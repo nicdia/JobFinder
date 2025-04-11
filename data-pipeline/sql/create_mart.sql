@@ -1,11 +1,3 @@
--- common fields
-BA
-id, externalid, title, adtitle, company, location, postalcode, country, region, lat, lon, exernalurl, starting_date, modified_at, published_at, fetched_at, geom
-
-Adzuna
-id, external_id, title, company, location, country, region, lat, lon, description, externalurl, geom, publishedat, fetched_at
-
-mart
 
 CREATE TABLE mart.jobs (
   id SERIAL PRIMARY KEY,

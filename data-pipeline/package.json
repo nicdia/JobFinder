@@ -1,0 +1,25 @@
+{
+  "name": "data-pipeline",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "pipeline": "ts-node scripts/mainPipeScript.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^22.14.0",
+    "data-pipeline": "file:",
+    "dotenv": "^16.5.0",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.14.1",
+    "save-dev": "^0.0.1-security",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.12",
+    "typescript": "^5.8.3"
+  }
+}

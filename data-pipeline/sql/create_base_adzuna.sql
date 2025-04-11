@@ -25,9 +25,7 @@ INSERT INTO base.jobs_adzuna (
   location,
   country,
   region,
-  lat,
-  lon,
-  geom,
+
   description,
   external_url,
   category,
@@ -42,16 +40,7 @@ SELECT
   
   raw_data->'location'->>'display_name',
   raw_data->'location'->'area'->>0,
-  raw_data->'location'->'area'->>1,
-  (raw_data->>'latitude')::double precision,
-  (raw_data->>'longitude')::double precision,
-  ST_SetSRID(
-    ST_Point(
-      (raw_data->>'longitude')::double precision,
-      (raw_data->>'latitude')::double precision
-    ),
-    4326
-  ),
+  raw_data->'location'->'area'->>1
   raw_data->>'description',
   raw_data->>'redirect_url',
   raw_data->'category'->>'label',
