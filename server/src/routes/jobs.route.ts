@@ -11,13 +11,9 @@ router.get("/jobs", async (req, res) => {
         id,
         'Feature' AS type,
         ST_AsGeoJSON(geom)::json AS geometry,
-        json_build_object(
-          'title', title,
-          'company', company,
-          'description', description,
-          'location', location
-        ) AS properties
-      FROM stage.jobs;
+        to_jsonb(j) - 'geom' AS properties
+      FROM base.jobs_ba j
+      WHERE geom IS NOT NULL;
     `);
 
     res.json({

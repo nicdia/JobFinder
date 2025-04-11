@@ -21,5 +21,6 @@ export async function fetchAdzunaJobs(query: string, location: string) {
   }
 
   const data = await res.json();
+  console.log(data);
   return data.results;
 }

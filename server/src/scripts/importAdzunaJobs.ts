@@ -1,9 +1,9 @@
-import { fetchJobsFromBA } from "../services/baFetcher";
+import { fetchAdzunaJobs } from "../services/adzunaFetcher";
 import pool from "../db";
 
-async function mainGetDataFromBAAPI() {
+async function mainGetDataFromAdzunaAPI() {
   try {
-    const jobs = await fetchJobsFromBA("entwickler", "Hamburg");
+    const jobs = await fetchAdzunaJobs("entwickler", "Hamburg");
 
     console.log(`✅ ${jobs.length} Jobs erhalten.`);
 
@@ -19,9 +19,9 @@ async function storeJobsToDatabase(jobs: any[]) {
 
     try {
       await pool.query(
-        `INSERT INTO stage.raw_jobs_ba_api (source, raw_data, external_id)
+        `INSERT INTO stage.raw_jobs_adzuna_api (source, raw_data, external_id)
          VALUES ($1, $2, $3)`,
-        ["BA", job, externalId]
+        ["Adzuna", job, externalId]
       );
     } catch (err) {
       console.error(
@@ -34,4 +34,4 @@ async function storeJobsToDatabase(jobs: any[]) {
   console.log("✅ Alle Jobs gespeichert.");
 }
 
-mainGetDataFromBAAPI();
+mainGetDataFromAdzunaAPI();
