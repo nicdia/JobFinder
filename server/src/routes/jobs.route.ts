@@ -1,6 +1,6 @@
 // src/routes/jobs.route.ts
 import { Router } from "express";
-import pool from "../db";
+import pool from "../utils/db";
 
 const router = Router();
 
@@ -12,7 +12,7 @@ router.get("/jobs", async (req, res) => {
         'Feature' AS type,
         ST_AsGeoJSON(geom)::json AS geometry,
         to_jsonb(j) - 'geom' AS properties
-      FROM base.jobs_ba j
+      FROM mart.jobs j
       WHERE geom IS NOT NULL;
     `);
 

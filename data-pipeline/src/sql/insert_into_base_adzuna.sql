@@ -1,22 +1,3 @@
-CREATE TABLE base.jobs_adzuna (
-  id SERIAL PRIMARY KEY,
-  external_id TEXT,
-  title TEXT,
-  company TEXT,
-  location TEXT,
-  country TEXT,
-  region TEXT,
-  lat DOUBLE PRECISION,
-  lon DOUBLE PRECISION,
-  geom GEOMETRY(Point, 4326),
-  description TEXT,
-  external_url TEXT,
-  category TEXT,
-  published_at TIMESTAMP,
-  fetched_at TIMESTAMP,
-  stage_id INTEGER REFERENCES stage.raw_jobs_adzuna_api(id)
-);
-
 
 INSERT INTO base.jobs_adzuna (
   external_id,
@@ -40,7 +21,7 @@ SELECT
   
   raw_data->'location'->>'display_name',
   raw_data->'location'->'area'->>0,
-  raw_data->'location'->'area'->>1
+  raw_data->'location'->'area'->>1,
   raw_data->>'description',
   raw_data->>'redirect_url',
   raw_data->'category'->>'label',

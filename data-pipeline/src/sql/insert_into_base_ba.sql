@@ -1,46 +1,4 @@
-CREATE TABLE base.jobs_ba (
-  id SERIAL PRIMARY KEY,
-  external_id TEXT,
-  title TEXT,
-  ad_title TEXT,
-  company TEXT,
-  location TEXT,
-  postal_code TEXT,
-  country TEXT,
-  region TEXT,
-  distance_km TEXT,
-  lat DOUBLE PRECISION,
-  lon DOUBLE PRECISION,
-  external_url TEXT,
-  starting_date DATE,
-  modified_at TIMESTAMP,
-  published_at DATE,
-  fetched_at TIMESTAMP,
-  stage_id INTEGER REFERENCES stage.raw_jobs_ba_api(id),
-  geom GEOMETRY(Point, 4326)
-);
 
-
-
-INSERT INTO base.jobs_ba (
-  external_id,
-  title,
-  ad_title,
-  company,
-  location,
-  postal_code,
-  country,
-  region,
-  distance_km,
-  lat,
-  lon,
-  external_url,
-  starting_date,
-  modified_at,
-  published_at,
-  fetched_at,
-  stage_id
-)
 INSERT INTO base.jobs_ba (
   external_id,
   title,

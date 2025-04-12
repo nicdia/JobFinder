@@ -1,6 +1,6 @@
-import pool from "../../server/src/db";
+import pool from "../util/db";
 import fetch from "node-fetch";
-import { GeocodeTableOptions } from "../types/types";
+import { GeocodeTableOptions } from "../types/pipelineTypes";
 import dotenv from "dotenv";
 dotenv.config();
 

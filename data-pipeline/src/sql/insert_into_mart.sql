@@ -1,21 +1,4 @@
 
-CREATE TABLE mart.jobs (
-  id SERIAL PRIMARY KEY,
-  source TEXT,
-  external_id TEXT,
-  title TEXT,
-  company TEXT,
-  location TEXT,
-  description TEXT,
-  external_url TEXT,
-  lat DOUBLE PRECISION,
-  lon DOUBLE PRECISION,
-  geom GEOMETRY(Point, 4326),
-  published_at TIMESTAMP,
-  starting_date TIMESTAMP
-);
-
-
 INSERT INTO mart.jobs (
   source,
   external_id,
@@ -62,7 +45,7 @@ SELECT
   lat,
   lon,
   geom,
-  publishedat,
+  published_at,
   NULL AS starting_date          -- Adzuna hat kein Startdatum
 FROM base.jobs_adzuna
 WHERE geom IS NOT NULL;

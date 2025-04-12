@@ -1,25 +1,37 @@
 {
   "name": "data-pipeline",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Pipeline die zyklisch neue Jobangebote importiert ",
+  "main": "src/mainPipeScript.ts",
   "scripts": {
-    "pipeline": "ts-node scripts/mainPipeScript.ts"
+    "pipeline": "ts-node src/mainPipeScript.ts"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicdia/JobFinder.git"
+  },
+  "author": "NicDia",
   "license": "ISC",
-  "description": "",
+  "bugs": {
+    "url": "https://github.com/nicdia/JobFinder/issues"
+  },
+  "homepage": "https://github.com/nicdia/JobFinder#readme",
   "dependencies": {
-    "@types/node": "^22.14.0",
+    "cors": "^2.8.5",
     "data-pipeline": "file:",
-    "dotenv": "^16.5.0",
-    "node-fetch": "^3.3.2",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "node-fetch": "^2.7.0",
     "pg": "^8.14.1",
-    "save-dev": "^0.0.1-security",
-    "ts-node": "^10.9.2"
+    "server": "file:"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.0",
     "@types/node-fetch": "^2.6.12",
+    "@types/pg": "^8.11.11",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
 }

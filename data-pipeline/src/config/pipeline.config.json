@@ -1,0 +1,14 @@
+{
+  "searchParamsInApis": ["entwickler", "Hamburg"],
+  "tablesToBeGeocoded": [
+    {
+      "table": "base.jobs_adzuna",
+      "idField": "id",
+      "addressFields": ["company"],
+      "latField": "lat",
+      "lonField": "lon",
+      "geomField": "geom",
+      "limit": 25
+    }
+  ]
+}

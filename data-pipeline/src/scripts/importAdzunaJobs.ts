@@ -1,9 +1,13 @@
-import { fetchAdzunaJobs } from "../services/adzunaFetcher";
-import pool from "../db";
+import { fetchAdzunaJobs } from "../modules/adzunaFetcher";
+import { loadPipelineConfig } from "../util/loadConfig";
+import pool from "../util/db";
+
+const config = loadPipelineConfig();
+const [keyword, city] = config.searchParamsInApis;
 
 async function mainGetDataFromAdzunaAPI() {
   try {
-    const jobs = await fetchAdzunaJobs("entwickler", "Hamburg");
+    const jobs = await fetchAdzunaJobs(keyword, city);
 
     console.log(`✅ ${jobs.length} Jobs erhalten.`);
 

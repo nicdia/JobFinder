@@ -20,7 +20,7 @@ export async function fetchAdzunaJobs(query: string, location: string) {
     throw new Error(`Fehler beim Abrufen von Adzuna: ${res.status}`);
   }
 
-  const data = await res.json();
+  const data: any = await res.json();
   console.log(data);
   return data.results;
 }

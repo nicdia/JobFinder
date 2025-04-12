@@ -1,0 +1,1 @@
+TRUNCATE stage.raw_jobs_ba_api, stage.raw_jobs_adzuna_api;
