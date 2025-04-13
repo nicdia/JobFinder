@@ -14,3 +14,12 @@ export interface FetchOtpParams {
   date: string;
   time: string;
 }
+
+export interface ImportIsochroneParams {
+  userId: number;
+  label: string;
+  cutoff: number;
+  mode: string;
+  center: [number, number];
+  geojsonPolygon: any;
+}
