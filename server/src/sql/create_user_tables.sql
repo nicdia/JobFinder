@@ -25,9 +25,20 @@ CREATE TABLE account.user_saved_jobs (
 );
 
 CREATE TABLE account.user_visible_jobs (
-  user_id INT REFERENCES account.users(id),
-  job_id INT REFERENCES mart.jobs(id),
-  inserted_at TIMESTAMP DEFAULT NOW()
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
+  source TEXT,
+  external_id TEXT,
+  title TEXT,
+  company TEXT,
+  location TEXT,
+  description TEXT,
+  external_url TEXT,
+  lat DOUBLE PRECISION,
+  lon DOUBLE PRECISION,
+  geom GEOMETRY(Point, 4326),
+  published_at TIMESTAMP,
+  starting_date TIMESTAMP
 );
 
 CREATE INDEX idx_user_isochrones_geom
