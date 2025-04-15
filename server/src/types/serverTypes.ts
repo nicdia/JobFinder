@@ -1,9 +1,10 @@
+import { Request } from "express";
+
 type Coord = [number, number];
 
 type CoordDict = {
   [table: string]: { coord: Coord }[];
 };
-
 export interface FetchOtpParams {
   corDict: CoordDict;
   url: string;
@@ -14,7 +15,6 @@ export interface FetchOtpParams {
   date: string;
   time: string;
 }
-
 export interface ImportIsochroneParams {
   userId: number;
   label: string;
@@ -22,4 +22,7 @@ export interface ImportIsochroneParams {
   mode: string;
   center: [number, number];
   geojsonPolygon: any;
+}
+export interface AuthRequest extends Request {
+  user?: { id: number };
 }
