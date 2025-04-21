@@ -1,38 +1,38 @@
 import pool from "../utils/db";
 
 /**
- * Berechnet alle Jobs, die in der aktuellsten Isochrone eines Users liegen,
+ * Berechnet alle Jobs, die im aktuellsten Polygon eines Users liegen,
  * und speichert sie in account.user_visible_jobs mit vollständigen Jobdaten.
  */
-export async function matchJobsToIsochrone(userId: number) {
-  // 1. Aktuellste Isochrone-ID holen
-  const isoResult = await pool.query(
+export async function matchJobsToPolygone(userId: number) {
+  // 1. Aktuellstes Polygon des Users holen
+  const polyResult = await pool.query(
     `
-    SELECT id FROM account.user_isochrones
+    SELECT id FROM account.user_polygone_job_search_area
     WHERE user_id = $1
     ORDER BY created_at DESC
     LIMIT 1;
-  `,
+    `,
     [userId]
   );
 
-  if (isoResult.rowCount === 0) {
-    console.warn(`⚠️ Keine Isochrone für User ${userId} gefunden.`);
+  if (polyResult.rowCount === 0) {
+    console.warn(`⚠️ Kein Polygon für User ${userId} gefunden.`);
     return;
   }
 
-  const isochroneId = isoResult.rows[0].id;
+  const polygonId = polyResult.rows[0].id;
 
   // 2. Alte Matches löschen
   await pool.query(
-    `DELETE FROM account.user_visible_jobs WHERE user_id = $1;`,
+    `DELETE FROM account.user_jobs_within_radius  WHERE user_id = $1;`,
     [userId]
   );
 
-  // 3. Neue Treffer einfügen (inkl. aller Job-Daten aus mart.jobs)
+  // 3. Neue Treffer anhand Polygon einfügen
   await pool.query(
     `
-    INSERT INTO account.user_visible_jobs (
+    INSERT INTO account.user_jobs_within_radius (
       user_id,
       source,
       external_id,
@@ -62,11 +62,13 @@ export async function matchJobsToIsochrone(userId: number) {
       j.published_at,
       j.starting_date
     FROM mart.jobs j
-    JOIN account.user_isochrones i ON i.id = $2
-    WHERE ST_Contains(i.polygon, j.geom);
-  `,
-    [userId, isochroneId]
+    JOIN account.user_polygone_job_search_area p ON p.id = $2
+    WHERE ST_Contains(p.geom, j.geom);
+    `,
+    [userId, polygonId]
   );
 
-  console.log(`✅ Sichtbare Jobs für User ${userId} aktualisiert.`);
+  console.log(
+    `✅ Sichtbare Jobs für User ${userId} basierend auf Polygon aktualisiert.`
+  );
 }

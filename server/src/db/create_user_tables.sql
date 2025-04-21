@@ -6,7 +6,7 @@ CREATE TABLE account.users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE account.user_isochrones (
+CREATE TABLE account.user_otp_server_params_input (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
   label TEXT,  -- z. B. "Zuhause", "Arbeit", "Test Hamburg"
@@ -17,6 +17,15 @@ CREATE TABLE account.user_isochrones (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+
+CREATE TABLE account.user_polygone_job_search_area (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  geom geometry(POLYGON, 4326) NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+
 CREATE TABLE account.user_saved_jobs (
   user_id INT REFERENCES account.users(id),
   job_id INT REFERENCES mart.jobs(id),
@@ -24,7 +33,7 @@ CREATE TABLE account.user_saved_jobs (
   PRIMARY KEY (user_id, job_id)
 );
 
-CREATE TABLE account.user_visible_jobs (
+CREATE TABLE account.user_jobs_within_radius (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
   source TEXT,
@@ -42,6 +51,6 @@ CREATE TABLE account.user_visible_jobs (
 );
 
 CREATE INDEX idx_user_isochrones_geom
-  ON account.user_isochrones
+  ON account.user_polygone_job_search_area
   USING GIST(polygon);
 
