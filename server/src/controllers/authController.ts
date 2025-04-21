@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { createUser } from "../services/registerService";
-import { handleLogin } from "../services/loginService";
+import { createUser } from "../services/userRegisterService";
+import { handleLogin } from "../services/userLoginService";
 
 export async function registerUser(req: Request, res: Response) {
   const { email, password } = req.body;

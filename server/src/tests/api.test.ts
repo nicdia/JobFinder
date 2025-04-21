@@ -13,10 +13,6 @@ describe("🚀 API Endpoints", () => {
     testEmail = `testuser_${timestamp}@example.com`;
   });
 
-  afterAll(async () => {
-    await pool.end(); // 🔌 DB sauber schließen
-  });
-
   it("✅ /register – should register a new user", async () => {
     const res = await request(app).post("/api/auth/register").send({
       email: testEmail,
@@ -142,4 +138,30 @@ describe("🚀 API Endpoints", () => {
     expect(res.statusCode).toBe(201);
     expect(res.body.message).toMatch(/Punkte verarbeitet/i);
   });
+});
+// 🔄 Nutzer aktualisieren
+it("✅ /users/:userId – should update the user", async () => {
+  const res = await request(app)
+    .patch(`/api/users/${userId}`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      email: `${testEmail.replace("@", "+updated@")}`, // Beispieländerung
+    });
+
+  expect(res.statusCode).toBe(200);
+  expect(res.body.message).toMatch(/aktualisiert/i);
+});
+
+// 🗑️ Nutzer löschen
+it("✅ /users/:userId – should delete the user", async () => {
+  const res = await request(app)
+    .delete(`/api/users/${userId}`)
+    .set("Authorization", `Bearer ${token}`);
+
+  expect(res.statusCode).toBe(200);
+  expect(res.body.message).toMatch(/gelöscht/i);
+});
+
+afterAll(async () => {
+  await pool.end(); // 🔌 DB sauber schließen
 });
