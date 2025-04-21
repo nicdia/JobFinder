@@ -1,8 +1,8 @@
 import pool from "../utils/db";
-import { matchJobsToPolygone } from "./matchJobsToIsochrone";
-import { fetchOtpApi } from "./fetchIsochrone";
-import { insertUserIsochrone } from "./importIsochrone";
-import { insertUserPolygon } from "../db/polygonRepo";
+import { matchJobsToPolygone } from "./geomS_matchJobsToIsochrone";
+import { fetchOtpApi } from "./geomS_fetchOTPServer";
+import { insertUserIsochrone } from "./geomS_importIsochrone";
+import { insertUserPolygon } from "../db/geometryOpsRepo";
 
 /**
  * Hauptlogik zum Verarbeiten von Benutzereingaben:

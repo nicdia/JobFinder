@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateToken } from "../middleware/authMiddleware";
-import { handleUserGeometryInput } from "../controllers/geometryController";
+import { handleUserGeometryInput } from "../controllers/inputGeometryController";
 
 const router = Router();
 

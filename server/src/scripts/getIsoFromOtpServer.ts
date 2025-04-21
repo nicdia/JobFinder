@@ -1,5 +1,7 @@
-import { fetchOtpApi } from "../services/fetchIsochrone";
-import { insertUserIsochrone } from "../services/importIsochrone";
+//////////////// OLD VERSION JUST EXISTiNG FOR COMPARISON CAN BE DELETED AT SOME POINT
+////////////////////////////////////////
+import { fetchOtpApi } from "../services/geomS_fetchOTPServer";
+import { insertUserIsochrone } from "../services/geomS_importIsochrone";
 
 (async () => {
   const result = await fetchOtpApi({
