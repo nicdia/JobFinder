@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import jobRoutes from "./routes/allJobs.route";
 import accessibleJobs from "./routes/userVisibleJobs.route";
-import register from "./routes/userRegister.route";
+import register from "./routes/userAuth.route";
 import login from "./routes/userAuth.route";
 import getUserGeometry from "./routes/userInputGeometry.route";
 
@@ -22,3 +22,5 @@ app.use("/api/", getUserGeometry);
 app.listen(PORT, () => {
   console.log(`✅ Server läuft unter http://localhost:${PORT}`);
 });
+
+export default app;

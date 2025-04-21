@@ -6,34 +6,23 @@ CREATE TABLE account.users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE account.user_otp_server_params_input (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
-  label TEXT,  -- z. B. "Zuhause", "Arbeit", "Test Hamburg"
-  cutoff_seconds INTEGER NOT NULL,  -- z. B. 900
-  mode TEXT NOT NULL,               -- z. B. "WALK", "BICYCLE"
-  center GEOMETRY(Point, 4326) NOT NULL,  -- Startpunkt
-  polygon GEOMETRY(MultiPolygon, 4326) NOT NULL, -- Isochrone
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-
-CREATE TABLE account.user_polygone_job_search_area (
+CREATE TABLE account.user_search_areas (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
-  geom geometry(POLYGON, 4326) NOT NULL,
+  geom GEOMETRY(MULTIPOLYGON, 4326) NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('direct', 'isochrone')),
+  source_point GEOMETRY(POINT, 4326),  -- nur bei type = 'isochrone'
+  label TEXT,
+  cutoff_seconds INTEGER,              -- nur bei type = 'isochrone'
+  mode TEXT,                           -- WALK / BIKE / etc.
   created_at TIMESTAMP DEFAULT now()
 );
+CREATE INDEX idx_user_isochrones_geom
+  ON account.user_search_areas
+  USING GIST(geom);
 
 
-CREATE TABLE account.user_saved_jobs (
-  user_id INT REFERENCES account.users(id),
-  job_id INT REFERENCES mart.jobs(id),
-  saved_at TIMESTAMP DEFAULT NOW(),
-  PRIMARY KEY (user_id, job_id)
-);
-
-CREATE TABLE account.user_jobs_within_radius (
+CREATE TABLE account.user_jobs_within_search_area (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
   source TEXT,
@@ -49,8 +38,3 @@ CREATE TABLE account.user_jobs_within_radius (
   published_at TIMESTAMP,
   starting_date TIMESTAMP
 );
-
-CREATE INDEX idx_user_isochrones_geom
-  ON account.user_polygone_job_search_area
-  USING GIST(polygon);
-

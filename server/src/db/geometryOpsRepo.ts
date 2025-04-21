@@ -6,8 +6,8 @@ import pool from "../utils/db";
 export async function insertUserPolygon(userId: number, geometry: any) {
   const result = await pool.query(
     `
-    INSERT INTO account.user_polygone_job_search_area (user_id, geom)
-    VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326))
+    INSERT INTO account.user_search_areas (user_id, geom, type)
+    VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), 'direct')
     RETURNING id;
     `,
     [userId, JSON.stringify(geometry)]
@@ -25,8 +25,8 @@ export async function getLatestPolygonIdByUser(
   const result = await pool.query(
     `
     SELECT id
-    FROM account.user_polygone_job_search_area
-    WHERE user_id = $1
+    FROM account.user_search_areas
+    WHERE user_id = $1 AND type = 'direct'
     ORDER BY created_at DESC
     LIMIT 1;
     `,
@@ -47,17 +47,19 @@ export async function insertIsochroneToDB(
 ) {
   await pool.query(
     `
-    INSERT INTO account.user_isochrones (
+    INSERT INTO account.user_search_areas (
       user_id,
       label,
       cutoff_seconds,
       mode,
-      center,
-      polygon
+      source_point,
+      geom,
+      type
     ) VALUES (
       $1, $2, $3, $4,
       ST_SetSRID(ST_Point($5, $6), 4326),
-      ST_SetSRID(ST_GeomFromGeoJSON($7), 4326)
+      ST_SetSRID(ST_GeomFromGeoJSON($7), 4326),
+      'isochrone'
     );
     `,
     [userId, label, cutoff, mode, lon, lat, geometry]
@@ -70,7 +72,7 @@ export async function insertUserMatchedJobs(
 ): Promise<void> {
   await pool.query(
     `
-    INSERT INTO account.user_jobs_within_radius (
+    INSERT INTO account.user_jobs_within_search_area (
       user_id,
       source,
       external_id,
@@ -100,7 +102,7 @@ export async function insertUserMatchedJobs(
       j.published_at,
       j.starting_date
     FROM mart.jobs j
-    JOIN account.user_polygone_job_search_area p ON p.id = $2
+    JOIN account.user_search_areas p ON p.id = $2
     WHERE ST_Contains(p.geom, j.geom);
     `,
     [userId, polygonId]
@@ -109,7 +111,18 @@ export async function insertUserMatchedJobs(
 
 export async function deleteUserMatchedJobs(userId: number): Promise<void> {
   await pool.query(
-    `DELETE FROM account.user_jobs_within_radius WHERE user_id = $1;`,
+    `DELETE FROM account.user_jobs_within_search_area WHERE user_id = $1;`,
     [userId]
   );
+}
+
+export async function unionOpsPolygon(geoJSON: any): Promise<string> {
+  const result = await pool.query(
+    `
+    SELECT ST_AsGeoJSON(ST_Union(ST_GeomFromGeoJSON($1))) AS merged
+    `,
+    [JSON.stringify(geoJSON)]
+  );
+
+  return result.rows[0]?.merged;
 }
