@@ -41,3 +41,7 @@ Backend
 - ggf. Quick Apply
 
 Frontend
+Draw Mode Point --> Cursor bleibt kleben am Punkt, das muss behoben werden
+
+Doku/UML Modell:
+Mermaid angucken--> in Git Markdown

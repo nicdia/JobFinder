@@ -18,7 +18,8 @@ const MapComponent = () => {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const drawRef = useRef<Draw | null>(null);
-  const vectorSourceRef = useRef(new VectorSource());
+  const vectorSourceRef = useRef(new VectorSource()); // Dauerhaft gespeicherte Features
+  const tempVectorSourceRef = useRef(new VectorSource()); // Nur temporäre Features
 
   const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
   const [drawType, setDrawType] = useState<string | null>(null);
@@ -37,9 +38,24 @@ const MapComponent = () => {
       }),
     });
 
+    const tempVectorLayer = new VectorLayer({
+      source: tempVectorSourceRef.current,
+      style: new Style({
+        image: new Icon({
+          src: "https://openlayers.org/en/latest/examples/data/icon.png",
+          anchor: [0.5, 1],
+          color: "#2196f3", // Blau für temporär
+        }),
+      }),
+    });
+
     const map = new Map({
       target: mapElementRef.current!,
-      layers: [new TileLayer({ source: new OSM() }), vectorLayer],
+      layers: [
+        new TileLayer({ source: new OSM() }),
+        vectorLayer,
+        tempVectorLayer,
+      ],
       view: new View({
         center: fromLonLat([13.405, 52.52]),
         zoom: 12,
@@ -47,16 +63,6 @@ const MapComponent = () => {
     });
 
     mapRef.current = map;
-
-    // Feature-Klick
-    map.on("click", (event) => {
-      const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f);
-      if (feature) {
-        setSelectedFeature(feature.getProperties());
-      } else {
-        setSelectedFeature(null);
-      }
-    });
 
     // Features laden
     fetchJobs()
@@ -96,16 +102,15 @@ const MapComponent = () => {
     if (!drawType) return;
 
     const draw = new Draw({
-      source: vectorSourceRef.current,
+      source: tempVectorSourceRef.current, // Immer temporär!
       type: drawType as any,
     });
 
     draw.on("drawend", (event) => {
       const feature = event.feature;
-
-      // Zeichnen abgeschlossen → Formular öffnen
-      setNewFeature(feature);
-      setFormOpen(true);
+      tempVectorSourceRef.current.clear(); // Immer nur 1 temporäres Feature
+      tempVectorSourceRef.current.addFeature(feature);
+      setNewFeature(feature); // nur merken, Dialog öffnet sich bei Button
     });
 
     mapRef.current.addInteraction(draw);
@@ -118,21 +123,25 @@ const MapComponent = () => {
     };
   }, [drawType]);
 
-  // 🖱️ Rechtsklick zum Öffnen des Formulars (optional)
+  // 🖱️ Rechtsklick = Zeichenmodus abbrechen + temporär löschen
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault(); // blockiert Browser-Menü
+      e.preventDefault();
 
       if (!drawType) return;
 
-      const feature = vectorSourceRef.current.getFeatures().slice(-1)[0]; // letzter = gezeichneter
-      if (feature) {
-        setNewFeature(feature);
-        setFormOpen(true);
+      if (drawRef.current) {
+        map.removeInteraction(drawRef.current);
+        drawRef.current = null;
       }
+
+      tempVectorSourceRef.current.clear(); // Temp löschen
+      setDrawType(null);
+      setFormOpen(false);
+      setNewFeature(null);
     };
 
     const mapEl = map.getTargetElement();
@@ -140,6 +149,29 @@ const MapComponent = () => {
 
     return () => {
       mapEl.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, [drawType]);
+
+  // 🖱️ Klick auf bestehende Features (nur im normalen Modus!)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const handleMapClick = (event: any) => {
+      const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f);
+      if (feature) {
+        setSelectedFeature(feature.getProperties());
+      } else {
+        setSelectedFeature(null);
+      }
+    };
+
+    if (drawType === null) {
+      map.on("click", handleMapClick);
+    }
+
+    return () => {
+      map.un("click", handleMapClick);
     };
   }, [drawType]);
 
@@ -155,18 +187,46 @@ const MapComponent = () => {
       newFeature.set(key, value);
     });
 
-    // Optional: an API senden
+    // Entferne aus temporärer Quelle:
+    tempVectorSourceRef.current.removeFeature(newFeature);
+
+    // Füge zur "echten" Quelle hinzu:
+    vectorSourceRef.current.addFeature(newFeature);
+
     console.log("📤 Neues Feature gespeichert:", newFeature);
 
     setNewFeature(null);
     setFormOpen(false);
-    setDrawType(null); // Zeichnen beenden
+    setDrawType(null);
+  };
+
+  const handleAbortDraw = () => {
+    if (drawRef.current && mapRef.current) {
+      mapRef.current.removeInteraction(drawRef.current);
+      drawRef.current = null;
+    }
+
+    tempVectorSourceRef.current.clear(); // Temp löschen
+    setNewFeature(null);
+    setDrawType(null);
+  };
+
+  const handleSubmitDraw = () => {
+    if (newFeature) {
+      setFormOpen(true);
+      setDrawType(null);
+    }
   };
 
   return (
     <>
       <div ref={mapElementRef} style={{ width: "100%", height: "100vh" }} />
-      <DrawToolbar drawType={drawType} setDrawType={setDrawType} />
+      <DrawToolbar
+        drawType={drawType}
+        setDrawType={setDrawType}
+        onAbortDraw={handleAbortDraw}
+        onSubmitDraw={handleSubmitDraw}
+      />
       <FeatureDetailsDialog
         feature={selectedFeature}
         onClose={() => setSelectedFeature(null)}
