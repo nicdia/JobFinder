@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Draw } from "ol/interaction";
 import VectorSource from "ol/source/Vector";
 import { Map } from "ol";
+import { Point } from "ol/geom";
 
 export const useDrawInteraction = (
   mapRef: React.RefObject<Map | null>,
@@ -23,7 +24,7 @@ export const useDrawInteraction = (
 
     const draw = new Draw({
       source: tempVectorSourceRef.current,
-      type: drawType as any,
+      type: "Point",
     });
 
     draw.on("drawend", (event) => {

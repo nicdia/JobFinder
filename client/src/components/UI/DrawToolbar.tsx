@@ -1,15 +1,23 @@
 import { ToggleButton, ToggleButtonGroup, Button, Stack } from "@mui/material";
 import { EditLocationAlt, ShowChart, CropSquare } from "@mui/icons-material";
-import { DrawToolbarProps } from "../../types/types";
 
 const DrawToolbar = ({
+  isDrawMode,
+  setIsDrawMode,
   drawType,
   setDrawType,
   onAbortDraw,
   onSubmitDraw,
-}: DrawToolbarProps) => {
+}: {
+  isDrawMode: boolean;
+  setIsDrawMode: (mode: boolean) => void;
+  drawType: string | null;
+  setDrawType: (type: string | null) => void;
+  onAbortDraw: () => void;
+  onSubmitDraw: () => void;
+}) => {
   const handleChange = (_: any, newType: string | null) => {
-    setDrawType(newType); // null = deaktivieren
+    setDrawType(newType);
   };
 
   return (
@@ -26,26 +34,30 @@ const DrawToolbar = ({
         borderRadius: 1,
       }}
     >
-      <ToggleButtonGroup value={drawType} exclusive onChange={handleChange}>
-        <ToggleButton value="Point" title="Punkt zeichnen">
-          <EditLocationAlt />
-        </ToggleButton>
-        <ToggleButton value="LineString" title="Linie zeichnen">
-          <ShowChart />
-        </ToggleButton>
-        <ToggleButton value="Polygon" title="Polygon zeichnen">
-          <CropSquare />
-        </ToggleButton>
-      </ToggleButtonGroup>
-
-      {drawType && (
+      {isDrawMode && (
         <>
-          <Button variant="outlined" onClick={onAbortDraw}>
-            Zeichnen abbrechen
-          </Button>
-          <Button variant="contained" onClick={onSubmitDraw}>
-            Suchbereich erstellen
-          </Button>
+          <ToggleButtonGroup value={drawType} exclusive onChange={handleChange}>
+            <ToggleButton value="Point" title="Punkt zeichnen">
+              <EditLocationAlt />
+            </ToggleButton>
+            <ToggleButton value="LineString" title="Linie zeichnen">
+              <ShowChart />
+            </ToggleButton>
+            <ToggleButton value="Polygon" title="Polygon zeichnen">
+              <CropSquare />
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          {drawType && (
+            <>
+              <Button variant="outlined" onClick={onAbortDraw}>
+                Zeichnen abbrechen
+              </Button>
+              <Button variant="contained" onClick={onSubmitDraw}>
+                Suchbereich erstellen
+              </Button>
+            </>
+          )}
         </>
       )}
     </Stack>
