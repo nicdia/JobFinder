@@ -8,6 +8,7 @@ import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { fetchJobs } from "../services/jobsApi";
+import { defaults as defaultControls } from "ol/control";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
@@ -36,7 +37,6 @@ export const useMapSetup = (
         }),
       }),
     });
-
     const map = new Map({
       target: mapElementRef.current!,
       layers: [
@@ -48,6 +48,11 @@ export const useMapSetup = (
         center: fromLonLat([13.405, 52.52]),
         zoom: 12,
       }),
+      controls: defaultControls({
+        zoom: true,
+        attribution: true,
+        rotate: true,
+      }), // ⬅️ das ergänzt
     });
 
     mapRef.current = map;

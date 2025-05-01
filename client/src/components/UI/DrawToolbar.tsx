@@ -20,6 +20,8 @@ const DrawToolbar = ({
     setDrawType(newType);
   };
 
+  if (!isDrawMode) return null; // 👈 verhindert das Rendern des weißen Kästchens
+
   return (
     <Stack
       direction="column"
@@ -34,30 +36,26 @@ const DrawToolbar = ({
         borderRadius: 1,
       }}
     >
-      {isDrawMode && (
-        <>
-          <ToggleButtonGroup value={drawType} exclusive onChange={handleChange}>
-            <ToggleButton value="Point" title="Punkt zeichnen">
-              <EditLocationAlt />
-            </ToggleButton>
-            <ToggleButton value="LineString" title="Linie zeichnen">
-              <ShowChart />
-            </ToggleButton>
-            <ToggleButton value="Polygon" title="Polygon zeichnen">
-              <CropSquare />
-            </ToggleButton>
-          </ToggleButtonGroup>
+      <ToggleButtonGroup value={drawType} exclusive onChange={handleChange}>
+        <ToggleButton value="Point" title="Punkt zeichnen">
+          <EditLocationAlt />
+        </ToggleButton>
+        <ToggleButton value="LineString" title="Linie zeichnen">
+          <ShowChart />
+        </ToggleButton>
+        <ToggleButton value="Polygon" title="Polygon zeichnen">
+          <CropSquare />
+        </ToggleButton>
+      </ToggleButtonGroup>
 
-          {drawType && (
-            <>
-              <Button variant="outlined" onClick={onAbortDraw}>
-                Zeichnen abbrechen
-              </Button>
-              <Button variant="contained" onClick={onSubmitDraw}>
-                Suchbereich erstellen
-              </Button>
-            </>
-          )}
+      {drawType && (
+        <>
+          <Button variant="outlined" onClick={onAbortDraw}>
+            Zeichnen abbrechen
+          </Button>
+          <Button variant="contained" onClick={onSubmitDraw}>
+            Suchbereich erstellen
+          </Button>
         </>
       )}
     </Stack>
