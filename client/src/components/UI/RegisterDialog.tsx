@@ -8,6 +8,8 @@ import {
   Stack,
 } from "@mui/material";
 import { useState } from "react";
+import { registerUser } from "../../services/authApi";
+import { useAuth } from "../../context/AuthContext";
 
 const RegisterDialog = ({
   open,
@@ -16,21 +18,31 @@ const RegisterDialog = ({
   open: boolean;
   onClose: () => void;
 }) => {
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
 
-  const handleRegister = () => {
-    if (password !== repeatPassword) {
-      alert("Passwörter stimmen nicht überein!");
+  const handleRegister = async () => {
+    if (!name || !email || !password || !repeatPassword) {
+      alert("Bitte fülle alle Felder aus.");
       return;
     }
 
-    // TODO: An Backend senden
-    console.log("📝 Registrierung:", { name, email, password });
+    if (password !== repeatPassword) {
+      alert("Passwörter stimmen nicht überein");
+      return;
+    }
 
-    onClose();
+    try {
+      const userData = await registerUser(name, email, password);
+      login(userData);
+      onClose();
+    } catch (err) {
+      alert("Registrierung fehlgeschlagen");
+      console.error(err);
+    }
   };
 
   return (

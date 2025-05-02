@@ -1,0 +1,35 @@
+import { IconButton, Menu, MenuItem, Avatar } from "@mui/material";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+
+const AccountMenu = () => {
+  const { logout, user } = useAuth();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => setAnchorEl(null);
+
+  const handleLogout = () => {
+    logout();
+    handleClose();
+  };
+
+  return (
+    <>
+      <IconButton onClick={handleClick} sx={{ ml: 2 }} color="inherit">
+        {/* 🧑 Profil-Icon statt Buchstabe */}
+        <AccountCircleIcon fontSize="large" />
+      </IconButton>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        <MenuItem disabled>{user?.email}</MenuItem>
+        <MenuItem onClick={handleLogout}>Abmelden</MenuItem>
+      </Menu>
+    </>
+  );
+};
+
+export default AccountMenu;

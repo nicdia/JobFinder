@@ -18,6 +18,8 @@ import { useState } from "react";
 import AddressAutocomplete from "./AddressAutocomplete";
 import LoginDialog from "./LoginDialog";
 import RegisterDialog from "./RegisterDialog";
+import AccountMenu from "./AccountMenu";
+import { useAuth } from "../../context/AuthContext";
 
 const AppHeader = ({
   setDrawType,
@@ -46,6 +48,8 @@ const AppHeader = ({
   const [travelTime, setTravelTime] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+
+  const { user } = useAuth();
 
   const handleOpen = () => setSearchOpen(true);
 
@@ -92,29 +96,33 @@ const AppHeader = ({
             </Button>
           </Stack>
 
-          <Stack direction="row" spacing={1}>
-            <Button color="inherit" onClick={() => setLoginOpen(true)}>
-              Anmelden
-            </Button>
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={() => setRegisterOpen(true)}
-              sx={{
-                borderColor: "white",
-                color: "white",
-                outline: "none",
-                "&:focus": {
+          {!user ? (
+            <Stack direction="row" spacing={1}>
+              <Button color="inherit" onClick={() => setLoginOpen(true)}>
+                Anmelden
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={() => setRegisterOpen(true)}
+                sx={{
+                  borderColor: "white",
+                  color: "white",
                   outline: "none",
-                },
-                "&.Mui-focusVisible": {
-                  boxShadow: "none",
-                },
-              }}
-            >
-              Registrieren
-            </Button>
-          </Stack>
+                  "&:focus": {
+                    outline: "none",
+                  },
+                  "&.Mui-focusVisible": {
+                    boxShadow: "none",
+                  },
+                }}
+              >
+                Registrieren
+              </Button>
+            </Stack>
+          ) : (
+            <AccountMenu />
+          )}
         </Toolbar>
       </AppBar>
 
