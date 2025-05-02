@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { registerUser } from "../../services/authApi";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const RegisterDialog = ({
   open,
@@ -23,6 +24,7 @@ const RegisterDialog = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     if (!name || !email || !password || !repeatPassword) {
@@ -39,6 +41,7 @@ const RegisterDialog = ({
       const userData = await registerUser(name, email, password);
       login(userData);
       onClose();
+      navigate("/dashboard");
     } catch (err) {
       alert("Registrierung fehlgeschlagen");
       console.error(err);

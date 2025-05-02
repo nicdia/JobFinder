@@ -1,7 +1,6 @@
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   Box,
   Dialog,
@@ -14,6 +13,8 @@ import {
   Typography as MuiTypography,
   TextField,
 } from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
+import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import AddressAutocomplete from "./AddressAutocomplete";
 import LoginDialog from "./LoginDialog";
@@ -87,15 +88,23 @@ const AppHeader = ({
       <AppBar position="static" color="primary">
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="h6" component="div">
-              Jobfinder
-            </Typography>
-            <Button color="inherit">Home</Button>
-            <Button color="inherit" onClick={handleOpen}>
-              Job suchen
-            </Button>
+            {/* 🧭 Work Icon führt zur Startseite */}
+            <IconButton
+              color="inherit"
+              onClick={() => (window.location.href = "/")}
+              sx={{ "& svg": { fontSize: 28 } }} // 👈 Icon-Größe anpassen
+            >
+              <HomeIcon />
+            </IconButton>
+
+            {user && (
+              <Button color="inherit" onClick={handleOpen}>
+                Suchbereich erstellen
+              </Button>
+            )}
           </Stack>
 
+          {/* 🔐 Auth Buttons oder AccountMenu */}
           {!user ? (
             <Stack direction="row" spacing={1}>
               <Button color="inherit" onClick={() => setLoginOpen(true)}>
@@ -109,12 +118,8 @@ const AppHeader = ({
                   borderColor: "white",
                   color: "white",
                   outline: "none",
-                  "&:focus": {
-                    outline: "none",
-                  },
-                  "&.Mui-focusVisible": {
-                    boxShadow: "none",
-                  },
+                  "&:focus": { outline: "none" },
+                  "&.Mui-focusVisible": { boxShadow: "none" },
                 }}
               >
                 Registrieren

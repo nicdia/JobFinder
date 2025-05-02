@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/authApi";
 
 const LoginDialog = ({
@@ -19,6 +20,7 @@ const LoginDialog = ({
   onClose: () => void;
 }) => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -26,10 +28,11 @@ const LoginDialog = ({
     try {
       const res = await loginUser(email, password);
       login({
-        name: res.name ?? "", // optional falls Backend den Namen liefert
+        name: res.name ?? "",
         email: res.email,
       });
       onClose();
+      navigate("/dashboard");
     } catch (err: any) {
       console.error("Login fehlgeschlagen:", err);
       alert("Login fehlgeschlagen: " + (err.message || "Unbekannter Fehler"));
