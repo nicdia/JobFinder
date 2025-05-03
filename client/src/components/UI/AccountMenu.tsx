@@ -1,11 +1,13 @@
-import { IconButton, Menu, MenuItem, Avatar } from "@mui/material";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AccountMenu = () => {
   const { logout, user } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -16,6 +18,7 @@ const AccountMenu = () => {
   const handleLogout = () => {
     logout();
     handleClose();
+    navigate("/");
   };
 
   return (

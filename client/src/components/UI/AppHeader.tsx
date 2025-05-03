@@ -21,6 +21,7 @@ import LoginDialog from "./LoginDialog";
 import RegisterDialog from "./RegisterDialog";
 import AccountMenu from "./AccountMenu";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AppHeader = ({
   setDrawType,
@@ -51,6 +52,7 @@ const AppHeader = ({
   const [registerOpen, setRegisterOpen] = useState(false);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleOpen = () => setSearchOpen(true);
 
@@ -91,8 +93,8 @@ const AppHeader = ({
             {/* 🧭 Work Icon führt zur Startseite */}
             <IconButton
               color="inherit"
-              onClick={() => (window.location.href = "/")}
-              sx={{ "& svg": { fontSize: 28 } }} // 👈 Icon-Größe anpassen
+              onClick={() => navigate(user ? "/dashboard" : "/")}
+              sx={{ "& svg": { fontSize: 28 } }}
             >
               <HomeIcon />
             </IconButton>

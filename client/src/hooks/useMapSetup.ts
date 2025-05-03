@@ -7,7 +7,7 @@ import VectorSource from "ol/source/Vector";
 import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
-import { fetchJobs } from "../services/jobsApi";
+import { fetchAllJobs } from "../services/allJobsApi";
 import { defaults as defaultControls } from "ol/control";
 
 export const useMapSetup = (
@@ -57,7 +57,7 @@ export const useMapSetup = (
 
     mapRef.current = map;
 
-    fetchJobs()
+    fetchAllJobs()
       .then((data) => {
         const format = new GeoJSON();
         const features = format.readFeatures(data, {
