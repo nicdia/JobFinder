@@ -3,11 +3,11 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import AppsIcon from "@mui/icons-material/Apps";
 import { useAuth } from "../context/AuthContext";
-import AppHeader from "../components/UI/AppHeader";
+import AppHeader from "../components/UI/AppHeaderComponent";
 import SearchIcon from "@mui/icons-material/Search"; // oben ergänzen
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useNavigate } from "react-router-dom";
-import DashboardSection from "../components/UI/DashboardSection"; // Navigation
+import DashboardSection from "../components/UI/DashboardSectionComponent"; // Navigation
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -48,7 +48,7 @@ const DashboardPage = () => {
           title="Meine neusten Jobempfehlungen"
           description="Basierend auf deinem Suchverlauf erstellen wir Empfehlungen. Suche nach Jobs, um personalisierte Vorschläge zu erhalten."
           buttonLabel="Anzeigen"
-          onClick={() => console.log("Jobempfehlungen")}
+          onClick={() => navigate("/map?mode=customVisible")}
         />
 
         <Divider sx={{ my: 2 }} />
@@ -67,13 +67,13 @@ const DashboardPage = () => {
           title="Alle Jobs"
           description="Du willst einfach mal alle Jobs ungefiltert ansehen? Kicke hier."
           buttonLabel="Anzeigen"
-          onClick={() => console.log("Gespeicherte Jobs")}
+          onClick={() => navigate("/map?mode=all")}
         />
         <Divider sx={{ my: 2 }} />
         <DashboardSection
           icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
           title="Neuen Suchauftrag erstellen"
-          description="Du willst einen eigenen Suchbereich erstellen oder an deiner Wohnsituation hat sich etwas geändert? Erstelle hier einen neuen Suchauftrag."
+          description="Erstelle hier einen neuen Suchauftrag."
           buttonLabel="Erstellen"
           onClick={() => console.log("Gespeicherte Jobs")}
         />

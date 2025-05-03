@@ -1,7 +1,7 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { useNavigate } from "react-router-dom";
-import AppHeader from "../components/UI/AppHeader";
+import AppHeader from "../components/UI/AppHeaderComponent";
 
 const LandingPage = () => {
   const navigate = useNavigate();

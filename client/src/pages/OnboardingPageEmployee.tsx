@@ -9,10 +9,10 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppHeader from "../components/UI/AppHeader";
-import LoginDialog from "../components/UI/LoginDialog";
-import RegisterDialog from "../components/UI/RegisterDialog";
-import AddressAutocomplete from "../components/UI/AddressAutocomplete";
+import AppHeader from "../components/UI/AppHeaderComponent";
+import LoginDialog from "../components/UI/LoginDialogComponent";
+import RegisterDialog from "../components/UI/RegisterDialogComponent";
+import AddressAutocomplete from "../components/UI/AddressAutocompleteComponent";
 
 const questions = [
   {

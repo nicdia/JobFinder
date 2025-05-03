@@ -8,9 +8,9 @@ import { useDrawInteraction } from "../../hooks/useDrawInteraction";
 import { useContextMenuHandler } from "../../hooks/useContextMenuHandler";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
 
-import DrawToolbar from "../UI/DrawToolbar";
-import FeatureDetailsDialog from "../UI/FeatureDetailsDialog";
-import FeatureCreateDialog from "../UI/FeatureCreateDialog";
+import DrawToolbar from "../UI/DrawToolbarComponent";
+import FeatureDetailsDialog from "../UI/FeatureDetailsDialogComponent";
+import FeatureCreateDialog from "../UI/FeatureCreateDialogComponent";
 
 const MapComponent = ({
   isDrawMode,
@@ -19,6 +19,7 @@ const MapComponent = ({
   setDrawType,
   setSearchOpen,
   setSearchMode,
+  fetchFunction,
 }: {
   isDrawMode: boolean;
   setIsDrawMode: (mode: boolean) => void;
@@ -26,6 +27,7 @@ const MapComponent = ({
   setDrawType: (type: string | null) => void;
   setSearchOpen: (open: boolean) => void;
   setSearchMode: (mode: "accessibility" | "customArea" | null) => void;
+  fetchFunction: () => Promise<any>;
 }) => {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
@@ -39,24 +41,31 @@ const MapComponent = ({
   const [formOpen, setFormOpen] = useState(false);
 
   // Hooks
-  useMapSetup(mapRef, mapElementRef, vectorSourceRef, tempVectorSourceRef);
-  useDrawInteraction(
+  useMapSetup(
     mapRef,
-    drawRef,
-    drawType,
+    mapElementRef,
+    vectorSourceRef,
     tempVectorSourceRef,
-    setNewFeature,
-    setDrawType
+    fetchFunction
   );
-  useContextMenuHandler(
-    mapRef,
-    drawRef,
-    drawType,
-    tempVectorSourceRef,
-    setDrawType,
-    setFormOpen,
-    setNewFeature
-  );
+
+  // useDrawInteraction(
+  //   mapRef,
+  //   drawRef,
+  //   drawType,
+  //   tempVectorSourceRef,
+  //   setNewFeature,
+  //   setDrawType
+  // );
+  // useContextMenuHandler(
+  //   mapRef,
+  //   drawRef,
+  //   drawType,
+  //   tempVectorSourceRef,
+  //   setDrawType,
+  //   setFormOpen,
+  //   setNewFeature
+  // );
   useFeatureClickHandler(mapRef, drawType, setSelectedFeature);
 
   // 💾 Feature speichern
@@ -118,7 +127,7 @@ const MapComponent = ({
 
   return (
     <>
-      <div ref={mapElementRef} style={{ width: "100%", height: "100vh" }} />
+      <div ref={mapElementRef} style={{ width: "100%", height: "100%" }} />
 
       <DrawToolbar
         isDrawMode={isDrawMode}

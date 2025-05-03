@@ -16,10 +16,10 @@ import {
 import HomeIcon from "@mui/icons-material/Home";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
-import AddressAutocomplete from "./AddressAutocomplete";
-import LoginDialog from "./LoginDialog";
-import RegisterDialog from "./RegisterDialog";
-import AccountMenu from "./AccountMenu";
+import AddressAutocomplete from "./AddressAutocompleteComponent";
+import LoginDialog from "./LoginDialogComponent";
+import RegisterDialog from "./RegisterDialogComponent";
+import AccountMenu from "./AccountMenuComponent";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 

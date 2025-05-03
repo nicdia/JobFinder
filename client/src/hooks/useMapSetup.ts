@@ -1,3 +1,4 @@
+// useMapSetup.ts
 import { useEffect } from "react";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -7,14 +8,14 @@ import VectorSource from "ol/source/Vector";
 import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
-import { fetchAllJobs } from "../services/allJobsApi";
 import { defaults as defaultControls } from "ol/control";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
   mapElementRef: React.RefObject<HTMLDivElement | null>,
   vectorSourceRef: React.RefObject<VectorSource>,
-  tempVectorSourceRef: React.RefObject<VectorSource>
+  tempVectorSourceRef: React.RefObject<VectorSource>,
+  fetchFunction: () => Promise<any> // ⬅️ HINZUGEFÜGT
 ) => {
   useEffect(() => {
     const vectorLayer = new VectorLayer({
@@ -37,6 +38,7 @@ export const useMapSetup = (
         }),
       }),
     });
+
     const map = new Map({
       target: mapElementRef.current!,
       layers: [
@@ -45,19 +47,16 @@ export const useMapSetup = (
         tempVectorLayer,
       ],
       view: new View({
-        center: fromLonLat([13.405, 52.52]),
+        center: fromLonLat([13.405, 52.52]), // Berlin
         zoom: 12,
       }),
-      controls: defaultControls({
-        zoom: true,
-        attribution: true,
-        rotate: true,
-      }), // ⬅️ das ergänzt
+      controls: defaultControls(),
     });
 
     mapRef.current = map;
 
-    fetchAllJobs()
+    // 🔄 Dynamischer Fetch
+    fetchFunction()
       .then((data) => {
         const format = new GeoJSON();
         const features = format.readFeatures(data, {
@@ -75,10 +74,11 @@ export const useMapSetup = (
 
         vectorSourceRef.current.addFeatures(features);
       })
-      .catch((err) => console.error("❌ Fehler beim Laden der Jobs:", err));
+      .catch((err) => console.error("❌ Fehler beim Laden:", err));
 
     return () => {
       map.setTarget(undefined);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };
