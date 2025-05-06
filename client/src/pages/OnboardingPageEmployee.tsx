@@ -7,12 +7,15 @@ import {
   TextField,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
 import AppHeader from "../components/UI/AppHeaderComponent";
 import LoginDialog from "../components/UI/LoginDialogComponent";
 import RegisterDialog from "../components/UI/RegisterDialogComponent";
 import AddressAutocomplete from "../components/UI/AddressAutocompleteComponent";
+import { useAuth } from "../context/AuthContext";
+import { submitSearchRequest } from "../services/searchRequestApi";
 
 const questions = [
   {
@@ -65,8 +68,10 @@ const OnboardingPageEmployee = () => {
   } | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const current = questions[step];
 
@@ -97,6 +102,25 @@ const OnboardingPageEmployee = () => {
 
   const handleLogin = () => navigate("/login");
   const handleRegister = () => navigate("/register");
+
+  useEffect(() => {
+    const saveAndRedirect = async () => {
+      const allAnswered = questions.every((q) => answers[q.key]);
+      if (user && saved && allAnswered && !hasSubmitted) {
+        try {
+          await submitSearchRequest(answers, user.token);
+          setHasSubmitted(true);
+          navigate("/save-success");
+        } catch (err) {
+          console.error("❌ Fehler beim Speichern des Suchauftrags", err);
+        }
+      }
+    };
+
+    saveAndRedirect();
+  }, [user, saved, answers, hasSubmitted]); // beachte: hasSubmitted hinzugefügt
+
+  console.log("🔁 useEffect triggered", { user, saved, answers });
 
   return (
     <>
@@ -215,7 +239,13 @@ const OnboardingPageEmployee = () => {
               <Button
                 variant="contained"
                 sx={{ mt: 4 }}
-                onClick={() => setSaved(true)}
+                onClick={() => {
+                  if (user) {
+                    setSaved(true); // useEffect erledigt Rest
+                  } else {
+                    setSaved(true); // zeigt Login/Registrierung
+                  }
+                }}
                 disabled={!questions.every((q) => answers[q.key])}
               >
                 Speichern

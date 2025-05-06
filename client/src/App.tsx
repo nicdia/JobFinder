@@ -4,6 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import MapPage from "./pages/MapPage";
 import OnboardingPageEmployee from "./pages/OnboardingPageEmployee";
 import DashboardPage from "./pages/DashboardPage";
+import SaveSuccessPage from "./pages/SaveSuccessPage";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/onboarding" element={<OnboardingPageEmployee />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/save-success" element={<SaveSuccessPage />} />
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
