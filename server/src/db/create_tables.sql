@@ -38,3 +38,16 @@ CREATE TABLE account.user_jobs_within_search_area (
   published_at TIMESTAMP,
   starting_date TIMESTAMP
 );
+
+CREATE TABLE account.user_search_requests (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES account.users(id) ON DELETE CASCADE,
+  job_type TEXT NOT NULL,
+  commute_range TEXT,
+  address_display TEXT,
+  address_lat DOUBLE PRECISION,
+  address_lon DOUBLE PRECISION,
+  house_number TEXT,
+  transport_mode TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);

@@ -15,7 +15,9 @@ export const loginUser = async (email: string, password: string) => {
   localStorage.setItem("token", data.token);
 
   return {
-    email,
+    id: data.id,
+    name: data.name,
+    token: data.token,
   };
 };
 
@@ -33,8 +35,18 @@ export const registerUser = async (
   });
 
   if (!res.ok) {
-    throw new Error("Registrierung fehlgeschlagen");
+    const error = await res.json();
+    throw new Error(error?.error || "Registrierung fehlgeschlagen");
   }
 
-  return res.json();
+  const data = await res.json();
+
+  // Optional: Token auch hier speichern, falls gebraucht
+  localStorage.setItem("token", data.token);
+
+  return {
+    id: data.id,
+    name: data.name,
+    token: data.token,
+  };
 };

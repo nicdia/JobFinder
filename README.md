@@ -42,6 +42,11 @@ Backend
 
 Frontend
 Draw Mode Point --> Cursor bleibt kleben am Punkt, das muss behoben werden
+Inspo von Uber Eats holen
 
 Doku/UML Modell:
 Mermaid angucken--> in Git Markdown
+
+neue Funktionen:
+Ratingsystem vom Arbeitgeber
+Suche nach Bezirk? -> Polygonlayer

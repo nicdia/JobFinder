@@ -5,12 +5,13 @@ import pool from "../utils/db";
 let token: string;
 let userId: number;
 let testEmail: string;
-const testPassword = "test123";
+const testPassword = "aa";
 
 describe("🚀 API Endpoints", () => {
   beforeAll(() => {
     const timestamp = Date.now();
-    testEmail = `testuser_${timestamp}@example.com`;
+    // testEmail = `testuser_${timestamp}@example.com`;
+    testEmail = `aa`;
   });
 
   it("✅ /register – should register a new user", async () => {

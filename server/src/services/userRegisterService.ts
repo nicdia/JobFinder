@@ -6,7 +6,11 @@ export async function createUser(email: string, password: string) {
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
-  const result = await createUserQuery(email, passwordHash);
+  const user = await createUserQuery(email, passwordHash);
 
-  return result;
+  return {
+    id: user.id,
+    name: "", // oder später: user.name
+    email: user.email,
+  };
 }

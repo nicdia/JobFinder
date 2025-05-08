@@ -12,13 +12,18 @@ export async function registerUser(req: Request, res: Response) {
   }
 
   try {
-    const user = await createUser(email, password);
-    res.status(201).json(user);
+    await createUser(email, password);
+
+    // Direkt einloggen nach erfolgreicher Registrierung:
+    const result = await handleLogin(email, password);
+    res.status(200).json(result); // ← Das ist wichtig!
   } catch (err: any) {
     console.error("❌ Fehler bei der Registrierung:", err);
+
     if (err.code === "23505") {
       return res.status(409).json({ error: "Email bereits registriert." });
     }
+
     res.status(500).json({ error: "Serverfehler" });
   }
 }
@@ -27,8 +32,10 @@ export async function loginUser(req: Request, res: Response) {
   const { email, password } = req.body;
 
   try {
-    const token = await handleLogin(email, password);
-    res.json({ token });
+    const result = await handleLogin(email, password); // ← gib das hier testweise aus
+    console.log("Login result:", result); // 👈
+
+    res.status(200).json(result); // ✅ wichtig: .json(), kein res.sendStatus(...)
   } catch (err: any) {
     console.error("❌ Fehler beim Login:", err);
     if (err.message === "invalid_credentials") {

@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "default_secret_key";
 export async function handleLogin(
   email: string,
   password: string
-): Promise<string> {
+): Promise<{ id: number; name: string; token: string }> {
   const result = await getUserDataByMail(email);
 
   if (result.rowCount === 0) {
@@ -26,5 +26,9 @@ export async function handleLogin(
     expiresIn: "2h",
   });
 
-  return token;
+  return {
+    id: user.id,
+    name: user.name ?? "", // Falls name nicht existiert
+    token,
+  };
 }

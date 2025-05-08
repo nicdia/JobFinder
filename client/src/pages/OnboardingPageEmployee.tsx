@@ -20,18 +20,13 @@ import { submitSearchRequest } from "../services/searchRequestApi";
 const questions = [
   {
     key: "jobType",
-    text: "Willst du Teilzeit oder Vollzeit arbeiten?",
-    options: ["Teilzeit", "Vollzeit"],
-  },
-  {
-    key: "sector",
     text: "In welchem Bereich möchtest du arbeiten?",
-    options: ["IT", "Pflege", "Handwerk", "Gastronomie"],
+    options: ["Software Engineering", "AI/Data", "Projektmanagement"],
   },
   {
     key: "commuteRange",
-    text: "Wie weit darf der Arbeitsweg sein?",
-    options: ["Bis 15 Minuten", "15–30 Minuten", "Mehr als 30 Minuten"],
+    text: "Wie viele Minuten darf dein Arbeitsweg maximal dauern?",
+    options: ["5", "10", "15", "30", "45", "60", "90"],
   },
   {
     key: "address",
@@ -47,11 +42,6 @@ const questions = [
     key: "transport",
     text: "Welches Transportmittel möchtest du nutzen?",
     options: ["Zu Fuß", "Radverkehr", "ÖPNV"],
-  },
-  {
-    key: "maxTime",
-    text: "Wie viele Minuten darf dein Arbeitsweg maximal dauern?",
-    options: ["5", "10", "15", "30", "45"],
   },
 ];
 
@@ -69,9 +59,10 @@ const OnboardingPageEmployee = () => {
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [shouldSaveAfterLogin, setShouldSaveAfterLogin] = useState(false);
 
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setPostLoginRedirect } = useAuth();
 
   const current = questions[step];
 
@@ -99,28 +90,65 @@ const OnboardingPageEmployee = () => {
       setStep((prev) => prev + 1);
     }
   };
-
   const handleLogin = () => navigate("/login");
   const handleRegister = () => navigate("/register");
 
-  useEffect(() => {
-    const saveAndRedirect = async () => {
-      const allAnswered = questions.every((q) => answers[q.key]);
-      if (user && saved && allAnswered && !hasSubmitted) {
-        try {
-          await submitSearchRequest(answers, user.token);
-          setHasSubmitted(true);
-          navigate("/save-success");
-        } catch (err) {
-          console.error("❌ Fehler beim Speichern des Suchauftrags", err);
-        }
+  const saveAndRedirect = async (
+    user: any,
+    answers: any,
+    saved: boolean,
+    hasSubmitted: boolean,
+    setHasSubmitted: (v: boolean) => void,
+    navigate: (path: string) => void
+  ) => {
+    console.log("save and redirect is triggered");
+
+    const allAnswered = questions.every((q) => answers[q.key]);
+    if (user?.id && user?.token && saved && allAnswered && !hasSubmitted) {
+      try {
+        console.log(
+          `this is answers ${answers}, this is token ${user.token} and this is ${user.id} `
+        );
+        await submitSearchRequest(answers, user.token, user.id); // ✅
+        setHasSubmitted(true);
+        navigate("/save-success");
+      } catch (err) {
+        console.error("❌ Fehler beim Speichern des Suchauftrags", err);
       }
-    };
+    }
+  };
 
-    saveAndRedirect();
-  }, [user, saved, answers, hasSubmitted]); // beachte: hasSubmitted hinzugefügt
+  const handleSaveForLoggedInUser = async () => {
+    const allAnswered = questions.every((q) => answers[q.key]);
+    if (!allAnswered || hasSubmitted || !user?.id || !user?.token) return;
 
-  console.log("🔁 useEffect triggered", { user, saved, answers });
+    try {
+      await submitSearchRequest(answers, user.token, user.id);
+      setHasSubmitted(true);
+      navigate("/save-success");
+    } catch (err) {
+      console.error("❌ Fehler beim Speichern des Suchauftrags", err);
+    }
+  };
+
+  const handleSaveForGuestUser = () => {
+    setSaved(true);
+    setShouldSaveAfterLogin(true);
+  };
+
+  useEffect(() => {
+    if (
+      shouldSaveAfterLogin &&
+      user?.id &&
+      user?.token &&
+      questions.every((q) => answers[q.key]) &&
+      !hasSubmitted
+    ) {
+      // Sofort speichern
+      handleSaveForLoggedInUser();
+      setShouldSaveAfterLogin(false); // Nur einmal speichern
+    }
+  }, [user?.id, user?.token, shouldSaveAfterLogin]);
 
   return (
     <>
@@ -240,10 +268,10 @@ const OnboardingPageEmployee = () => {
                 variant="contained"
                 sx={{ mt: 4 }}
                 onClick={() => {
-                  if (user) {
-                    setSaved(true); // useEffect erledigt Rest
+                  if (user?.id && user?.token) {
+                    handleSaveForLoggedInUser();
                   } else {
-                    setSaved(true); // zeigt Login/Registrierung
+                    handleSaveForGuestUser();
                   }
                 }}
                 disabled={!questions.every((q) => answers[q.key])}
@@ -263,7 +291,12 @@ const OnboardingPageEmployee = () => {
               <Stack spacing={2} mt={4} alignItems="center">
                 <Button
                   variant="outlined"
-                  onClick={() => setLoginOpen(true)}
+                  onClick={() => {
+                    setPostLoginRedirect(
+                      "/onboarding-employee?triggerSave=true"
+                    );
+                    setLoginOpen(true);
+                  }}
                   fullWidth
                   sx={{ maxWidth: 300 }}
                 >
@@ -272,7 +305,12 @@ const OnboardingPageEmployee = () => {
                 <Typography color="text.secondary">oder</Typography>
                 <Button
                   variant="contained"
-                  onClick={() => setRegisterOpen(true)}
+                  onClick={() => {
+                    setPostLoginRedirect(
+                      "/onboarding-employee?triggerSave=true"
+                    );
+                    setRegisterOpen(true);
+                  }}
                   fullWidth
                   sx={{ maxWidth: 300 }}
                 >

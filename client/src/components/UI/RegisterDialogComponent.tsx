@@ -19,7 +19,7 @@ const RegisterDialog = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  const { login } = useAuth();
+  const { login, postLoginRedirect, setPostLoginRedirect } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,10 +38,27 @@ const RegisterDialog = ({
     }
 
     try {
-      const userData = await registerUser(name, email, password);
-      login(userData);
+      const res = await registerUser(name, email, password);
+
+      if (!res.id || !res.token) {
+        throw new Error("Ungültige Registrierungsdaten vom Server");
+      }
+
+      login({
+        id: res.id,
+        name: res.name ?? "",
+        token: res.token,
+      });
+
       onClose();
-      navigate("/dashboard");
+
+      if (postLoginRedirect) {
+        const target = postLoginRedirect;
+        setPostLoginRedirect(null);
+        navigate(target);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       alert("Registrierung fehlgeschlagen");
       console.error(err);

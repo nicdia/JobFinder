@@ -19,7 +19,7 @@ const LoginDialog = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  const { login } = useAuth();
+  const { login, postLoginRedirect, setPostLoginRedirect } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,12 +27,24 @@ const LoginDialog = ({
   const handleLogin = async () => {
     try {
       const res = await loginUser(email, password);
+
       login({
+        id: res.id,
         name: res.name ?? "",
-        email: res.email,
+        token: res.token,
       });
+      if (!res.id || !res.token) {
+        throw new Error("Ungültige Login-Daten vom Server");
+      }
       onClose();
-      navigate("/dashboard");
+
+      if (postLoginRedirect) {
+        const target = postLoginRedirect;
+        setPostLoginRedirect(null);
+        navigate(target);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       console.error("Login fehlgeschlagen:", err);
       alert("Login fehlgeschlagen: " + (err.message || "Unbekannter Fehler"));
