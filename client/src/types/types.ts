@@ -10,7 +10,7 @@ export interface MapComponentProps {
   disableFeatureInfo?: boolean;
 }
 
-type DrawType = "Polygon" | "Point" | "LineString" | null;
+export type DrawType = "Polygon" | "Point" | "LineString" | null;
 export interface DrawToolbarProps {
   isDrawMode: boolean;
   setIsDrawMode: Dispatch<SetStateAction<boolean>>;

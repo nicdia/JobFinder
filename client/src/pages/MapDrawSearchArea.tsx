@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import MapComponent from "../components/Map/MapComponent";
 import FeatureCreateDialog from "../components/Map/DrawModeCreateSearchDialogComponent";
 import DrawToolbar from "../components/Map/DrawToolbarComponent";
+import AppHeader from "../components/UI/AppHeaderComponent";
 import { useDraw } from "../hooks/useDraw";
 import { saveSearchArea } from "../services/drawSearchRequestApi";
 
@@ -86,13 +87,13 @@ const DrawAreaPage = () => {
 
   return (
     <Box sx={{ width: "100vw", height: "100vh" }}>
+      <AppHeader />
       <MapComponent
         mapRef={mapRef}
         fetchFunction={() => Promise.resolve([])}
         onFeatureClick={(f) => console.log("Feature", f)}
         disableFeatureInfo={isDrawMode}
       />
-
       <DrawToolbar
         isDrawMode={isDrawMode}
         setIsDrawMode={setIsDrawMode}

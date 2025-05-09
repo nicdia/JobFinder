@@ -47,7 +47,7 @@ export const useMapSetup = (
         tempVectorLayer,
       ],
       view: new View({
-        center: fromLonLat([13.405, 52.52]), // Berlin
+        center: fromLonLat([9.9937, 53.5511]),
         zoom: 12,
       }),
       controls: defaultControls(),
