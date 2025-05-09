@@ -4,12 +4,8 @@ import { fetchOtpApi } from "./geomS_fetchOTPServer";
 import { insertUserIsochrone } from "./geomS_insertIsochrone";
 import { matchJobsToPolygone } from "./geomS_matchJobsToIsochrone";
 import { mergeIsochrones } from "./geomS_mergeIsochrones";
-
-interface ProcessPointsParams {
-  userId: number;
-  coordinates: [number, number][]; // Array von Punkten (Latitude, Longitude)
-  params: any;
-}
+import { toLatLon, CoordArr } from "./geomS_coordUtils";
+import { ProcessPointsParams } from "../types/serverTypes";
 
 export const processPoints = async ({
   userId,
@@ -32,7 +28,8 @@ export const processPoints = async ({
   const isochrones = [];
 
   // Für jeden Punkt wird eine Isochrone berechnet und gespeichert
-  for (const coord of coordinates) {
+  for (const raw of coordinates) {
+    const coord = toLatLon(raw);
     const result = await fetchOtpApi({
       corDict: { userPoints: [{ coord }] },
       url: "http://localhost:8080/otp/routers/current/isochrone",
@@ -78,7 +75,7 @@ export const processPoints = async ({
       label: `${label} (Merged)`,
       cutoff,
       mode,
-      center: coordinates[0], // Optional: Der erste Punkt als Zentrum
+      center: toLatLon(coordinates[0]),
       geojsonPolygon: mergedGeoJSON,
     });
     // Matching der Jobs für die zusammengeführte Isochrone
@@ -87,6 +84,6 @@ export const processPoints = async ({
 
   return {
     message: "Punkte verarbeitet → Isochronen gespeichert und Jobs gematcht",
-    points: coordinates,
+    points: coordinates.map(toLatLon),
   };
 };

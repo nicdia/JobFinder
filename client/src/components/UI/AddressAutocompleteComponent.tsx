@@ -1,17 +1,6 @@
 import { TextField, Autocomplete, CircularProgress } from "@mui/material";
 import { useState, useEffect } from "react";
-
-interface NominatimResult {
-  display_name: string;
-  lat: string;
-  lon: string;
-}
-
-interface Props {
-  value: string;
-  setValue: (val: string) => void;
-  onSelectLocation: (coords: { lat: number; lon: number }) => void;
-}
+import { NominatimResult, Props } from "../../types/types";
 
 const AddressAutocomplete = ({ value, setValue, onSelectLocation }: Props) => {
   const [options, setOptions] = useState<NominatimResult[]>([]);

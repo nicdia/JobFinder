@@ -25,3 +25,15 @@ export interface FeatureCreateDialogProps {
   onClose: () => void;
   onSave: (data: Record<string, string>) => void;
 }
+
+export interface NominatimResult {
+  display_name: string;
+  lon: string;
+  lat: string;
+}
+
+export interface Props {
+  value: string;
+  setValue: (val: string) => void;
+  onSelectLocation: (coords: { lon: number; lat: number }) => void;
+}

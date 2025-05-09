@@ -53,8 +53,8 @@ const OnboardingPageEmployee = () => {
   const [saved, setSaved] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [addressCoords, setAddressCoords] = useState<{
-    lat: number;
     lon: number;
+    lat: number;
   } | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -71,6 +71,9 @@ const OnboardingPageEmployee = () => {
       setAnswers((prev) => ({ ...prev, [current.key]: textInput }));
       setTextInput("");
     } else if (current.options === "address") {
+      console.log(
+        `this is address coords: ${addressCoords?.lon} and ${addressCoords?.lat}`
+      );
       setAnswers((prev) => ({
         ...prev,
         [current.key]: {
@@ -88,31 +91,6 @@ const OnboardingPageEmployee = () => {
       setStep(questions.length);
     } else {
       setStep((prev) => prev + 1);
-    }
-  };
-
-  const saveAndRedirect = async (
-    user: any,
-    answers: any,
-    saved: boolean,
-    hasSubmitted: boolean,
-    setHasSubmitted: (v: boolean) => void,
-    navigate: (path: string) => void
-  ) => {
-    console.log("save and redirect is triggered");
-
-    const allAnswered = questions.every((q) => answers[q.key]);
-    if (user?.id && user?.token && saved && allAnswered && !hasSubmitted) {
-      try {
-        console.log(
-          `this is answers ${answers}, this is token ${user.token} and this is ${user.id} `
-        );
-        await submitSearchRequest(answers, user.token, user.id); // ✅
-        setHasSubmitted(true);
-        navigate("/save-success");
-      } catch (err) {
-        console.error("❌ Fehler beim Speichern des Suchauftrags", err);
-      }
     }
   };
 

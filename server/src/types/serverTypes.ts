@@ -26,3 +26,9 @@ export interface ImportIsochroneParams {
 export interface AuthRequest extends Request {
   user?: { id: number };
 }
+
+export interface ProcessPointsParams {
+  userId: number;
+  coordinates: [number, number][]; // Array von Punkten (Latitude, Longitude)
+  params: any;
+}

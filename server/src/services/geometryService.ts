@@ -24,7 +24,7 @@ export async function processUserGeometry(
 
   // Verarbeitung des Points
   if (geometry.type === "Point") {
-    const [lon, lat] = geometry.coordinates;
+    const [lat, lon] = geometry.coordinates;
     return processPoints({
       userId,
       coordinates: [[lon, lat]], // Einfacher Fall: Ein Punkt
