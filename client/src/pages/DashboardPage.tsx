@@ -38,9 +38,8 @@ const DashboardPage = () => {
           <Typography color="text.secondary" sx={{ mb: 4 }}>
             Hier ist deine Jobsuche im Überblick.
           </Typography>
-
-          <Divider sx={{ my: 2 }} />
         </Container>
+        <Divider sx={{ my: 2 }} />
         <DashboardSection
           icon={
             <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />
@@ -72,10 +71,18 @@ const DashboardPage = () => {
         <Divider sx={{ my: 2 }} />
         <DashboardSection
           icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Neuen Suchauftrag erstellen"
-          description="Erstelle hier einen neuen Suchauftrag."
+          title="Jobs per Adresse suchen"
+          description="Erstelle hier einen neuen Suchauftrag basierend auf den Erreichbarkeitsverhältnissen deiner Adresse."
           buttonLabel="Erstellen"
-          onClick={() => console.log("Gespeicherte Jobs")}
+          onClick={() => navigate("/onboarding")}
+        />
+        <Divider sx={{ my: 2 }} />
+        <DashboardSection
+          icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+          title="Suchgebiet/-Ort einzeichnen"
+          description="Zeichne hier ein, in welchem Bereich du Jobs angezeigt bekommen möchtest."
+          buttonLabel="Zeichnen"
+          onClick={() => navigate("/draw-search")}
         />
         <Divider sx={{ my: 2 }} />
         <DashboardSection

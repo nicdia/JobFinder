@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Box } from "@mui/material";
 import LandingPage from "./pages/LandingPage";
-import MapPage from "./pages/MapPage";
+import MapPage from "./pages/MapShowFoundJobs";
 import OnboardingPageEmployee from "./pages/OnboardingPageEmployee";
 import DashboardPage from "./pages/DashboardPage";
 import SaveSuccessPage from "./pages/SaveSuccessPage";
+import DrawAreaPage from "./pages/MapDrawSearchArea";
 
 function App() {
   return (
@@ -15,6 +16,8 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/save-success" element={<SaveSuccessPage />} />
+        <Route path="/draw-search" element={<DrawAreaPage />} />
+
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

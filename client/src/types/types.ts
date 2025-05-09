@@ -1,11 +1,21 @@
-export interface DrawToolbarProps {
-  drawType: string | null;
-  setDrawType: (type: string | null) => void;
+import { Feature } from "ol";
+import { Geometry } from "ol/geom";
+import { Map } from "ol";
+import { Dispatch, SetStateAction } from "react";
+
+export interface MapComponentProps {
+  fetchFunction: () => Promise<any>;
+  onFeatureClick?: (feature: Feature<Geometry>) => void;
+  mapRef?: React.RefObject<Map | null>; // <— NEU!
+  disableFeatureInfo?: boolean;
 }
 
+type DrawType = "Polygon" | "Point" | "LineString" | null;
 export interface DrawToolbarProps {
-  drawType: string | null;
-  setDrawType: (type: string | null) => void;
+  isDrawMode: boolean;
+  setIsDrawMode: Dispatch<SetStateAction<boolean>>;
+  drawType: DrawType;
+  setDrawType: Dispatch<SetStateAction<DrawType>>;
   onAbortDraw: () => void;
   onSubmitDraw: () => void;
 }

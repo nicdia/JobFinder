@@ -1,5 +1,17 @@
 import { ToggleButton, ToggleButtonGroup, Button, Stack } from "@mui/material";
 import { EditLocationAlt, ShowChart, CropSquare } from "@mui/icons-material";
+import { Dispatch, SetStateAction } from "react";
+
+type DrawType = "Polygon" | "Point" | "LineString" | null;
+
+interface DrawToolbarProps {
+  isDrawMode: boolean;
+  setIsDrawMode: Dispatch<SetStateAction<boolean>>;
+  drawType: DrawType;
+  setDrawType: Dispatch<SetStateAction<DrawType>>;
+  onAbortDraw: () => void;
+  onSubmitDraw: () => void;
+}
 
 const DrawToolbar = ({
   isDrawMode,
@@ -8,19 +20,42 @@ const DrawToolbar = ({
   setDrawType,
   onAbortDraw,
   onSubmitDraw,
-}: {
-  isDrawMode: boolean;
-  setIsDrawMode: (mode: boolean) => void;
-  drawType: string | null;
-  setDrawType: (type: string | null) => void;
-  onAbortDraw: () => void;
-  onSubmitDraw: () => void;
-}) => {
-  const handleChange = (_: any, newType: string | null) => {
+}: DrawToolbarProps) => {
+  const handleChange = (_: any, newType: DrawType) => {
     setDrawType(newType);
   };
 
-  if (!isDrawMode) return null; // 👈 verhindert das Rendern des weißen Kästchens
+  if (!isDrawMode) {
+    return (
+      <Stack
+        direction="column"
+        spacing={1}
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          backgroundColor: "white",
+          p: 1,
+          zIndex: 1000,
+          borderRadius: 1,
+        }}
+      >
+        <Button
+          variant={isDrawMode ? "outlined" : "contained"}
+          color={isDrawMode ? "secondary" : "primary"}
+          onClick={() => {
+            if (isDrawMode) {
+              onAbortDraw();
+            } else {
+              setIsDrawMode(true);
+            }
+          }}
+        >
+          {isDrawMode ? "Zeichnen abbrechen" : "Zeichnen starten"}
+        </Button>
+      </Stack>
+    );
+  }
 
   return (
     <Stack

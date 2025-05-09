@@ -1,30 +1,38 @@
-import { useEffect } from "react";
+// useFeatureClickHandler.ts
+import { useEffect, useRef } from "react";
 import { Map } from "ol";
+import { Select } from "ol/interaction";
 
 export const useFeatureClickHandler = (
   mapRef: React.RefObject<Map | null>,
-  drawType: string | null,
-  setSelectedFeature: (feature: any | null) => void
+  layerFilter: any,
+  onClick: (f: any) => void,
+  disabled = false // ⬅️ neu
 ) => {
+  const selectRef = useRef<Select | null>(null);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const handleMapClick = (event: any) => {
-      const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f);
-      if (feature) {
-        setSelectedFeature(feature.getProperties());
-      } else {
-        setSelectedFeature(null);
-      }
-    };
-
-    if (drawType === null) {
-      map.on("click", handleMapClick);
+    // Interaktion einmalig anlegen
+    if (!selectRef.current) {
+      selectRef.current = new Select({ layers: layerFilter });
+      selectRef.current.on("select", (evt) => {
+        if (evt.selected[0]) onClick(evt.selected[0]);
+      });
+      map.addInteraction(selectRef.current);
     }
 
+    // 👉 je nach disabled ein‑/ausschalten
+    selectRef.current.setActive(!disabled);
+
     return () => {
-      map.un("click", handleMapClick);
+      // Clean‑Up bei Unmount
+      if (selectRef.current) {
+        map.removeInteraction(selectRef.current);
+        selectRef.current = null;
+      }
     };
-  }, [drawType]);
+  }, [mapRef, layerFilter, onClick, disabled]);
 };
