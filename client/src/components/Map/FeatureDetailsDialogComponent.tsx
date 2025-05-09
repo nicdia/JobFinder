@@ -15,8 +15,10 @@ interface FeatureDialogProps {
 const FeatureDialog = ({ feature, onClose }: FeatureDialogProps) => {
   if (!feature) return null;
 
+  const props = feature.properties ?? feature; // GeoJSON oder flach
+
   return (
-    <Dialog open={!!feature} onClose={onClose}>
+    <Dialog open onClose={onClose}>
       <DialogTitle
         sx={{
           display: "flex",
@@ -24,18 +26,29 @@ const FeatureDialog = ({ feature, onClose }: FeatureDialogProps) => {
           alignItems: "center",
         }}
       >
-        {feature.title || "Kein Titel"}
+        {props.title || "Kein Titel"}
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         <Typography variant="subtitle1" gutterBottom>
-          {feature.company || "Keine Firma"}
+          {props.company || "Keine Firma"}
         </Typography>
         <Typography variant="body2">
-          {feature.description || "Keine Beschreibung"}
+          {props.description || "Keine Beschreibung"}
         </Typography>
+        {props.external_url && (
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            <a
+              href={props.external_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Zur Stellenanzeige
+            </a>
+          </Typography>
+        )}
       </DialogContent>
     </Dialog>
   );

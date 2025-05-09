@@ -128,14 +128,7 @@ const OnboardingPageEmployee = () => {
 
   return (
     <>
-      <AppHeader
-        setDrawType={() => {}}
-        setIsDrawMode={() => {}}
-        searchOpen={false}
-        setSearchOpen={() => {}}
-        searchMode={null}
-        setSearchMode={() => {}}
-      />
+      <AppHeader />
 
       <Box sx={{ minHeight: "100vh", backgroundColor: "#fff", py: 8 }}>
         <Stack alignItems="center" spacing={4}>

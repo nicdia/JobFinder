@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Box } from "@mui/material";
 import LandingPage from "./pages/LandingPage";
-import MapPage from "./pages/MapShowFoundJobs";
+import FoundJobMapPage from "./pages/MapShowFoundJobs";
 import OnboardingPageEmployee from "./pages/OnboardingPageEmployee";
 import DashboardPage from "./pages/DashboardPage";
 import SaveSuccessPage from "./pages/SaveSuccessPage";
@@ -14,7 +14,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/onboarding" element={<OnboardingPageEmployee />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/map" element={<MapPage />} />
+        <Route path="/found-jobs" element={<FoundJobMapPage />} />
         <Route path="/save-success" element={<SaveSuccessPage />} />
         <Route path="/draw-search" element={<DrawAreaPage />} />
 

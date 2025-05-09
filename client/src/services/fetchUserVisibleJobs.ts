@@ -1,19 +1,37 @@
-export const fetchUserVisibleJobs = async () => {
-  const token = localStorage.getItem("token");
-  const userStr = localStorage.getItem("user");
+// src/services/fetchUserVisibleJobs.ts
+export const fetchUserVisibleJobs = async (user?: {
+  id?: number;
+  token?: string;
+}) => {
+  const id = user?.id ?? JSON.parse(localStorage.getItem("user") || "null")?.id;
+  const token = user?.token ?? localStorage.getItem("token");
 
-  if (!token || !userStr) throw new Error("Nicht eingeloggt");
+  console.log("[fetchUserVisibleJobs] id:", id, "token:", token?.slice(0, 8));
 
-  const user = JSON.parse(userStr);
-  const res = await fetch(
-    `http://localhost:3001/api/userVisibleJobs/${user.id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+  if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
+
+  const url = `http://localhost:3001/api/userVisibleJobs/${id}`;
+  console.log("[fetchUserVisibleJobs] GET", url);
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  console.log(
+    "[fetchUserVisibleJobs] Response status:",
+    res.status,
+    res.ok ? "OK" : "FAIL"
   );
 
-  if (!res.ok) throw new Error("Fehler beim Laden der sichtbaren Jobs");
-  return await res.json();
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("[fetchUserVisibleJobs] Error‑body:", errorText);
+    throw new Error(
+      `Fehler beim Laden der sichtbaren Jobs (${res.status}): ${errorText}`
+    );
+  }
+
+  const data = await res.json();
+  console.log("[fetchUserVisibleJobs] Loaded jobs:", data);
+  return data; // GeoJSON FeatureCollection
 };

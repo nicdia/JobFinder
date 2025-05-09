@@ -15,14 +15,7 @@ const DashboardPage = () => {
 
   return (
     <>
-      <AppHeader
-        setDrawType={() => {}}
-        setIsDrawMode={() => {}}
-        searchOpen={false}
-        setSearchOpen={() => {}}
-        searchMode={null}
-        setSearchMode={() => {}}
-      />
+      <AppHeader />
       <Box
         sx={{
           py: 4,
@@ -47,7 +40,7 @@ const DashboardPage = () => {
           title="Meine neusten Jobempfehlungen"
           description="Basierend auf deinem Suchverlauf erstellen wir Empfehlungen. Suche nach Jobs, um personalisierte Vorschläge zu erhalten."
           buttonLabel="Anzeigen"
-          onClick={() => navigate("/map?mode=customVisible")}
+          onClick={() => navigate("/found-jobs?mode=customVisible")}
         />
 
         <Divider sx={{ my: 2 }} />

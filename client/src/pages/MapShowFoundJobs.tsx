@@ -1,60 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
+
 import AppHeader from "../components/UI/AppHeaderComponent";
 import MapComponent from "../components/Map/MapComponent";
+import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
 import { fetchAllJobs } from "../services/allJobsApi";
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
 import { useAuth } from "../context/AuthContext";
 
 const MapPage = () => {
   const { user } = useAuth();
-  const [isDrawMode, setIsDrawMode] = useState(false);
-  const [drawType, setDrawType] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchMode, setSearchMode] = useState<
-    "accessibility" | "customArea" | null
-  >(null);
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode");
-  const fetchFunction = () => {
-    if (mode === "customVisible") {
-      return fetchUserVisibleJobs();
-    }
-    return fetchAllJobs(); // fallback: alle Jobs
-  };
+
+  /* --- 🆕 Feature‑Auswahl ------------------- */
+  const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
+  const handleFeatureClick = useCallback((feature: any) => {
+    setSelectedFeature(feature);
+  }, []);
+  const handleDialogClose = () => setSelectedFeature(null);
+  /* ----------------------------------------- */
+
+  useEffect(() => {
+    console.log("[MapPage] route mode:", mode);
+    console.log("[MapPage] current user:", user);
+  }, [mode, user]);
+
+  if (mode === "customVisible" && !user?.id) {
+    console.log("[MapPage] warte auf Benutzer‑Infos …");
+    return (
+      <Box
+        sx={{
+          width: "100vw",
+          height: "100vh",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const fetchFunction = () =>
+    mode === "customVisible" ? fetchUserVisibleJobs(user!) : fetchAllJobs();
 
   return (
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {!isDrawMode && (
-        <AppHeader
-          setDrawType={setDrawType}
-          setIsDrawMode={setIsDrawMode}
-          searchOpen={searchOpen}
-          setSearchOpen={setSearchOpen}
-          searchMode={searchMode}
-          setSearchMode={setSearchMode}
-        />
-      )}
-
-      <Box sx={{ flex: 1 }}>
-        <MapComponent
-          drawType={drawType}
-          setDrawType={setDrawType}
-          isDrawMode={isDrawMode}
-          setIsDrawMode={setIsDrawMode}
-          setSearchOpen={setSearchOpen}
-          setSearchMode={setSearchMode}
-          fetchFunction={fetchFunction}
-        />
-      </Box>
+    <Box sx={{ width: "100vw", height: "100vh" }}>
+      <AppHeader />
+      <MapComponent
+        key={mode + (user?.id ?? "anon")}
+        fetchFunction={fetchFunction}
+        onFeatureClick={handleFeatureClick} /* 🆕 */
+      />
+      <FeatureDialog /* 🆕 */
+        feature={selectedFeature}
+        onClose={handleDialogClose}
+      />
     </Box>
   );
 };

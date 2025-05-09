@@ -8,15 +8,7 @@ const LandingPage = () => {
 
   return (
     <>
-      <AppHeader
-        // Dummy-Funktionen, weil auf der Landing Page kein Map-Context notwendig ist
-        setDrawType={() => {}}
-        setIsDrawMode={() => {}}
-        searchOpen={false}
-        setSearchOpen={() => {}}
-        searchMode={null}
-        setSearchMode={() => {}}
-      />
+      <AppHeader />
       <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5", py: 8 }}>
         <Container maxWidth="md">
           <Stack spacing={4} alignItems="center" textAlign="center">
