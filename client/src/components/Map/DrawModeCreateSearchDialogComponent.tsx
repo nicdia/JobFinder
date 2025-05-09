@@ -10,12 +10,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-
-interface FeatureCreateDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSave: (data: Record<string, string>) => void;
-}
+import { FeatureCreateDialogProps } from "../../types/types";
 
 export default function FeatureCreateDialog({
   open,

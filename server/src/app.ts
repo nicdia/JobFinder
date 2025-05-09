@@ -6,7 +6,7 @@ import accessibleJobs from "./routes/userVisibleJobs.route";
 import register from "./routes/userAuth.route";
 import login from "./routes/userAuth.route";
 import userRoutes from "./routes/userManagement.route";
-import getUserGeometry from "./routes/userInputGeometry.route";
+import userDrawRequestRoute from "./routes/userInputGeometry.route";
 import userSearchRequestRoute from "./routes/userInputSearchRequest.route";
 
 dotenv.config();
@@ -20,7 +20,7 @@ app.use("/api/auth", login);
 app.use("/api/users", userRoutes);
 app.use("/api", jobRoutes);
 app.use("/api", accessibleJobs);
-app.use("/api", getUserGeometry);
+app.use("/api", userDrawRequestRoute);
 app.use("/api", userSearchRequestRoute);
 
 app.listen(PORT, () => {

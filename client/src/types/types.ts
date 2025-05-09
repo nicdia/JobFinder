@@ -19,3 +19,9 @@ export interface DrawToolbarProps {
   onAbortDraw: () => void;
   onSubmitDraw: () => void;
 }
+
+export interface FeatureCreateDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: Record<string, string>) => void;
+}

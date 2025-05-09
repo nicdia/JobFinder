@@ -7,7 +7,7 @@ const router = Router();
 /**
  * POST /api/userInputGeometry/:userId
  * Erwartet GeoJSON-Objekt vom Typ: Polygon, Point oder LineString
- * Optional: zusätzliche Parameter wie cutoff, mode, speed, date, time
+ *  zusätzliche Parameter wie cutoff, mode, speed, date, time
  */
 router.post(
   "/userInputGeometry/:userId",

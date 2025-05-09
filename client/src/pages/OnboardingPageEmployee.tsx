@@ -15,7 +15,7 @@ import LoginDialog from "../components/UI/LoginDialogComponent";
 import RegisterDialog from "../components/UI/RegisterDialogComponent";
 import AddressAutocomplete from "../components/UI/AddressAutocompleteComponent";
 import { useAuth } from "../context/AuthContext";
-import { submitSearchRequest } from "../services/searchRequestApi";
+import { submitSearchRequest } from "../services/addressSearchRequestApi";
 
 const questions = [
   {
