@@ -8,7 +8,7 @@ export async function insertUserSearchRequest(userId: number, data: any) {
     INSERT INTO account.user_search_requests (
       user_id,
       job_type,
-      commute_range,
+      speed,
       address_display,
       address_lat,
       address_lon,
@@ -22,7 +22,7 @@ export async function insertUserSearchRequest(userId: number, data: any) {
   const values = [
     userId,
     data.jobType,
-    data.commuteRange,
+    data.speed,
     data.address?.display,
     data.address?.coords?.lat,
     data.address?.coords?.lon,

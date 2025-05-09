@@ -26,7 +26,7 @@ export async function getLatestPolygonIdByUser(
     `
     SELECT id
     FROM account.user_search_areas
-    WHERE user_id = $1 AND type = 'direct'
+    WHERE user_id = $1
     ORDER BY created_at DESC
     LIMIT 1;
     `,

@@ -24,11 +24,6 @@ const questions = [
     options: ["Software Engineering", "AI/Data", "Projektmanagement"],
   },
   {
-    key: "commuteRange",
-    text: "Wie viele Minuten darf dein Arbeitsweg maximal dauern?",
-    options: ["5", "10", "15", "30", "45", "60", "90"],
-  },
-  {
     key: "address",
     text: "Wie lautet deine Startadresse?",
     options: "address",
@@ -42,6 +37,11 @@ const questions = [
     key: "transport",
     text: "Welches Transportmittel möchtest du nutzen?",
     options: ["Zu Fuß", "Radverkehr", "ÖPNV"],
+  },
+  {
+    key: "speed",
+    text: "Wie hoch ist deine Geschwindigkeit mit deinem ausgewählten Transportmittel?",
+    options: "text",
   },
 ];
 
@@ -90,8 +90,6 @@ const OnboardingPageEmployee = () => {
       setStep((prev) => prev + 1);
     }
   };
-  const handleLogin = () => navigate("/login");
-  const handleRegister = () => navigate("/register");
 
   const saveAndRedirect = async (
     user: any,
