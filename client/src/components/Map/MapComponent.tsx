@@ -1,88 +1,119 @@
-import { MutableRefObject, useRef, useState } from "react";
+import {
+  forwardRef,
+  MutableRefObject,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { Map } from "ol";
 import VectorSource from "ol/source/Vector";
 import { Feature } from "ol";
 import { Geometry } from "ol/geom";
+import View from "ol/View";
+import { fromLonLat } from "ol/proj";
 
 import { useMapSetup } from "../../hooks/useMapSetup";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
 import FeatureDetailsDialog from "./FeatureDetailsDialogComponent";
+import { MapComponentProps as BaseProps } from "../../types/types";
+import GeoJSON from "ol/format/GeoJSON";
+/* ---------- public handle (zoomTo) ------------------------------- */
+export interface MapHandle {
+  zoomTo: (coord: [number, number], zoom?: number) => void;
+}
 
-import { MapComponentProps as BaseMapComponentProps } from "../../types/types";
-
-/* ------------------------------------------------------------------ */
-/* 🔧 Prop‑Typen ----------------------------------------------------- */
-type Props = BaseMapComponentProps & {
-  /** Wird ausgelöst, wenn der User einen Marker / ein Feature anklickt */
+/* ---------- props ------------------------------------------------ */
+type Props = BaseProps & {
   onFeatureClick?: (feature: any) => void;
-  /** Deaktiviert das Standard‑Popup der Map, falls true               */
   disableFeatureInfo?: boolean;
-  /** Optional externer Map‑Ref – falls du die OL‑Instanz außerhalb brauchst */
   mapRef?: MutableRefObject<Map | null>;
 };
-/* ------------------------------------------------------------------ */
 
-const MapComponent = ({
-  fetchFunction,
-  onFeatureClick,
-  mapRef,
-  disableFeatureInfo = false,
-}: Props) => {
-  /* ---------- Refs ------------------------------------------------ */
-  const mapElementRef = useRef<HTMLDivElement | null>(null);
+const MapComponent = forwardRef<MapHandle, Props>(
+  (
+    { fetchFunction, onFeatureClick, mapRef, disableFeatureInfo = false },
+    ref
+  ) => {
+    /* refs -------------------------------------------------------- */
+    const mapDivRef = useRef<HTMLDivElement | null>(null);
+    const internalMapRef = useRef<Map | null>(null);
+    const usedMapRef = mapRef || internalMapRef;
 
-  // internes Fallback‑Ref für die OL‑Map, falls kein externes übergeben wird
-  const internalMapRef = useRef<Map | null>(null);
-  const usedMapRef = mapRef || internalMapRef;
+    const vectorSrcRef = useRef(new VectorSource());
+    const tempSrcRef = useRef(new VectorSource());
 
-  const vectorSourceRef = useRef(new VectorSource());
-  const tempVectorSourceRef = useRef(new VectorSource());
+    /* selected feature dialog ------------------------------------ */
+    const [selectedFeature, setSelectedFeature] =
+      useState<Feature<Geometry> | null>(null);
 
-  /* ---------- State ---------------------------------------------- */
-  const [selectedFeature, setSelectedFeature] =
-    useState<Feature<Geometry> | null>(null);
+    /* map setup --------------------------------------------------- */
+    useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef, fetchFunction);
+    useEffect(() => {
+      let cancelled = false;
 
-  /* ---------- Map‑Setup & Daten‑Fetch ----------------------------- */
-  useMapSetup(
-    usedMapRef,
-    mapElementRef,
-    vectorSourceRef,
-    tempVectorSourceRef,
-    fetchFunction
-  );
+      async function loadNew() {
+        const data = await fetchFunction(); // FeatureCollection
+        if (cancelled) return;
 
-  /* ---------- Klick‑Handler -------------------------------------- */
-  useFeatureClickHandler(
-    usedMapRef,
-    null, // kein eigenes Overlay
-    (feature: Feature<Geometry>) => {
-      setSelectedFeature(feature); // Dialog öffnen
-      // Roh‑Properties (GeoJSON‑artig) nach außen weiterreichen
-      onFeatureClick?.(
-        feature.getProperties ? feature.getProperties() : feature
-      );
-    },
-    disableFeatureInfo
-  );
+        const features = new GeoJSON().readFeatures(data, {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857",
+        });
 
-  /* ---------- Render --------------------------------------------- */
-  return (
-    <>
-      <div ref={mapElementRef} style={{ width: "100%", height: "100%" }} />
+        vectorSrcRef.current.clear();
+        vectorSrcRef.current.addFeatures(features);
+      }
 
-      <FeatureDetailsDialog
-        feature={
-          selectedFeature?.getProperties
-            ? {
-                ...selectedFeature.getProperties(),
-                geometry: selectedFeature.getGeometry(),
-              }
-            : (selectedFeature as any)
-        }
-        onClose={() => setSelectedFeature(null)}
-      />
-    </>
-  );
-};
+      loadNew();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [fetchFunction]);
+    /* click handler ---------------------------------------------- */
+    useFeatureClickHandler(
+      usedMapRef,
+      null,
+      (f) => {
+        setSelectedFeature(f);
+        onFeatureClick?.(f.getProperties ? f.getProperties() : f);
+      },
+      disableFeatureInfo
+    );
+
+    /* expose zoomTo ---------------------------------------------- */
+    useImperativeHandle(ref, () => ({
+      zoomTo(coord: [number, number], zoom = 14) {
+        const map = usedMapRef.current;
+        if (!map) return;
+        const view: View = map.getView();
+        view.animate({
+          center: fromLonLat(coord),
+          zoom,
+          duration: 400,
+        });
+      },
+    }));
+
+    /* render ------------------------------------------------------ */
+    return (
+      <>
+        <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+        <FeatureDetailsDialog
+          feature={
+            selectedFeature?.getProperties
+              ? {
+                  ...selectedFeature.getProperties(),
+                  geometry: selectedFeature.getGeometry(),
+                }
+              : (selectedFeature as any)
+          }
+          onClose={() => setSelectedFeature(null)}
+        />
+      </>
+    );
+  }
+);
 
 export default MapComponent;
