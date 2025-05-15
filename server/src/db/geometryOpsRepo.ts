@@ -74,6 +74,7 @@ export async function insertUserMatchedJobs(
     `
     INSERT INTO account.user_jobs_within_search_area (
       user_id,
+      search_area_id,                -- ⬅️ Hier ergänzen
       source,
       external_id,
       title,
@@ -89,6 +90,7 @@ export async function insertUserMatchedJobs(
     )
     SELECT
       $1 AS user_id,
+      $2 AS search_area_id,         -- ⬅️ Hier ebenfalls
       j.source,
       j.external_id,
       j.title,

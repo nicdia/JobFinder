@@ -17,14 +17,15 @@ CREATE TABLE account.user_search_areas (
   mode TEXT,                           -- WALK / BIKE / etc.
   created_at TIMESTAMP DEFAULT now()
 );
+
 CREATE INDEX idx_user_isochrones_geom
   ON account.user_search_areas
   USING GIST(geom);
 
-
 CREATE TABLE account.user_jobs_within_search_area (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
+  search_area_id INTEGER REFERENCES account.user_search_areas(id) ON DELETE CASCADE,
   source TEXT,
   external_id TEXT,
   title TEXT,
@@ -38,6 +39,9 @@ CREATE TABLE account.user_jobs_within_search_area (
   published_at TIMESTAMP,
   starting_date TIMESTAMP
 );
+
+CREATE INDEX idx_user_jobs_search_area
+  ON account.user_jobs_within_search_area (search_area_id);
 
 CREATE TABLE account.user_search_requests (
   id SERIAL PRIMARY KEY,
