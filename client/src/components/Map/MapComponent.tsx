@@ -3,27 +3,22 @@ import {
   MutableRefObject,
   useImperativeHandle,
   useRef,
-  useState,
   useEffect,
 } from "react";
 import { Map } from "ol";
 import VectorSource from "ol/source/Vector";
-import { Feature } from "ol";
-import { Geometry } from "ol/geom";
 import View from "ol/View";
 import { fromLonLat } from "ol/proj";
+import GeoJSON from "ol/format/GeoJSON";
 
 import { useMapSetup } from "../../hooks/useMapSetup";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
-import FeatureDetailsDialog from "./FeatureDetailsDialogComponent";
 import { MapComponentProps as BaseProps } from "../../types/types";
-import GeoJSON from "ol/format/GeoJSON";
-/* ---------- public handle (zoomTo) ------------------------------- */
+
 export interface MapHandle {
   zoomTo: (coord: [number, number], zoom?: number) => void;
 }
 
-/* ---------- props ------------------------------------------------ */
 type Props = BaseProps & {
   onFeatureClick?: (feature: any) => void;
   disableFeatureInfo?: boolean;
@@ -35,7 +30,7 @@ const MapComponent = forwardRef<MapHandle, Props>(
     { fetchFunction, onFeatureClick, mapRef, disableFeatureInfo = false },
     ref
   ) => {
-    /* refs -------------------------------------------------------- */
+    /* Refs -------------------------------------------------------- */
     const mapDivRef = useRef<HTMLDivElement | null>(null);
     const internalMapRef = useRef<Map | null>(null);
     const usedMapRef = mapRef || internalMapRef;
@@ -43,16 +38,13 @@ const MapComponent = forwardRef<MapHandle, Props>(
     const vectorSrcRef = useRef(new VectorSource());
     const tempSrcRef = useRef(new VectorSource());
 
-    /* selected feature dialog ------------------------------------ */
-    const [selectedFeature, setSelectedFeature] =
-      useState<Feature<Geometry> | null>(null);
-
-    /* map setup --------------------------------------------------- */
+    /* Map-Setup --------------------------------------------------- */
     useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef, fetchFunction);
+
+    /* Re-load GeoJSON on fetchFunction change -------------------- */
     useEffect(() => {
       let cancelled = false;
-
-      async function loadNew() {
+      (async () => {
         const data = await fetchFunction(); // FeatureCollection
         if (cancelled) return;
 
@@ -60,34 +52,28 @@ const MapComponent = forwardRef<MapHandle, Props>(
           dataProjection: "EPSG:4326",
           featureProjection: "EPSG:3857",
         });
-
         vectorSrcRef.current.clear();
         vectorSrcRef.current.addFeatures(features);
-      }
-
-      loadNew();
+      })();
 
       return () => {
         cancelled = true;
       };
     }, [fetchFunction]);
-    /* click handler ---------------------------------------------- */
+
+    /* Klick-Handler → nur nach außen weiterreichen --------------- */
     useFeatureClickHandler(
       usedMapRef,
       null,
-      (f) => {
-        setSelectedFeature(f);
-        onFeatureClick?.(f.getProperties ? f.getProperties() : f);
-      },
+      (f) => onFeatureClick?.(f.getProperties ? f.getProperties() : f),
       disableFeatureInfo
     );
 
     /* expose zoomTo ---------------------------------------------- */
     useImperativeHandle(ref, () => ({
       zoomTo(coord: [number, number], zoom = 14) {
-        const map = usedMapRef.current;
-        if (!map) return;
-        const view: View = map.getView();
+        const view: View | undefined = usedMapRef.current?.getView();
+        if (!view) return;
         view.animate({
           center: fromLonLat(coord),
           zoom,
@@ -96,23 +82,8 @@ const MapComponent = forwardRef<MapHandle, Props>(
       },
     }));
 
-    /* render ------------------------------------------------------ */
-    return (
-      <>
-        <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
-        <FeatureDetailsDialog
-          feature={
-            selectedFeature?.getProperties
-              ? {
-                  ...selectedFeature.getProperties(),
-                  geometry: selectedFeature.getGeometry(),
-                }
-              : (selectedFeature as any)
-          }
-          onClose={() => setSelectedFeature(null)}
-        />
-      </>
-    );
+    /* Render ------------------------------------------------------ */
+    return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
   }
 );
 
