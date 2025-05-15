@@ -1,3 +1,4 @@
+// src/hooks/useMapSetup.ts
 import { useEffect } from "react";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -8,18 +9,16 @@ import VectorSource from "ol/source/Vector";
 import LayerGroup from "ol/layer/Group";
 import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
-import GeoJSON from "ol/format/GeoJSON";
 import { defaults as defaultControls } from "ol/control";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
   mapElementRef: React.RefObject<HTMLDivElement | null>,
   vectorSourceRef: React.RefObject<VectorSource>,
-  tempVectorSourceRef: React.RefObject<VectorSource>,
-  fetchFunction: () => Promise<any>
+  tempVectorSourceRef: React.RefObject<VectorSource>
 ) => {
   useEffect(() => {
-    // Base layers
+    // 1) Basemaps
     const osmLayer = new TileLayer({
       source: new OSM(),
       title: "OSM Standard",
@@ -40,7 +39,7 @@ export const useMapSetup = (
       layers: [osmLayer, satelliteLayer],
     });
 
-    // Overlay groups
+    // 2) Overlay-Gruppen
     const jobsLayer = new VectorLayer({
       source: vectorSourceRef.current,
       title: "Jobs",
@@ -75,7 +74,7 @@ export const useMapSetup = (
       layers: [tempJobsLayer],
     });
 
-    // Initialize map without LayerSwitcher
+    // 3) Karte initialisieren (nur einmal!)
     const map = new Map({
       target: mapElementRef.current!,
       layers: [baseGroup, overlayGroupJobs, overlayGroupTemp],
@@ -87,23 +86,9 @@ export const useMapSetup = (
     });
     mapRef.current = map;
 
-    // Load initial GeoJSON
-    fetchFunction()
-      .then((data) => {
-        const format = new GeoJSON();
-        const features = format.readFeatures(data, {
-          featureProjection: "EPSG:3857",
-        });
-        vectorSourceRef.current.addFeatures(features);
-      })
-      .catch((err) => console.error("Fehler beim Laden:", err));
-
-    return () => map.setTarget(undefined);
-  }, [
-    fetchFunction,
-    mapRef,
-    mapElementRef,
-    vectorSourceRef,
-    tempVectorSourceRef,
-  ]);
+    // Cleanup
+    return () => {
+      map.setTarget(undefined);
+    };
+  }, [mapRef, mapElementRef, vectorSourceRef, tempVectorSourceRef]);
 };

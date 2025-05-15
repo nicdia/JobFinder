@@ -23,7 +23,7 @@ type Props = BaseProps & {
   onFeatureClick?: (feature: any) => void;
   disableFeatureInfo?: boolean;
   mapRef?: MutableRefObject<Map | null>;
-  enableLayerSwitcher?: boolean; // neu
+  enableLayerSwitcher?: boolean;
 };
 
 const MapComponent = forwardRef<MapHandle, Props>(
@@ -44,8 +44,8 @@ const MapComponent = forwardRef<MapHandle, Props>(
     const vectorSrcRef = useRef(new VectorSource());
     const tempSrcRef = useRef(new VectorSource());
 
-    // Setup base, overlay layers and view
-    useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef, fetchFunction);
+    // Setup base, overlay layers and view (only once)
+    useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef);
 
     // Conditional LayerSwitcher
     useEffect(() => {
@@ -58,7 +58,7 @@ const MapComponent = forwardRef<MapHandle, Props>(
       return () => {
         if (usedMapRef.current) usedMapRef.current.removeControl(switcher);
       };
-    }, [enableLayerSwitcher, usedMapRef.current]);
+    }, [enableLayerSwitcher]);
 
     // Reload GeoJSON when fetchFunction changes
     useEffect(() => {
