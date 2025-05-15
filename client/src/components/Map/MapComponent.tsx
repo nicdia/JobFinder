@@ -1,4 +1,4 @@
-import {
+import React, {
   forwardRef,
   MutableRefObject,
   useImperativeHandle,
@@ -10,7 +10,7 @@ import VectorSource from "ol/source/Vector";
 import View from "ol/View";
 import { fromLonLat } from "ol/proj";
 import GeoJSON from "ol/format/GeoJSON";
-
+import LayerSwitcherControl from "./LayerSwitcherControl";
 import { useMapSetup } from "../../hooks/useMapSetup";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
 import { MapComponentProps as BaseProps } from "../../types/types";
@@ -30,7 +30,6 @@ const MapComponent = forwardRef<MapHandle, Props>(
     { fetchFunction, onFeatureClick, mapRef, disableFeatureInfo = false },
     ref
   ) => {
-    /* Refs -------------------------------------------------------- */
     const mapDivRef = useRef<HTMLDivElement | null>(null);
     const internalMapRef = useRef<Map | null>(null);
     const usedMapRef = mapRef || internalMapRef;
@@ -38,16 +37,13 @@ const MapComponent = forwardRef<MapHandle, Props>(
     const vectorSrcRef = useRef(new VectorSource());
     const tempSrcRef = useRef(new VectorSource());
 
-    /* Map-Setup --------------------------------------------------- */
     useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef, fetchFunction);
 
-    /* Re-load GeoJSON on fetchFunction change -------------------- */
     useEffect(() => {
       let cancelled = false;
       (async () => {
-        const data = await fetchFunction(); // FeatureCollection
+        const data = await fetchFunction();
         if (cancelled) return;
-
         const features = new GeoJSON().readFeatures(data, {
           dataProjection: "EPSG:4326",
           featureProjection: "EPSG:3857",
@@ -55,13 +51,11 @@ const MapComponent = forwardRef<MapHandle, Props>(
         vectorSrcRef.current.clear();
         vectorSrcRef.current.addFeatures(features);
       })();
-
       return () => {
         cancelled = true;
       };
     }, [fetchFunction]);
 
-    /* Klick-Handler → nur nach außen weiterreichen --------------- */
     useFeatureClickHandler(
       usedMapRef,
       null,
@@ -69,21 +63,22 @@ const MapComponent = forwardRef<MapHandle, Props>(
       disableFeatureInfo
     );
 
-    /* expose zoomTo ---------------------------------------------- */
     useImperativeHandle(ref, () => ({
       zoomTo(coord: [number, number], zoom = 14) {
-        const view: View | undefined = usedMapRef.current?.getView();
+        const view = usedMapRef.current?.getView();
         if (!view) return;
-        view.animate({
-          center: fromLonLat(coord),
-          zoom,
-          duration: 400,
-        });
+        view.animate({ center: fromLonLat(coord), zoom, duration: 400 });
       },
     }));
 
-    /* Render ------------------------------------------------------ */
-    return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
+    return (
+      <>
+        <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+        {usedMapRef.current && (
+          <LayerSwitcherControl map={usedMapRef.current} />
+        )}
+      </>
+    );
   }
 );
 

@@ -1,0 +1,11 @@
+@import "ol-layerswitcher/dist/ol-layerswitcher.css";
+@import "ol/ol.css";
+
+/* ► Position: rechts unten, 84 px über Rand  (16 Margin + 56 FAB + 12 Spalt) */
+.ol-control.ol-layerswitcher {
+  top: auto !important; /* Standard oben links ausschalten   */
+  left: auto !important;
+  right: 16px !important; /* gleicher Rand wie dein Job-FAB     */
+  bottom: 84px !important; /* 56 (FAB) + 12 (Gap) + 16 (Rand)     */
+  border-radius: 4px;
+}

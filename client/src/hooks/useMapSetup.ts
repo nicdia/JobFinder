@@ -1,4 +1,3 @@
-// useMapSetup.ts
 import { useEffect } from "react";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -9,17 +8,31 @@ import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { defaults as defaultControls } from "ol/control";
+// add at top:
+import LayerSwitcher from "ol-layerswitcher";
+import "ol-layerswitcher/dist/ol-layerswitcher.css";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
   mapElementRef: React.RefObject<HTMLDivElement | null>,
   vectorSourceRef: React.RefObject<VectorSource>,
   tempVectorSourceRef: React.RefObject<VectorSource>,
-  fetchFunction: () => Promise<any> // ⬅️ HINZUGEFÜGT
+  fetchFunction: () => Promise<any>
 ) => {
   useEffect(() => {
+    // Base layer with title and type for switcher
+    const baseLayer = new TileLayer({
+      source: new OSM(),
+      title: "OSM Base",
+      type: "base",
+      visible: true,
+    });
+
     const vectorLayer = new VectorLayer({
       source: vectorSourceRef.current,
+      title: "Jobs",
+      type: "overlay",
+      visible: true,
       style: new Style({
         image: new Icon({
           src: "https://openlayers.org/en/latest/examples/data/icon.png",
@@ -30,6 +43,9 @@ export const useMapSetup = (
 
     const tempVectorLayer = new VectorLayer({
       source: tempVectorSourceRef.current,
+      title: "Temp Jobs",
+      type: "overlay",
+      visible: true,
       style: new Style({
         image: new Icon({
           src: "https://openlayers.org/en/latest/examples/data/icon.png",
@@ -41,11 +57,7 @@ export const useMapSetup = (
 
     const map = new Map({
       target: mapElementRef.current!,
-      layers: [
-        new TileLayer({ source: new OSM() }),
-        vectorLayer,
-        tempVectorLayer,
-      ],
+      layers: [baseLayer, vectorLayer, tempVectorLayer],
       view: new View({
         center: fromLonLat([9.9937, 53.5511]),
         zoom: 12,
@@ -55,7 +67,15 @@ export const useMapSetup = (
 
     mapRef.current = map;
 
-    // 🔄 Dynamischer Fetch
+    // add LayerSwitcher control
+    const layerSwitcherControl = new LayerSwitcher({
+      tipLabel: "Layers",
+      activationMode: "hover",
+      startActive: false,
+    });
+    map.addControl(layerSwitcherControl);
+
+    // load initial GeoJSON
     fetchFunction()
       .then((data) => {
         const format = new GeoJSON();
@@ -79,6 +99,11 @@ export const useMapSetup = (
     return () => {
       map.setTarget(undefined);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    fetchFunction,
+    mapRef,
+    mapElementRef,
+    vectorSourceRef,
+    tempVectorSourceRef,
+  ]);
 };
