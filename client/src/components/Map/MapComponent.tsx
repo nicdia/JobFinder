@@ -9,7 +9,8 @@ import { Map } from "ol";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { fromLonLat } from "ol/proj";
-import LayerSwitcherControl from "./LayerSwitcherControl";
+import LayerSwitcher from "ol-layerswitcher";
+import "ol-layerswitcher/dist/ol-layerswitcher.css";
 import { useMapSetup } from "../../hooks/useMapSetup";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
 import { MapComponentProps as BaseProps } from "../../types/types";
@@ -22,11 +23,18 @@ type Props = BaseProps & {
   onFeatureClick?: (feature: any) => void;
   disableFeatureInfo?: boolean;
   mapRef?: MutableRefObject<Map | null>;
+  enableLayerSwitcher?: boolean; // neu
 };
 
 const MapComponent = forwardRef<MapHandle, Props>(
   (
-    { fetchFunction, onFeatureClick, mapRef, disableFeatureInfo = false },
+    {
+      fetchFunction,
+      onFeatureClick,
+      mapRef,
+      disableFeatureInfo = false,
+      enableLayerSwitcher = true,
+    },
     ref
   ) => {
     const mapDivRef = useRef<HTMLDivElement | null>(null);
@@ -36,8 +44,23 @@ const MapComponent = forwardRef<MapHandle, Props>(
     const vectorSrcRef = useRef(new VectorSource());
     const tempSrcRef = useRef(new VectorSource());
 
+    // Setup base, overlay layers and view
     useMapSetup(usedMapRef, mapDivRef, vectorSrcRef, tempSrcRef, fetchFunction);
 
+    // Conditional LayerSwitcher
+    useEffect(() => {
+      if (!enableLayerSwitcher || !usedMapRef.current) return;
+      const switcher = new LayerSwitcher({
+        activationMode: "hover",
+        tipLabel: "Layers",
+      });
+      usedMapRef.current.addControl(switcher);
+      return () => {
+        if (usedMapRef.current) usedMapRef.current.removeControl(switcher);
+      };
+    }, [enableLayerSwitcher, usedMapRef.current]);
+
+    // Reload GeoJSON when fetchFunction changes
     useEffect(() => {
       let cancelled = false;
       (async () => {
@@ -55,6 +78,7 @@ const MapComponent = forwardRef<MapHandle, Props>(
       };
     }, [fetchFunction]);
 
+    // Feature click handler
     useFeatureClickHandler(
       usedMapRef,
       null,
@@ -62,6 +86,7 @@ const MapComponent = forwardRef<MapHandle, Props>(
       disableFeatureInfo
     );
 
+    // Expose zoomTo
     useImperativeHandle(ref, () => ({
       zoomTo(coord: [number, number], zoom = 14) {
         const view = usedMapRef.current?.getView();
@@ -70,14 +95,7 @@ const MapComponent = forwardRef<MapHandle, Props>(
       },
     }));
 
-    return (
-      <>
-        <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
-        {usedMapRef.current && (
-          <LayerSwitcherControl map={usedMapRef.current} />
-        )}
-      </>
-    );
+    return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
   }
 );
 

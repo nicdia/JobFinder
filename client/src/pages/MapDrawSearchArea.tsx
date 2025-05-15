@@ -93,6 +93,7 @@ const DrawAreaPage = () => {
         fetchFunction={() => Promise.resolve([])}
         onFeatureClick={(f) => console.log("Feature", f)}
         disableFeatureInfo={isDrawMode}
+        enableLayerSwitcher={false}
       />
       <DrawToolbar
         isDrawMode={isDrawMode}

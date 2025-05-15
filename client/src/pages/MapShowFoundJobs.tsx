@@ -93,6 +93,7 @@ export default function MapPage() {
         key={mode + (user?.id ?? "anon")}
         fetchFunction={fetchFunction}
         onFeatureClick={handleFeatureClick}
+        enableLayerSwitcher={true}
       />
 
       <JobsListWidget jobs={jobs} onSelect={handleJobSelect} />

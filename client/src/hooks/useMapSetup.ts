@@ -10,8 +10,6 @@ import { fromLonLat } from "ol/proj";
 import { Style, Icon } from "ol/style";
 import GeoJSON from "ol/format/GeoJSON";
 import { defaults as defaultControls } from "ol/control";
-import LayerSwitcher from "ol-layerswitcher";
-import "ol-layerswitcher/dist/ol-layerswitcher.css";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
@@ -21,7 +19,7 @@ export const useMapSetup = (
   fetchFunction: () => Promise<any>
 ) => {
   useEffect(() => {
-    // Base layers group
+    // Base layers
     const osmLayer = new TileLayer({
       source: new OSM(),
       title: "OSM Standard",
@@ -68,19 +66,19 @@ export const useMapSetup = (
         }),
       }),
     });
-    const overlayGroup1 = new LayerGroup({
+    const overlayGroupJobs = new LayerGroup({
       title: "Jobs Group",
       layers: [jobsLayer],
     });
-    const overlayGroup2 = new LayerGroup({
+    const overlayGroupTemp = new LayerGroup({
       title: "Temp Jobs Group",
       layers: [tempJobsLayer],
     });
 
-    // Initialize map
+    // Initialize map without LayerSwitcher
     const map = new Map({
       target: mapElementRef.current!,
-      layers: [baseGroup, overlayGroup1, overlayGroup2],
+      layers: [baseGroup, overlayGroupJobs, overlayGroupTemp],
       view: new View({
         center: fromLonLat([9.9937, 53.5511]),
         zoom: 12,
@@ -88,14 +86,6 @@ export const useMapSetup = (
       controls: defaultControls(),
     });
     mapRef.current = map;
-
-    // Add LayerSwitcher control
-    const switcher = new LayerSwitcher({
-      tipLabel: "Layers",
-      activationMode: "hover",
-      startActive: false,
-    });
-    map.addControl(switcher);
 
     // Load initial GeoJSON
     fetchFunction()
