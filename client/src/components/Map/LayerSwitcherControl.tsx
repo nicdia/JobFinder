@@ -1,23 +1,22 @@
-// src/components/Map/LayerSwitcherControl.tsx
 import React, { useEffect } from "react";
 import LayerSwitcher from "ol-layerswitcher";
 import "ol-layerswitcher/dist/ol-layerswitcher.css";
 import { Map } from "ol";
 
 interface LayerSwitcherControlProps {
-  map: Map | null;
+  map: Map;
 }
 
 const LayerSwitcherControl: React.FC<LayerSwitcherControlProps> = ({ map }) => {
   useEffect(() => {
-    if (!map) return;
-    const layerSwitcher = new LayerSwitcher({
-      activationMode: "click", // or 'hover'
+    const control = new LayerSwitcher({
+      activationMode: "hover",
+      tipLabel: "Layers",
       startActive: false,
     });
-    map.addControl(layerSwitcher);
+    map.addControl(control);
     return () => {
-      map.removeControl(layerSwitcher);
+      map.removeControl(control);
     };
   }, [map]);
 

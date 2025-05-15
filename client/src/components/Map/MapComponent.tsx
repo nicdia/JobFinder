@@ -7,9 +7,8 @@ import React, {
 } from "react";
 import { Map } from "ol";
 import VectorSource from "ol/source/Vector";
-import View from "ol/View";
-import { fromLonLat } from "ol/proj";
 import GeoJSON from "ol/format/GeoJSON";
+import { fromLonLat } from "ol/proj";
 import LayerSwitcherControl from "./LayerSwitcherControl";
 import { useMapSetup } from "../../hooks/useMapSetup";
 import { useFeatureClickHandler } from "../../hooks/useFeatureClickHandler";
