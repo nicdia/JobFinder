@@ -1,18 +1,22 @@
-// src/routes/userInputSearchRequest.route.ts
 import { Router } from "express";
 import { authenticateToken } from "../middleware/authMiddleware";
-import { handleUserInputSearchRequest } from "../controllers/inputSeachRequestController";
+import {
+  handleUserInputSearchRequest,
+  getUserSearchRequests,
+} from "../controllers/inputSeachRequestController";
 
 const router = Router();
 
 /**
+ * GET  /api/userInputSearchRequest/:userId
+ * Liefert alle bestehenden Suchgebiete als GeoJSON-FeatureCollection
  * POST /api/userInputSearchRequest/:userId
- * Erwartet strukturierte Antworten des Users zu Jobpräferenzen + Adresse usw.
+ * Legt eine neue Suchanfrage (Geometrie oder Adresse) an
  */
-router.post(
-  "/userInputSearchRequest/:userId",
-  authenticateToken,
-  handleUserInputSearchRequest as any
-);
+router
+  .route("/userInputSearchRequest/:userId")
+  .all(authenticateToken)
+  .get(getUserSearchRequests as any)
+  .post(handleUserInputSearchRequest as any);
 
 export default router;
