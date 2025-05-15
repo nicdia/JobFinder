@@ -10,11 +10,12 @@ import JobsListWidget, { JobItem } from "../components/Map/JobsListWidget";
 
 import { fetchAllJobs } from "../services/allJobsApi";
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
-import { fetchUserSearchAreas } from "../services/fetchUserSearchAreas"; // ⬅️  NEW
+import { fetchUserSearchAreas } from "../services/fetchUserSearchAreas";
 import { useAuth } from "../context/AuthContext";
 
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
+import LayerGroup from "ol/layer/Group";
 import GeoJSON from "ol/format/GeoJSON";
 import { Stroke, Fill, Style } from "ol/style";
 import { Map as OLMap } from "ol";
@@ -24,11 +25,11 @@ export default function MapPage() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode"); // "customVisible" | null
 
-  /* Refs -------------------------------------------------------- */
-  const mapHandleRef = useRef<MapHandle>(null); // zoomTo()
-  const olMapRef = useRef<OLMap | null>(null); // echte OL-Map
+  /* Refs ------------------------------------------------------ */
+  const mapHandleRef = useRef<MapHandle>(null);
+  const olMapRef = useRef<OLMap | null>(null);
 
-  /* State ------------------------------------------------------- */
+  /* State ----------------------------------------------------- */
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [featureCollection, setFeatureCollection] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,14 +37,14 @@ export default function MapPage() {
   const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
   const handleFeatureClick = useCallback((f: any) => setSelectedFeature(f), []);
 
-  /* Daten laden ------------------------------------------------- */
+  /* Daten laden ---------------------------------------------- */
   useEffect(() => {
     async function load() {
       if (mode === "customVisible" && !user?.id) return;
 
       setLoading(true);
       try {
-        /* 1) Jobs ------------------------------------------------ */
+        /* 1) Jobs --------------------------------------------- */
         const jobsFC =
           mode === "customVisible"
             ? await fetchUserVisibleJobs(user!)
@@ -58,7 +59,7 @@ export default function MapPage() {
           }))
         );
 
-        /* 2) Suchgebiete (nur wenn User) ------------------------ */
+        /* 2) Search Areas ------------------------------------- */
         let areasFC = { type: "FeatureCollection", features: [] };
         if (user?.id) {
           try {
@@ -68,32 +69,45 @@ export default function MapPage() {
           }
         }
 
-        /* 3) Für Map-Component alles zusammenführen ------------- */
+        /* 3) MapComponent-Daten ------------------------------- */
         setFeatureCollection({
           type: "FeatureCollection",
           features: [...jobsFC.features, ...areasFC.features],
         });
 
-        /* 4) Suchgebiete als eigenen Layer in die OL-Map hängen --*/
+        /* 4) Gruppen-Layer pro Area --------------------------- */
         if (olMapRef.current) {
-          // Bestehenden Layer ggf. entfernen
-          const existing = olMapRef.current
+          // Alte Gruppen entfernen
+          olMapRef.current
             .getLayers()
             .getArray()
-            .find((l) => (l as any).get("title") === "Search Areas");
-          if (existing) olMapRef.current.removeLayer(existing);
+            .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
+            .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          if (areasFC.features.length) {
-            const source = new VectorSource({
-              features: new GeoJSON().readFeatures(areasFC, {
-                dataProjection: "EPSG:4326",
-                featureProjection: "EPSG:3857",
+          // Jobs nach Area-ID gruppieren
+          const jobsByArea: Record<string, any[]> = {};
+          jobsFC.features.forEach((feat: any) => {
+            const key = feat.properties?.search_area_id ?? "null";
+            (jobsByArea[key] ||= []).push(feat);
+          });
+
+          // Für jede Area Group bauen
+          areasFC.features.forEach((areaFeat: any, idx: number) => {
+            const areaId = areaFeat.properties?.search_area_id ?? areaFeat.id;
+            const areaLabel =
+              areaFeat.properties?.label ?? `Suchgebiet ${idx + 1}`;
+
+            /* Polygon-Layer */
+            const polyLayer = new VectorLayer({
+              source: new VectorSource({
+                features: [
+                  new GeoJSON().readFeature(areaFeat, {
+                    dataProjection: "EPSG:4326",
+                    featureProjection: "EPSG:3857",
+                  }),
+                ],
               }),
-            });
-
-            const searchLayer = new VectorLayer({
-              source,
-              title: "Search Areas", // 🠒 erscheint im Layer-Switcher
+              title: "Fläche",
               type: "overlay",
               style: new Style({
                 stroke: new Stroke({ color: "#ff1744", width: 2 }),
@@ -101,8 +115,34 @@ export default function MapPage() {
               }),
             });
 
-            olMapRef.current.addLayer(searchLayer);
-          }
+            /* Jobs-Layer */
+            const jobLayer = new VectorLayer({
+              source: new VectorSource({
+                features: new GeoJSON().readFeatures(
+                  {
+                    type: "FeatureCollection",
+                    features: jobsByArea[areaId] || [],
+                  },
+                  {
+                    dataProjection: "EPSG:4326",
+                    featureProjection: "EPSG:3857",
+                  }
+                ),
+              }),
+              title: "Jobs",
+              type: "overlay",
+            });
+
+            /* Group zusammenführen */
+            const group = new LayerGroup({
+              title: areaLabel,
+              layers: [polyLayer, jobLayer],
+            });
+            group.set("layerType", "searchAreaGroup");
+            group.set("searchAreaId", areaId);
+
+            olMapRef.current.addLayer(group);
+          });
         }
       } finally {
         setLoading(false);
@@ -111,7 +151,7 @@ export default function MapPage() {
     load();
   }, [mode, user]);
 
-  /* Guard bis User geladen ------------------------------------- */
+  /* Guard ----------------------------------------------------- */
   if (mode === "customVisible" && !user?.id) {
     return (
       <Box
@@ -127,24 +167,24 @@ export default function MapPage() {
     );
   }
 
-  /* fetch-Fn für MapComponent ---------------------------------- */
+  /* fetchFn für MapComponent --------------------------------- */
   const fetchFunction = () =>
     Promise.resolve(
       featureCollection ?? { type: "FeatureCollection", features: [] }
     );
 
-  /* Job-Klick → Zoom ------------------------------------------ */
+  /* Job-Klick → Zoom ---------------------------------------- */
   const handleJobSelect = (j: JobItem) =>
     mapHandleRef.current?.zoomTo(j.coord, 17);
 
-  /* Render ----------------------------------------------------- */
+  /* Render --------------------------------------------------- */
   return (
     <Box sx={{ width: "100vw", height: "100vh" }}>
       <AppHeader />
 
       <MapComponent
         ref={mapHandleRef}
-        mapRef={olMapRef} // echte OL-Map
+        mapRef={olMapRef}
         key={mode + (user?.id ?? "anon")}
         fetchFunction={fetchFunction}
         onFeatureClick={handleFeatureClick}

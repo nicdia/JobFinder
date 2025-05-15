@@ -16,7 +16,7 @@ export async function matchJobsToPolygone(userId: number) {
     return;
   }
 
-  await deleteUserMatchedJobs(userId);
+  //await deleteUserMatchedJobs(userId);
   await insertUserMatchedJobs(userId, polygonId);
 
   console.log(
