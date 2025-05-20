@@ -34,6 +34,17 @@ export async function processUserGeometry(
   // Verarbeitung des Points
   if (geometry.type === "Point") {
     const [lat, lon] = geometry.coordinates;
+
+    if (params.addressReqId) {
+      // ➜ Address-Flow: KEIN Drawn-Request anlegen
+      return processPoints({
+        userId,
+        coordinates: [[lon, lat]],
+        params: { ...params }, // enthält addressReqId
+      });
+    }
+
+    // ➜ Drawn-Flow:
     const drawnId = await insertUserDrawnRequest(
       userId,
       geometry,
@@ -42,7 +53,7 @@ export async function processUserGeometry(
     return processPoints({
       userId,
       coordinates: [[lon, lat]],
-      params: { ...params, drawnReqId: drawnId }, // ⚠️ hier
+      params: { ...params, drawnReqId: drawnId },
     });
   }
 
