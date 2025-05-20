@@ -3,16 +3,59 @@ import pool from "../utils/db";
 /**
  * Speichert ein Polygon (GeoJSON) für einen Benutzer
  */
-export async function insertUserPolygon(userId: number, geometry: any) {
+export async function insertUserPolygon(
+  userId: number,
+  geometry: any,
+  drawnReqId: number // 💡 neu
+): Promise<number> {
   const result = await pool.query(
     `
-    INSERT INTO account.user_search_areas (user_id, geom, type)
-    VALUES ($1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), 'direct')
+    INSERT INTO account.user_search_areas (
+      user_id,
+      geom,
+      type,
+      drawn_req_id,
+      address_req_id
+    )
+    VALUES (
+      $1,
+      ST_SetSRID(ST_GeomFromGeoJSON($2),4326),
+      'direct',
+      $3,        -- drawn_req_id
+      NULL       -- address_req_id
+    )
     RETURNING id;
     `,
-    [userId, JSON.stringify(geometry)]
+    [userId, JSON.stringify(geometry), drawnReqId]
   );
+  return result.rows[0].id;
+}
 
+/**
+ * Speichert ein vom Nutzer gezeichnetes Feature (Point, LineString, Polygon)
+ * in account.user_drawn_search_requests und gibt die neue ID zurück.
+ */
+// src/db/geometryOpsRepo.ts
+export async function insertUserDrawnRequest(
+  userId: number,
+  geometry: any,
+  reqName = "Zeichnung"
+): Promise<number> {
+  const geomType = geometry.type;
+
+  const result = await pool.query(
+    `
+    INSERT INTO account.user_drawn_search_requests (
+      user_id, req_name, geom_type, geom
+    )
+    VALUES (
+      $1, $2, $3,
+      ST_SetSRID(ST_GeomFromGeoJSON($4),4326)
+    )
+    RETURNING id;
+    `,
+    [userId, reqName, geomType, JSON.stringify(geometry)]
+  );
   return result.rows[0].id;
 }
 
@@ -43,26 +86,27 @@ export async function insertIsochroneToDB(
   mode: string,
   lon: number,
   lat: number,
-  geometry: string
+  geometry: string,
+  drawnReqId: number | null, // genau eine ID übergeben
+  addressReqId: number | null
 ) {
   await pool.query(
     `
     INSERT INTO account.user_search_areas (
-      user_id,
-      label,
-      cutoff_seconds,
-      mode,
-      source_point,
-      geom,
-      type
-    ) VALUES (
+      user_id, label, cutoff_seconds, mode,
+      source_point, geom, type,
+      drawn_req_id, address_req_id
+    )
+    VALUES (
       $1, $2, $3, $4,
-      ST_SetSRID(ST_Point($5, $6), 4326),
-      ST_SetSRID(ST_GeomFromGeoJSON($7), 4326),
-      'isochrone'
+      ST_SetSRID(ST_Point($5,$6),4326),
+      ST_SetSRID(ST_GeomFromGeoJSON($7),4326),
+      'isochrone',
+      $8,  -- drawn_req_id  (nullable)
+      $9   -- address_req_id (nullable)
     );
     `,
-    [userId, label, cutoff, mode, lon, lat, geometry]
+    [userId, label, cutoff, mode, lon, lat, geometry, drawnReqId, addressReqId]
   );
 }
 
@@ -74,7 +118,9 @@ export async function insertUserMatchedJobs(
     `
     INSERT INTO account.user_jobs_within_search_area (
       user_id,
-      search_area_id,                -- ⬅️ Hier ergänzen
+      search_area_id,
+      drawn_req_id,
+      address_req_id,
       source,
       external_id,
       title,
@@ -89,8 +135,10 @@ export async function insertUserMatchedJobs(
       starting_date
     )
     SELECT
-      $1 AS user_id,
-      $2 AS search_area_id,         -- ⬅️ Hier ebenfalls
+      $1             AS user_id,
+      p.id           AS search_area_id,
+      p.drawn_req_id,
+      p.address_req_id,
       j.source,
       j.external_id,
       j.title,
@@ -103,7 +151,7 @@ export async function insertUserMatchedJobs(
       j.geom,
       j.published_at,
       j.starting_date
-    FROM mart.jobs j
+    FROM mart.jobs               j
     JOIN account.user_search_areas p ON p.id = $2
     WHERE ST_Contains(p.geom, j.geom);
     `,

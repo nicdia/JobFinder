@@ -22,6 +22,8 @@ export const processPoints = async ({
     date = "2025-04-14",
     time = "10:00:00",
     label = "Benutzer-Isochrone",
+    drawnReqId = null, // ⚠️ kommt von außen
+    addressReqId = null,
   } = params;
 
   // Array zum Speichern der Isochronen-Geometrien
@@ -60,6 +62,8 @@ export const processPoints = async ({
       mode,
       center: coord, // Der aktuelle Punkt
       geojsonPolygon: feature,
+      drawnReqId, // ⚠️ mitgeben
+      addressReqId,
     });
 
     // Matching der Jobs für den Punkt
@@ -77,6 +81,8 @@ export const processPoints = async ({
       mode,
       center: toLatLon(coordinates[0]),
       geojsonPolygon: mergedGeoJSON,
+      drawnReqId, // ⚠️ mitgeben
+      addressReqId,
     });
     // Matching der Jobs für die zusammengeführte Isochrone
     await matchJobsToPolygone(userId);

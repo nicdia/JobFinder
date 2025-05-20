@@ -43,22 +43,25 @@ export async function insertUserSearchRequest(userId: number, data: any) {
 export async function queryIsochroneCenters(userId: number) {
   const sql = `
     SELECT
-      u.id                         AS id,
-      'Feature'                    AS type,
-      ST_AsGeoJSON(u.source_point)::json AS geometry,
+      r.id                                       AS id,
+      'Feature'                                  AS type,
+      ST_AsGeoJSON(
+        ST_SetSRID(ST_MakePoint(r.address_lon, r.address_lat), 4326)
+      )::json                                     AS geometry,
       jsonb_build_object(
-        'search_area_id', u.id,
-        'label', u.label,
-        'cutoff_seconds', u.cutoff_seconds,
-        'mode', u.mode,
-        'created_at', u.created_at
+        'req_name',        r.req_name,
+        'job_type',        r.job_type,
+        'speed',           r.speed,
+        'address_display', r.address_display,
+        'house_number',    r.house_number,
+        'transport_mode',  r.transport_mode,
+        'created_at',      r.created_at
       ) AS properties
-    FROM account.user_search_areas u
-    WHERE u.user_id = $1
-      AND u.type = 'isochrone'
-      AND u.label LIKE '%(Merged)%'
-      AND u.source_point IS NOT NULL;
+    FROM account.user_search_requests r
+    WHERE r.user_id = $1
+      AND r.address_lat IS NOT NULL
+      AND r.address_lon IS NOT NULL
   `;
   const result = await pool.query(sql, [userId]);
-  return result.rows; // Array von Point-Features
+  return result.rows;
 }

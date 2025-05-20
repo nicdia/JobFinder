@@ -20,9 +20,12 @@ export interface ImportIsochroneParams {
   label: string;
   cutoff: number;
   mode: string;
-  center: [number, number];
+  center: [number, number]; // [lon, lat]
   geojsonPolygon: any;
+  drawnReqId?: number | null; // optional
+  addressReqId?: number | null; // optional
 }
+
 export interface AuthRequest extends Request {
   user?: { id: number };
 }
@@ -30,5 +33,15 @@ export interface AuthRequest extends Request {
 export interface ProcessPointsParams {
   userId: number;
   coordinates: [number, number][]; // Array von Punkten (Latitude, Longitude)
-  params: any;
+  params: {
+    cutoff?: number;
+    mode?: string;
+    speed?: number;
+    date?: string;
+    time?: string;
+    label?: string;
+    drawnReqId?: number | null;
+    addressReqId?: number | null;
+    reqName?: string;
+  };
 }

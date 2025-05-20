@@ -1,5 +1,8 @@
 // src/services/geometryService.ts
-import { insertUserPolygon } from "../db/geometryOpsRepo";
+import {
+  insertUserDrawnRequest,
+  insertUserPolygon,
+} from "../db/geometryOpsRepo";
 import { matchJobsToPolygone } from "./geomS_matchJobsToIsochrone";
 import { processPoints } from "./geomS_processPoints";
 import { generatePointsFromLineString } from "./geomS_lineStringHandling";
@@ -17,30 +20,47 @@ export async function processUserGeometry(
 ): Promise<{ message: string; points?: [number, number][] }> {
   // Verarbeitung des Polygons
   if (geometry.type === "Polygon") {
-    await insertUserPolygon(userId, geometry);
-    await matchJobsToPolygone(userId);
+    const drawnId = await insertUserDrawnRequest(
+      userId,
+      geometry,
+      params.reqName
+    );
+    console.log(`this is drawn id: ${drawnId}`);
+    const searchAreaId = await insertUserPolygon(userId, geometry, drawnId);
+    await matchJobsToPolygone(userId, searchAreaId);
     return { message: "Polygon gespeichert und Jobs gematcht" };
   }
 
   // Verarbeitung des Points
   if (geometry.type === "Point") {
     const [lat, lon] = geometry.coordinates;
+    const drawnId = await insertUserDrawnRequest(
+      userId,
+      geometry,
+      params.reqName
+    );
     return processPoints({
       userId,
-      coordinates: [[lon, lat]], // Einfacher Fall: Ein Punkt
-      params,
+      coordinates: [[lon, lat]],
+      params: { ...params, drawnReqId: drawnId }, // ⚠️ hier
     });
   }
 
   // Verarbeitung des LineStrings
   if (geometry.type === "LineString") {
-    // Punkte entlang des LineStrings generieren
-    const points = generatePointsFromLineString(geometry.coordinates, 5); // Beispiel: 5 Punkte generieren
+    const drawnId = await insertUserDrawnRequest(
+      userId,
+      geometry,
+      params.reqName
+    );
+
+    const points = generatePointsFromLineString(geometry.coordinates, 5);
     console.log("📍 Generierte Punkte für OTP:", points);
+
     return processPoints({
       userId,
-      coordinates: points, // Die Punkte werden dann genau so wie beim Point verarbeitet
-      params,
+      coordinates: points,
+      params: { ...params, drawnReqId: drawnId }, // ⚠️ hier
     });
   }
 

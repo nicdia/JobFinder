@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { processUserGeometry } from "../services/geometryService";
+import { queryIsochroneCenters } from "../db/searchRequestRepo";
 
 export async function handleUserGeometryInput(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
