@@ -46,6 +46,7 @@ CREATE INDEX idx_user_jobs_search_area
 CREATE TABLE account.user_search_requests (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES account.users(id) ON DELETE CASCADE,
+  req_name TEXT,
   job_type TEXT NOT NULL,
   speed TEXT,
   address_display TEXT,

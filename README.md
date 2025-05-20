@@ -23,23 +23,22 @@ Mermaid angucken--> in Git Markdown
 
 Funktionen die noch kommen müssen:
 
-- wenn man selbst etwas einzeichnet, dann soll das auch dargestellt werden und nicht nur die resultierenden Isochrone
-
-- archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
-
-Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
-
-Jobs speicherbar machen
-
-Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
-
-Im Frontend die Namen der Suchaufträge Namen geben könnne
-
-Die Navigation zwischen den Seiten verbessern
-
-Dem Icon wenn man angemeldet ist weitere Funktionen geben
+1. - wenn man selbst etwas einzeichnet, dann soll das auch dargestellt werden und nicht nur die resultierenden Isochrone
+     Man soll seinem Suchauftrag einen Namen geben können und der soll dann auch so in der layer list dargestellt werden
+2. Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
+3. Update, Delete Suchaufträge
+4. Jobs speicherbar machen
+5. Im Frontend die Namen der Suchaufträge Namen geben könnne
+6. Die Navigation zwischen den Seiten verbessern
+7. Dem Icon wenn man angemeldet ist weitere Funktionen geben
+8. archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
+9. Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
 
 BUGLISTE
 manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktberechnung
-es werden noch alle einzelnen Isochrone bei Line Zeichenn ausgegeben aber es soll eigentlich nur Merge geschickt werden
+
+es werden noch alle einzelnen Isochrone bei Line Zeichenn ausgegeben aber es soll eigentlich nur Merge geschickt werden --> das ist etwas kompleyer, könnte man lösen indem man in die Isochrone noch ne Spalte macht Type und dann im Frontend filtern wenn Type Linestring, dann filter und nimm nur das was im label merged stehen hat --> oder ein anderes keywort
+
 Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
+
+Suchauftragsdialog nimmt m/s --> das muss noch umgecodet werden dass er km/h nimmt + dass man auch die Zeit angeben kann die man brauchen will

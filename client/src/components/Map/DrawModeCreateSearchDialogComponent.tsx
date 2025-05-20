@@ -20,6 +20,11 @@ export default function FeatureCreateDialog({
   /** Fragen‑Konfiguration */
   const questions = [
     {
+      key: "reqName",
+      label: "Wie soll dein Suchauftrag genannt werden?",
+      options: "text" as const,
+    },
+    {
       key: "jobType",
       label: "In welchem Bereich möchtest du arbeiten?",
       options: ["Software Engineering", "AI/Data", "Projektmanagement"],

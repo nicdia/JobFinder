@@ -4,11 +4,9 @@ import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
-import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import LayerGroup from "ol/layer/Group";
 import { fromLonLat } from "ol/proj";
-import { Style, Icon } from "ol/style";
 import { defaults as defaultControls } from "ol/control";
 
 export const useMapSetup = (
@@ -39,45 +37,10 @@ export const useMapSetup = (
       layers: [osmLayer, satelliteLayer],
     });
 
-    // 2) Overlay-Gruppen
-    const jobsLayer = new VectorLayer({
-      source: vectorSourceRef.current,
-      title: "Jobs",
-      type: "overlay",
-      visible: true,
-      style: new Style({
-        image: new Icon({
-          src: "https://openlayers.org/en/latest/examples/data/icon.png",
-          anchor: [0.5, 1],
-        }),
-      }),
-    });
-    const tempJobsLayer = new VectorLayer({
-      source: tempVectorSourceRef.current,
-      title: "Temp Jobs",
-      type: "overlay",
-      visible: false,
-      style: new Style({
-        image: new Icon({
-          src: "https://openlayers.org/en/latest/examples/data/icon.png",
-          anchor: [0.5, 1],
-          color: "#2196f3",
-        }),
-      }),
-    });
-    const overlayGroupJobs = new LayerGroup({
-      title: "Jobs Group",
-      layers: [jobsLayer],
-    });
-    const overlayGroupTemp = new LayerGroup({
-      title: "Temp Jobs Group",
-      layers: [tempJobsLayer],
-    });
-
     // 3) Karte initialisieren (nur einmal!)
     const map = new Map({
       target: mapElementRef.current!,
-      layers: [baseGroup, overlayGroupJobs, overlayGroupTemp],
+      layers: [baseGroup],
       view: new View({
         center: fromLonLat([9.9937, 53.5511]),
         zoom: 12,
