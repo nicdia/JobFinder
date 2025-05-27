@@ -32,7 +32,7 @@ export async function insertIsochroneToDB(
 }
 
 export async function queryUserIsochrone(userId: number) {
-  console.log("[queryUserIsochron] ↗️  userId =", userId);
+  console.log("[queryUserIsochrone] ↗️  userId =", userId);
   console.time("[queryUserIsochrone] Dauer");
 
   const sql = `
@@ -41,12 +41,14 @@ export async function queryUserIsochrone(userId: number) {
       'Feature' AS type,
       ST_AsGeoJSON(geom)::json AS geometry,
       jsonb_build_object(
-        'source_point', ST_AsGeoJSON(source_point)::json,
-        'type', j.type,
-        'label', j.label,
+        'source_point',   ST_AsGeoJSON(source_point)::json,
+        'type',           j.type,
+        'label',          j.label,
         'cutoff_seconds', j.cutoff_seconds,
-        'mode', j.mode,
-        'created_at', j.created_at
+        'mode',           j.mode,
+        'created_at',     j.created_at,
+        'drawn_req_id',   j.drawn_req_id,
+        'address_req_id', j.address_req_id
       ) AS properties
     FROM account.user_search_areas j
     WHERE j.user_id = $1
@@ -55,8 +57,8 @@ export async function queryUserIsochrone(userId: number) {
 
   const result = await pool.query(sql, [userId]);
 
-  console.timeEnd("[queryUserSearchAreas] Dauer");
-  console.log("[queryUserSearchAreas] ↘️  gefunden:", result.rowCount, "Rows");
+  console.timeEnd("[queryUserIsochrone] Dauer");
+  console.log("[queryUserIsochrone] ↘️  gefunden:", result.rowCount, "Rows");
 
-  return result.rows;
+  return result.rows; // Array<Feature>
 }

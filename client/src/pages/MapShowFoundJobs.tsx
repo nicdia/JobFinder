@@ -61,30 +61,56 @@ export default function MapPage() {
           }))
         );
 
-        /* 2) Isochronen (= Polygone) ---------------------------- */
         let isoFC = { type: "FeatureCollection", features: [] };
-
-        /* 3) Requests (Startpunkte) ----------------------------- */
         let drawnReqFC = { type: "FeatureCollection", features: [] };
         let addressReqFC = { type: "FeatureCollection", features: [] };
-
         if (user?.id) {
           try {
+            /* --- Isochronen holen ----------------------------------- */
             isoFC = await fetchUserIsochrones(user);
 
-            const hasDrawn = isoFC.features.some(
-              (f: any) => f.properties?.drawn_req_id
-            );
-            const hasAddress = isoFC.features.some(
-              (f: any) => f.properties?.address_req_id
-            );
+            isoFC.features.forEach((f: any) => {
+              console.log(
+                `[Iso ${f.id}] drawn_req_id: ${
+                  f.properties?.drawn_req_id ?? "null"
+                }, ` +
+                  `address_req_id: ${f.properties?.address_req_id ?? "null"}`
+              );
+            });
 
-            if (hasDrawn) drawnReqFC = await fetchDrawnRequests(user);
-            if (hasAddress) addressReqFC = await fetchUserSearchRequests(user);
+            /* --- Flags, ob überhaupt Verknüpfungen existieren -------- */
+            const drawnIds = isoFC.features
+              .map((f: any) => f.properties?.drawn_req_id)
+              .filter((id: number | undefined) => !!id) as number[];
+
+            const addressIds = isoFC.features
+              .map((f: any) => f.properties?.address_req_id)
+              .filter((id: number | undefined) => !!id) as number[];
+
+            /* --- Requests komplett laden (Variante A) ---------------- */
+            if (drawnIds.length) drawnReqFC = await fetchDrawnRequests(user);
+            if (addressIds.length)
+              addressReqFC = await fetchUserSearchRequests(user);
+
+            /* --- Jetzt auf die benötigten IDs herunterfiltern -------- */
+            if (drawnReqFC.features.length) {
+              drawnReqFC.features = drawnReqFC.features.filter((f: any) =>
+                drawnIds.includes(f.id)
+              );
+            }
+
+            if (addressReqFC.features.length) {
+              addressReqFC.features = addressReqFC.features.filter((f: any) =>
+                addressIds.includes(f.id)
+              );
+            }
 
             console.log("[MapPage] Isochrones:", isoFC);
-            console.log("[MapPage] Drawn-Requests:", drawnReqFC);
-            console.log("[MapPage] Address-Requests:", addressReqFC);
+            console.log("[MapPage] Drawn-Requests (gefiltert):", drawnReqFC);
+            console.log(
+              "[MapPage] Address-Requests (gefiltert):",
+              addressReqFC
+            );
           } catch (err) {
             console.warn(
               "⚠️  Laden von Isochronen/Requests fehlgeschlagen:",
@@ -105,48 +131,52 @@ export default function MapPage() {
         });
 
         /* 5) LayerGroups für jede Isochrone -------------------- */
+        /* 6) Gruppen-Layer pro Isochrone ---------------------------- */
         if (olMapRef.current) {
-          // alte Groups entfernen
+          /** alte Groups entfernen */
           olMapRef.current
             .getLayers()
             .getArray()
             .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
             .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          /* Jobs nach search_area_id indizieren */
-          const jobsByArea: Record<string, any[]> = {};
+          /** Index: Jobs nach search_area_id (= Iso-ID) */
+          const jobsByArea: Record<number, any[]> = {};
           jobsFC.features.forEach((feat: any) => {
-            const key = feat.properties?.search_area_id ?? "null";
-            (jobsByArea[key] ||= []).push(feat);
+            const key = feat.properties?.search_area_id;
+            if (key) (jobsByArea[key] ||= []).push(feat);
           });
 
-          /* Startpunkte indizieren */
-          const reqPointByArea: Record<string, any> = {};
-          [...drawnReqFC.features, ...addressReqFC.features].forEach((feat) => {
-            const key =
-              feat.properties?.search_area_id ??
-              feat.properties?.linked_area_id ??
-              feat.properties?.searchAreaId;
-            if (key) reqPointByArea[key] = feat;
-          });
+          /** Index: Drawn- & Address-Requests nach ID */
+          const drawnReqMap: Record<number, any> = {};
+          drawnReqFC.features.forEach((f: any) => (drawnReqMap[f.id] = f));
 
-          /* Für jede Isochrone eine Group  --------------------- */
-          isoFC.features.forEach((polyFeat: any, idx: number) => {
-            const areaId = polyFeat.properties?.search_area_id ?? polyFeat.id;
+          const addressReqMap: Record<number, any> = {};
+          addressReqFC.features.forEach((f: any) => (addressReqMap[f.id] = f));
+
+          /** Für jede Isochrone eine Layer-Group -------------------- */
+          isoFC.features.forEach((isoFeat: any, idx: number) => {
+            const areaId = isoFeat.id; // Primär-Key
             const areaLabel =
-              polyFeat.properties?.label ?? `Suchgebiet ${idx + 1}`;
+              isoFeat.properties?.label ?? `Isochrone ${idx + 1}`;
 
-            /* Polygon-Layer */
+            /** START-PUNKT holen (drawn *oder* address) */
+            const reqPointFeat =
+              drawnReqMap[isoFeat.properties?.drawn_req_id] ??
+              addressReqMap[isoFeat.properties?.address_req_id] ??
+              null;
+
+            /** Polygon-Layer */
             const polyLayer = new VectorLayer({
               source: new VectorSource({
                 features: [
-                  new GeoJSON().readFeature(polyFeat, {
+                  new GeoJSON().readFeature(isoFeat, {
                     dataProjection: "EPSG:4326",
                     featureProjection: "EPSG:3857",
                   }),
                 ],
               }),
-              title: "Fläche",
+              title: "Isochrone",
               type: "overlay",
               style: new Style({
                 stroke: new Stroke({ color: "#ff1744", width: 2 }),
@@ -154,7 +184,7 @@ export default function MapPage() {
               }),
             });
 
-            /* Jobs-Layer */
+            /** Jobs-Layer */
             const jobLayer = new VectorLayer({
               source: new VectorSource({
                 features: new GeoJSON().readFeatures(
@@ -172,14 +202,13 @@ export default function MapPage() {
               type: "overlay",
             });
 
-            /* Startpunkt (falls vorhanden) */
-            let startLayer: VectorLayer | null = null;
-            const startFeat = reqPointByArea[areaId];
-            if (startFeat) {
-              startLayer = new VectorLayer({
+            /** Request-Point-Layer (falls vorhanden) */
+            let reqPointLayer: VectorLayer | null = null;
+            if (reqPointFeat) {
+              reqPointLayer = new VectorLayer({
                 source: new VectorSource({
                   features: [
-                    new GeoJSON().readFeature(startFeat, {
+                    new GeoJSON().readFeature(reqPointFeat, {
                       dataProjection: "EPSG:4326",
                       featureProjection: "EPSG:3857",
                     }),
@@ -197,8 +226,9 @@ export default function MapPage() {
               });
             }
 
-            const layersArr = startLayer
-              ? [polyLayer, jobLayer, startLayer]
+            /** Layers bündeln & Gruppe an Karte hängen */
+            const layersArr = reqPointLayer
+              ? [polyLayer, jobLayer, reqPointLayer]
               : [polyLayer, jobLayer];
 
             const group = new LayerGroup({
