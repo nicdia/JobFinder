@@ -3,7 +3,7 @@ import pool from "../utils/db";
 /**
  * Speichert einen Suchauftrag für den User in der Datenbank
  */
-export async function insertUserSearchRequest(
+export async function insertAddressSearchRequest(
   userId: number,
   data: any
 ): Promise<number> {
@@ -39,7 +39,7 @@ export async function insertUserSearchRequest(
  * aber **nur** die, deren Fläche gemergt wurde
  * (label enthält '(Merged)').
  */
-export async function queryIsochroneCenters(userId: number) {
+export async function queryAddressRequest(userId: number) {
   const sql = `
     SELECT
       r.id                                       AS id,

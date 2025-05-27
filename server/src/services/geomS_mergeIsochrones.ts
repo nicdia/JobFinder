@@ -1,4 +1,4 @@
-import { unionOpsPolygon } from "../db/geometryOpsRepo";
+import { unionOpsPolygon } from "../db/drawnRequestRepo";
 
 /**
  * Funktion zum Mergen von Isochronen

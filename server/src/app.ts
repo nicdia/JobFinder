@@ -6,8 +6,9 @@ import accessibleJobs from "./routes/userVisibleJobs.route";
 import register from "./routes/userAuth.route";
 import login from "./routes/userAuth.route";
 import userRoutes from "./routes/userManagement.route";
-import userDrawRequestRoute from "./routes/userInputGeometry.route";
-import userSearchRequestRoute from "./routes/userInputSearchRequest.route";
+import userDrawRequestRoute from "./routes/drawnRequest.route";
+import userSearchRequestRoute from "./routes/addressSearchRequest.route";
+import userIsochroneRoute from "./routes/userIsochrone.route";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ app.use("/api", jobRoutes);
 app.use("/api", accessibleJobs);
 app.use("/api", userDrawRequestRoute);
 app.use("/api", userSearchRequestRoute);
+app.use("/api", userIsochroneRoute);
 
 app.listen(PORT, () => {
   console.log(`✅ Server läuft unter http://localhost:${PORT}`);

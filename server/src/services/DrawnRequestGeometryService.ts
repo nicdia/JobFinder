@@ -1,8 +1,8 @@
 // src/services/geometryService.ts
 import {
   insertUserDrawnRequest,
-  insertUserPolygon,
-} from "../db/geometryOpsRepo";
+  insertUserDrawnPolygon,
+} from "../db/drawnRequestRepo";
 import { matchJobsToPolygone } from "./geomS_matchJobsToIsochrone";
 import { processPoints } from "./geomS_processPoints";
 import { generatePointsFromLineString } from "./geomS_lineStringHandling";
@@ -13,7 +13,7 @@ import { generatePointsFromLineString } from "./geomS_lineStringHandling";
  * - Point → Isochrone-API → Insert + Match
  * - LineString → Punkte generieren + Isochrone-API → Zusammenführen der Isochronen + Insert + Match
  */
-export async function processUserGeometry(
+export async function processRequestDrawnGeometry(
   userId: number,
   geometry: any,
   params: any
@@ -26,7 +26,11 @@ export async function processUserGeometry(
       params.reqName
     );
     console.log(`this is drawn id: ${drawnId}`);
-    const searchAreaId = await insertUserPolygon(userId, geometry, drawnId);
+    const searchAreaId = await insertUserDrawnPolygon(
+      userId,
+      geometry,
+      drawnId
+    );
     await matchJobsToPolygone(userId, searchAreaId);
     return { message: "Polygon gespeichert und Jobs gematcht" };
   }

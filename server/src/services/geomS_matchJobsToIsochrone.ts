@@ -1,8 +1,5 @@
-import {
-  getLatestPolygonIdByUser,
-  insertUserMatchedJobs,
-} from "../db/geometryOpsRepo";
-
+import { getLatestPolygonIdByUser } from "../db/drawnRequestRepo";
+import { insertUserMatchedJobs } from "../db/jobsRepo";
 /**
  * Fügt alle Jobs hinzu, die in einem bestimmten (oder dem neuesten) Search-Area-Polygon liegen,
  * und schreibt sie nach account.user_jobs_within_search_area.

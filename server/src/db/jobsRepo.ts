@@ -40,3 +40,52 @@ export async function queryUserVisibleJobs(userId: number) {
   console.log("[queryUserVisibleJobs] ↘️  gefunden:", result.rowCount, "Rows");
   return result.rows;
 }
+
+export async function insertUserMatchedJobs(
+  userId: number,
+  polygonId: number
+): Promise<void> {
+  await pool.query(
+    `
+    INSERT INTO account.user_jobs_within_search_area (
+      user_id,
+      search_area_id,
+      drawn_req_id,
+      address_req_id,
+      source,
+      external_id,
+      title,
+      company,
+      location,
+      description,
+      external_url,
+      lat,
+      lon,
+      geom,
+      published_at,
+      starting_date
+    )
+    SELECT
+      $1             AS user_id,
+      p.id           AS search_area_id,
+      p.drawn_req_id,
+      p.address_req_id,
+      j.source,
+      j.external_id,
+      j.title,
+      j.company,
+      j.location,
+      j.description,
+      j.external_url,
+      j.lat,
+      j.lon,
+      j.geom,
+      j.published_at,
+      j.starting_date
+    FROM mart.jobs               j
+    JOIN account.user_search_areas p ON p.id = $2
+    WHERE ST_Contains(p.geom, j.geom);
+    `,
+    [userId, polygonId]
+  );
+}

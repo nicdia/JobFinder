@@ -1,9 +1,9 @@
 // src/services/searchRequestService.ts
-import { insertUserSearchRequest } from "../db/searchRequestRepo";
-import { processUserGeometry } from "./geometryService";
+import { insertAddressSearchRequest } from "../db/addressRequestRepo";
+import { processRequestDrawnGeometry } from "./DrawnRequestGeometryService";
 import { mapFrontendTransportToOtpMode } from "../utils/transportMapper";
 
-export async function processUserSearchRequest(
+export async function processAddressSearchRequest(
   userId: number,
   requestData: any
 ) {
@@ -11,7 +11,7 @@ export async function processUserSearchRequest(
     throw new Error("Ungültige Suchdaten");
   }
 
-  const addressReqId = await insertUserSearchRequest(userId, requestData);
+  const addressReqId = await insertAddressSearchRequest(userId, requestData);
 
   // 2) Geometrie vorbereiten
   const lat = requestData.address?.coords?.lat;
@@ -30,5 +30,5 @@ export async function processUserSearchRequest(
     reqName: requestData.reqName,
   };
 
-  await processUserGeometry(userId, geometry, otpParams);
+  await processRequestDrawnGeometry(userId, geometry, otpParams);
 }

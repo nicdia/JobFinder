@@ -1,16 +1,9 @@
 // src/controllers/inputSearchRequestController.ts
 import { Request, Response } from "express";
-import { processUserSearchRequest } from "../services/searchRequestService";
-import { queryUserSearchAreas } from "../db/getSearchAreasRepo";
+import { processAddressSearchRequest } from "../services/addressRequestService";
+import { queryAddressRequest } from "../db/addressRequestRepo";
 
-/**
- * POST /api/userInputSearchRequest/:userId
- * Verarbeitet eine neue Suchanfrage (Adresse oder Geometrie).
- */
-export async function handleUserInputSearchRequest(
-  req: Request,
-  res: Response
-) {
+export async function handleAddressSearchRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
   const paramUserId = parseInt(req.params.userId, 10);
 
@@ -26,7 +19,7 @@ export async function handleUserInputSearchRequest(
       `[POST /api/userInputSearchRequest/${paramUserId}] → processing request`,
       req.body
     );
-    await processUserSearchRequest(paramUserId, req.body);
+    await processAddressSearchRequest(paramUserId, req.body);
     console.log(`[POST /api/userInputSearchRequest/${paramUserId}] → success`);
     res.status(201).json({ message: "Suchauftrag gespeichert" });
   } catch (err: any) {
@@ -38,11 +31,7 @@ export async function handleUserInputSearchRequest(
   }
 }
 
-/**
- * GET /api/userInputSearchRequest/:userId
- * Liefert alle bestehenden Suchgebiete als GeoJSON-FeatureCollection.
- */
-export async function getUserSearchRequests(req: Request, res: Response) {
+export async function getAddressRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
   const paramUserId = parseInt(req.params.userId, 10);
 
@@ -58,7 +47,7 @@ export async function getUserSearchRequests(req: Request, res: Response) {
 
   try {
     console.time(`[queryUserSearchAreas] Dauer (userId=${paramUserId})`);
-    const areas = await queryUserSearchAreas(paramUserId);
+    const areas = await queryAddressRequest(paramUserId);
     console.timeEnd(`[queryUserSearchAreas] Dauer (userId=${paramUserId})`);
     console.log(
       `[GET /api/userInputSearchRequest/${paramUserId}] → success, found ${areas.length} areas`

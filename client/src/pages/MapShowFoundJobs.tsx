@@ -8,16 +8,17 @@ import MapComponent, { MapHandle } from "../components/Map/MapComponent";
 import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
 import JobsListWidget, { JobItem } from "../components/Map/JobsListWidget";
 
-import { fetchAllJobs } from "../services/allJobsApi";
+import { fetchAllJobs } from "../services/fetchAllJobsApi";
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
 import { fetchUserSearchAreas } from "../services/fetchUserSearchAreas";
+import { fetchUserSearchRequests } from "../services/fetchSearchRequest";
 import { useAuth } from "../context/AuthContext";
 
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import LayerGroup from "ol/layer/Group";
 import GeoJSON from "ol/format/GeoJSON";
-import { Stroke, Fill, Style } from "ol/style";
+import { Stroke, Fill, Style, Circle as CircleStyle } from "ol/style";
 import { Map as OLMap } from "ol";
 
 export default function MapPage() {
@@ -59,39 +60,57 @@ export default function MapPage() {
           }))
         );
 
-        /* 2) Search Areas ------------------------------------- */
+        /* 2) Areas + Requests --------------------------------- */
         let areasFC = { type: "FeatureCollection", features: [] };
+        let searchReqFC = { type: "FeatureCollection", features: [] };
+
         if (user?.id) {
           try {
             areasFC = await fetchUserSearchAreas(user);
+            searchReqFC = await fetchUserSearchRequests(user);
+            console.log("[MapPage] Search Requests:", searchReqFC);
           } catch (err) {
-            console.warn("⚠️  Konnte Suchgebiete nicht laden:", err);
+            console.warn("⚠️  Laden der Gebiete/Requests fehlgeschlagen:", err);
           }
         }
 
         /* 3) MapComponent-Daten ------------------------------- */
         setFeatureCollection({
           type: "FeatureCollection",
-          features: [...jobsFC.features, ...areasFC.features],
+          features: [
+            ...jobsFC.features,
+            ...areasFC.features,
+            ...searchReqFC.features,
+          ],
         });
 
         /* 4) Gruppen-Layer pro Area --------------------------- */
         if (olMapRef.current) {
-          // Alte Gruppen entfernen
+          // Alte Groups entfernen
           olMapRef.current
             .getLayers()
             .getArray()
             .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
             .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          // Jobs nach Area-ID gruppieren
+          /* Index: Jobs nach Area-ID */
           const jobsByArea: Record<string, any[]> = {};
           jobsFC.features.forEach((feat: any) => {
             const key = feat.properties?.search_area_id ?? "null";
             (jobsByArea[key] ||= []).push(feat);
           });
 
-          // Für jede Area Group bauen
+          /* Index: Request-Point nach Area-ID */
+          const reqPointByArea: Record<string, any> = {};
+          searchReqFC.features.forEach((feat: any) => {
+            const key =
+              feat.properties?.search_area_id ??
+              feat.properties?.linked_area_id ??
+              feat.properties?.searchAreaId;
+            if (key) reqPointByArea[key] = feat;
+          });
+
+          /* Groups bauen */
           areasFC.features.forEach((areaFeat: any, idx: number) => {
             const areaId = areaFeat.properties?.search_area_id ?? areaFeat.id;
             const areaLabel =
@@ -133,10 +152,39 @@ export default function MapPage() {
               type: "overlay",
             });
 
-            /* Group zusammenführen */
+            /* Request-Point-Layer (falls vorhanden) */
+            let reqPointLayer: VectorLayer | null = null;
+            const reqPointFeat = reqPointByArea[areaId];
+            if (reqPointFeat) {
+              reqPointLayer = new VectorLayer({
+                source: new VectorSource({
+                  features: [
+                    new GeoJSON().readFeature(reqPointFeat, {
+                      dataProjection: "EPSG:4326",
+                      featureProjection: "EPSG:3857",
+                    }),
+                  ],
+                }),
+                title: "Startpunkt",
+                type: "overlay",
+                style: new Style({
+                  image: new CircleStyle({
+                    radius: 6,
+                    fill: new Fill({ color: "#1976d2" }),
+                    stroke: new Stroke({ color: "#fff", width: 1.5 }),
+                  }),
+                }),
+              });
+            }
+
+            /* Layers zusammenführen */
+            const layersArr = reqPointLayer
+              ? [polyLayer, jobLayer, reqPointLayer]
+              : [polyLayer, jobLayer];
+
             const group = new LayerGroup({
               title: areaLabel,
-              layers: [polyLayer, jobLayer],
+              layers: layersArr,
             });
             group.set("layerType", "searchAreaGroup");
             group.set("searchAreaId", areaId);

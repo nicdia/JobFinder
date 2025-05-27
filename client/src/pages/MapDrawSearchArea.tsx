@@ -13,7 +13,7 @@ import FeatureCreateDialog from "../components/Map/DrawModeCreateSearchDialogCom
 import DrawToolbar from "../components/Map/DrawToolbarComponent";
 import AppHeader from "../components/UI/AppHeaderComponent";
 import { useDraw } from "../hooks/useDraw";
-import { saveSearchArea } from "../services/drawSearchRequestApi";
+import { saveSearchArea } from "../services/postDrawSearchRequestApi";
 
 const DrawAreaPage = () => {
   const { user } = useAuth();

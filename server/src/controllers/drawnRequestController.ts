@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { processUserGeometry } from "../services/geometryService";
-import { queryIsochroneCenters } from "../db/searchRequestRepo";
+import { processRequestDrawnGeometry } from "../services/DrawnRequestGeometryService";
+import { queryDrawnRequest } from "../db/drawnRequestRepo";
 
-export async function handleUserGeometryInput(req: Request, res: Response) {
+export async function handleDrawnGeometryInput(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
   const paramUserId = parseInt(req.params.userId, 10);
   const geometry = req.body.geometry;
@@ -21,7 +21,11 @@ export async function handleUserGeometryInput(req: Request, res: Response) {
   }
 
   try {
-    const result = await processUserGeometry(paramUserId, geometry, req.body);
+    const result = await processRequestDrawnGeometry(
+      paramUserId,
+      geometry,
+      req.body
+    );
     res.status(201).json(result);
   } catch (err: any) {
     console.error("❌ Fehler im Controller:", err);
@@ -29,7 +33,7 @@ export async function handleUserGeometryInput(req: Request, res: Response) {
   }
 }
 
-export async function getUserIsochroneCenters(req: Request, res: Response) {
+export async function getDrawnRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
   const paramUserId = parseInt(req.params.userId, 10);
 
@@ -38,7 +42,7 @@ export async function getUserIsochroneCenters(req: Request, res: Response) {
   }
 
   try {
-    const features = await queryIsochroneCenters(paramUserId);
+    const features = await queryDrawnRequest(paramUserId);
     res.json({
       type: "FeatureCollection",
       features,

@@ -1,5 +1,5 @@
 // src/services/geomS_insertIsochrone.ts
-import { insertIsochroneToDB } from "../db/geometryOpsRepo";
+import { insertIsochroneToDB } from "../db/IsochroneRepo";
 import { ImportIsochroneParams } from "../types/serverTypes";
 
 /**
