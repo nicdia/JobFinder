@@ -4,12 +4,12 @@ import { authenticateToken } from "../middleware/authMiddleware";
 import {
   handleDrawnGeometryInput,
   getDrawnRequest,
-} from "../controllers/DrawnRequestController";
+} from "../controllers/drawnRequestController";
 
 const router = Router();
 
 router
-  .route("/userInputGeometry/:userId")
+  .route("/drawRequest/:userId")
   .all(authenticateToken)
   .get(getDrawnRequest as any)
   .post(handleDrawnGeometryInput as any);

@@ -13,7 +13,7 @@ export async function saveSearchArea({
   formData: Record<string, string>; // jobType, transport, speed etc.
 }) {
   const response = await fetch(
-    `http://localhost:3001/api/userInputGeometry/${userId}`,
+    `http://localhost:3001/api/drawRequest/${userId}`,
     {
       method: "POST",
       headers: {

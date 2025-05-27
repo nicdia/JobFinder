@@ -10,8 +10,9 @@ import JobsListWidget, { JobItem } from "../components/Map/JobsListWidget";
 
 import { fetchAllJobs } from "../services/fetchAllJobsApi";
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
-import { fetchUserSearchAreas } from "../services/fetchUserSearchAreas";
-import { fetchUserSearchRequests } from "../services/fetchSearchRequest";
+import { fetchUserIsochrones } from "../services/fetchIsochrones";
+import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
+import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { useAuth } from "../context/AuthContext";
 
 import VectorSource from "ol/source/Vector";
@@ -45,7 +46,7 @@ export default function MapPage() {
 
       setLoading(true);
       try {
-        /* 1) Jobs --------------------------------------------- */
+        /* 1) Jobs ------------------------------------------------ */
         const jobsFC =
           mode === "customVisible"
             ? await fetchUserVisibleJobs(user!)
@@ -60,49 +61,68 @@ export default function MapPage() {
           }))
         );
 
-        /* 2) Areas + Requests --------------------------------- */
-        let areasFC = { type: "FeatureCollection", features: [] };
-        let searchReqFC = { type: "FeatureCollection", features: [] };
+        /* 2) Isochronen (= Polygone) ---------------------------- */
+        let isoFC = { type: "FeatureCollection", features: [] };
+
+        /* 3) Requests (Startpunkte) ----------------------------- */
+        let drawnReqFC = { type: "FeatureCollection", features: [] };
+        let addressReqFC = { type: "FeatureCollection", features: [] };
 
         if (user?.id) {
           try {
-            areasFC = await fetchUserSearchAreas(user);
-            searchReqFC = await fetchUserSearchRequests(user);
-            console.log("[MapPage] Search Requests:", searchReqFC);
+            isoFC = await fetchUserIsochrones(user);
+
+            const hasDrawn = isoFC.features.some(
+              (f: any) => f.properties?.drawn_req_id
+            );
+            const hasAddress = isoFC.features.some(
+              (f: any) => f.properties?.address_req_id
+            );
+
+            if (hasDrawn) drawnReqFC = await fetchDrawnRequests(user);
+            if (hasAddress) addressReqFC = await fetchUserSearchRequests(user);
+
+            console.log("[MapPage] Isochrones:", isoFC);
+            console.log("[MapPage] Drawn-Requests:", drawnReqFC);
+            console.log("[MapPage] Address-Requests:", addressReqFC);
           } catch (err) {
-            console.warn("⚠️  Laden der Gebiete/Requests fehlgeschlagen:", err);
+            console.warn(
+              "⚠️  Laden von Isochronen/Requests fehlgeschlagen:",
+              err
+            );
           }
         }
 
-        /* 3) MapComponent-Daten ------------------------------- */
+        /* 4) MapComponent-Daten --------------------------------- */
         setFeatureCollection({
           type: "FeatureCollection",
           features: [
             ...jobsFC.features,
-            ...areasFC.features,
-            ...searchReqFC.features,
+            ...isoFC.features,
+            ...drawnReqFC.features,
+            ...addressReqFC.features,
           ],
         });
 
-        /* 4) Gruppen-Layer pro Area --------------------------- */
+        /* 5) LayerGroups für jede Isochrone -------------------- */
         if (olMapRef.current) {
-          // Alte Groups entfernen
+          // alte Groups entfernen
           olMapRef.current
             .getLayers()
             .getArray()
             .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
             .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          /* Index: Jobs nach Area-ID */
+          /* Jobs nach search_area_id indizieren */
           const jobsByArea: Record<string, any[]> = {};
           jobsFC.features.forEach((feat: any) => {
             const key = feat.properties?.search_area_id ?? "null";
             (jobsByArea[key] ||= []).push(feat);
           });
 
-          /* Index: Request-Point nach Area-ID */
+          /* Startpunkte indizieren */
           const reqPointByArea: Record<string, any> = {};
-          searchReqFC.features.forEach((feat: any) => {
+          [...drawnReqFC.features, ...addressReqFC.features].forEach((feat) => {
             const key =
               feat.properties?.search_area_id ??
               feat.properties?.linked_area_id ??
@@ -110,17 +130,17 @@ export default function MapPage() {
             if (key) reqPointByArea[key] = feat;
           });
 
-          /* Groups bauen */
-          areasFC.features.forEach((areaFeat: any, idx: number) => {
-            const areaId = areaFeat.properties?.search_area_id ?? areaFeat.id;
+          /* Für jede Isochrone eine Group  --------------------- */
+          isoFC.features.forEach((polyFeat: any, idx: number) => {
+            const areaId = polyFeat.properties?.search_area_id ?? polyFeat.id;
             const areaLabel =
-              areaFeat.properties?.label ?? `Suchgebiet ${idx + 1}`;
+              polyFeat.properties?.label ?? `Suchgebiet ${idx + 1}`;
 
             /* Polygon-Layer */
             const polyLayer = new VectorLayer({
               source: new VectorSource({
                 features: [
-                  new GeoJSON().readFeature(areaFeat, {
+                  new GeoJSON().readFeature(polyFeat, {
                     dataProjection: "EPSG:4326",
                     featureProjection: "EPSG:3857",
                   }),
@@ -152,14 +172,14 @@ export default function MapPage() {
               type: "overlay",
             });
 
-            /* Request-Point-Layer (falls vorhanden) */
-            let reqPointLayer: VectorLayer | null = null;
-            const reqPointFeat = reqPointByArea[areaId];
-            if (reqPointFeat) {
-              reqPointLayer = new VectorLayer({
+            /* Startpunkt (falls vorhanden) */
+            let startLayer: VectorLayer | null = null;
+            const startFeat = reqPointByArea[areaId];
+            if (startFeat) {
+              startLayer = new VectorLayer({
                 source: new VectorSource({
                   features: [
-                    new GeoJSON().readFeature(reqPointFeat, {
+                    new GeoJSON().readFeature(startFeat, {
                       dataProjection: "EPSG:4326",
                       featureProjection: "EPSG:3857",
                     }),
@@ -177,9 +197,8 @@ export default function MapPage() {
               });
             }
 
-            /* Layers zusammenführen */
-            const layersArr = reqPointLayer
-              ? [polyLayer, jobLayer, reqPointLayer]
+            const layersArr = startLayer
+              ? [polyLayer, jobLayer, startLayer]
               : [polyLayer, jobLayer];
 
             const group = new LayerGroup({
