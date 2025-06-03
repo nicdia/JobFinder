@@ -15,6 +15,7 @@ import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { useAuth } from "../context/AuthContext";
 
+import { unByKey } from "ol/Observable";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import LayerGroup from "ol/layer/Group";
@@ -30,6 +31,8 @@ export default function MapPage() {
   /* Refs ------------------------------------------------------ */
   const mapHandleRef = useRef<MapHandle>(null);
   const olMapRef = useRef<OLMap | null>(null);
+  const layerListenerKeys = useRef<any[]>([]); // hält alle Visibility-Listener
+  const jobsByAreaRef = useRef<Record<number, JobItem[]>>({}); // Index der Jobs nach Iso-ID
 
   /* State ----------------------------------------------------- */
   const [jobs, setJobs] = useState<JobItem[]>([]);
@@ -38,6 +41,28 @@ export default function MapPage() {
 
   const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
   const handleFeatureClick = useCallback((f: any) => setSelectedFeature(f), []);
+
+  /* Sichtbare Jobs anhand der sichtbaren Layer-Groups ermitteln */
+  const updateVisibleJobs = useCallback(() => {
+    if (!olMapRef.current) return;
+
+    const visibleAreaIds = olMapRef.current
+      .getLayers()
+      .getArray()
+      .filter(
+        (l) =>
+          (l as any).get("layerType") === "searchAreaGroup" && l.getVisible()
+      )
+      .map((l) => (l as any).get("searchAreaId")) as number[];
+
+    const visibleJobs: JobItem[] = [];
+    visibleAreaIds.forEach((id) => {
+      const arr = jobsByAreaRef.current[id];
+      if (arr) visibleJobs.push(...arr);
+    });
+
+    setJobs(visibleJobs);
+  }, []);
 
   /* Daten laden ---------------------------------------------- */
   useEffect(() => {
@@ -52,74 +77,58 @@ export default function MapPage() {
             ? await fetchUserVisibleJobs(user!)
             : await fetchAllJobs();
 
-        setJobs(
-          jobsFC.features.map((f: any) => ({
-            id: f.id,
-            title: f.properties?.title ?? "Job",
-            company: f.properties?.company,
-            coord: f.geometry.coordinates,
-          }))
-        );
+        /* --- Index für spätere Sichtbarkeits-Filter ----------- */
+        const jobsByArea: Record<number, JobItem[]> = {};
+        jobsFC.features.forEach((feat: any) => {
+          const key = feat.properties?.search_area_id;
+          if (!key) return;
 
+          (jobsByArea[key] ||= []).push({
+            id: feat.id,
+            title: feat.properties?.title ?? "Job",
+            company: feat.properties?.company,
+            coord: feat.geometry.coordinates,
+          });
+        });
+        jobsByAreaRef.current = jobsByArea;
+
+        /* 2) Isochronen + Requests ------------------------------ */
         let isoFC = { type: "FeatureCollection", features: [] };
         let drawnReqFC = { type: "FeatureCollection", features: [] };
         let addressReqFC = { type: "FeatureCollection", features: [] };
+
         if (user?.id) {
           try {
-            /* --- Isochronen holen ----------------------------------- */
             isoFC = await fetchUserIsochrones(user);
 
-            isoFC.features.forEach((f: any) => {
-              console.log(
-                `[Iso ${f.id}] drawn_req_id: ${
-                  f.properties?.drawn_req_id ?? "null"
-                }, ` +
-                  `address_req_id: ${f.properties?.address_req_id ?? "null"}`
-              );
-            });
-
-            /* --- Flags, ob überhaupt Verknüpfungen existieren -------- */
             const drawnIds = isoFC.features
               .map((f: any) => f.properties?.drawn_req_id)
-              .filter((id: number | undefined) => !!id) as number[];
+              .filter(Boolean) as number[];
 
             const addressIds = isoFC.features
               .map((f: any) => f.properties?.address_req_id)
-              .filter((id: number | undefined) => !!id) as number[];
+              .filter(Boolean) as number[];
 
-            /* --- Requests komplett laden (Variante A) ---------------- */
             if (drawnIds.length) drawnReqFC = await fetchDrawnRequests(user);
             if (addressIds.length)
               addressReqFC = await fetchUserSearchRequests(user);
 
-            /* --- Jetzt auf die benötigten IDs herunterfiltern -------- */
             if (drawnReqFC.features.length) {
               drawnReqFC.features = drawnReqFC.features.filter((f: any) =>
                 drawnIds.includes(f.id)
               );
             }
-
             if (addressReqFC.features.length) {
               addressReqFC.features = addressReqFC.features.filter((f: any) =>
                 addressIds.includes(f.id)
               );
             }
-
-            console.log("[MapPage] Isochrones:", isoFC);
-            console.log("[MapPage] Drawn-Requests (gefiltert):", drawnReqFC);
-            console.log(
-              "[MapPage] Address-Requests (gefiltert):",
-              addressReqFC
-            );
           } catch (err) {
-            console.warn(
-              "⚠️  Laden von Isochronen/Requests fehlgeschlagen:",
-              err
-            );
+            console.warn("⚠️  Laden Isochronen/Requests fehlgeschlagen:", err);
           }
         }
 
-        /* 4) MapComponent-Daten --------------------------------- */
+        /* 3) MapComponent-Daten -------------------------------- */
         setFeatureCollection({
           type: "FeatureCollection",
           features: [
@@ -130,43 +139,36 @@ export default function MapPage() {
           ],
         });
 
-        /* 5) LayerGroups für jede Isochrone -------------------- */
-        /* 6) Gruppen-Layer pro Isochrone ---------------------------- */
+        /* 4) LayerGroups aufbauen ------------------------------ */
         if (olMapRef.current) {
-          /** alte Groups entfernen */
+          /** alte Search-Area-Groups entfernen */
           olMapRef.current
             .getLayers()
             .getArray()
             .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
             .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          /** Index: Jobs nach search_area_id (= Iso-ID) */
-          const jobsByArea: Record<number, any[]> = {};
-          jobsFC.features.forEach((feat: any) => {
-            const key = feat.properties?.search_area_id;
-            if (key) (jobsByArea[key] ||= []).push(feat);
-          });
+          /** Listener der Vorgänger-Runde deaktivieren */
+          layerListenerKeys.current.forEach(unByKey);
+          layerListenerKeys.current = [];
 
-          /** Index: Drawn- & Address-Requests nach ID */
+          /** Index: Drawn- & Address-Requests */
           const drawnReqMap: Record<number, any> = {};
           drawnReqFC.features.forEach((f: any) => (drawnReqMap[f.id] = f));
-
           const addressReqMap: Record<number, any> = {};
           addressReqFC.features.forEach((f: any) => (addressReqMap[f.id] = f));
 
-          /** Für jede Isochrone eine Layer-Group -------------------- */
+          /** Für jede Isochrone eine LayerGroup ----------------- */
           isoFC.features.forEach((isoFeat: any, idx: number) => {
-            const areaId = isoFeat.id; // Primär-Key
+            const areaId = isoFeat.id;
             const areaLabel =
               isoFeat.properties?.label ?? `Isochrone ${idx + 1}`;
 
-            /** START-PUNKT holen (drawn *oder* address) */
             const reqPointFeat =
               drawnReqMap[isoFeat.properties?.drawn_req_id] ??
               addressReqMap[isoFeat.properties?.address_req_id] ??
               null;
 
-            /** Polygon-Layer */
             const polyLayer = new VectorLayer({
               source: new VectorSource({
                 features: [
@@ -184,13 +186,14 @@ export default function MapPage() {
               }),
             });
 
-            /** Jobs-Layer */
             const jobLayer = new VectorLayer({
               source: new VectorSource({
                 features: new GeoJSON().readFeatures(
                   {
                     type: "FeatureCollection",
-                    features: jobsByArea[areaId] || [],
+                    features: (jobsFC.features as any[]).filter(
+                      (f) => f.properties?.search_area_id === areaId
+                    ),
                   },
                   {
                     dataProjection: "EPSG:4326",
@@ -202,7 +205,6 @@ export default function MapPage() {
               type: "overlay",
             });
 
-            /** Request-Point-Layer (falls vorhanden) */
             let reqPointLayer: VectorLayer | null = null;
             if (reqPointFeat) {
               reqPointLayer = new VectorLayer({
@@ -226,27 +228,38 @@ export default function MapPage() {
               });
             }
 
-            /** Layers bündeln & Gruppe an Karte hängen */
-            const layersArr = reqPointLayer
-              ? [polyLayer, jobLayer, reqPointLayer]
-              : [polyLayer, jobLayer];
-
             const group = new LayerGroup({
               title: areaLabel,
-              layers: layersArr,
+              layers: reqPointLayer
+                ? [polyLayer, jobLayer, reqPointLayer]
+                : [polyLayer, jobLayer],
             });
             group.set("layerType", "searchAreaGroup");
             group.set("searchAreaId", areaId);
 
+            // Sichtbarkeits-Änderungen dieser Gruppe beobachten
+            const key = group.on("change:visible", updateVisibleJobs);
+            layerListenerKeys.current.push(key);
+
             olMapRef.current.addLayer(group);
           });
         }
+
+        /* 5) erste Synchronisierung der Job-Liste -------------- */
+        updateVisibleJobs();
       } finally {
         setLoading(false);
       }
     }
+
     load();
-  }, [mode, user]);
+
+    /* Cleanup: Listener entfernen ----------------------------- */
+    return () => {
+      layerListenerKeys.current.forEach(unByKey);
+      layerListenerKeys.current = [];
+    };
+  }, [mode, user, updateVisibleJobs]);
 
   /* Guard ----------------------------------------------------- */
   if (mode === "customVisible" && !user?.id) {
