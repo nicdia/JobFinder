@@ -1,10 +1,9 @@
 // src/services/geomS_processPoints.ts
-
 import { fetchOtpApi } from "./geomS_fetchOTPServer";
 import { insertUserIsochrone } from "./geomS_insertIsochrone";
 import { matchJobsToPolygone } from "./geomS_matchJobsToIsochrone";
 import { mergeIsochrones } from "./geomS_mergeIsochrones";
-import { toLatLon, CoordArr } from "./geomS_coordUtils";
+import { toLatLon } from "./geomS_coordUtils";
 import { ProcessPointsParams } from "../types/serverTypes";
 
 export const processPoints = async ({
@@ -15,65 +14,74 @@ export const processPoints = async ({
   message: string;
   points?: [number, number][];
 }> => {
+  /* ---------- Debug ---------- */
+  Object.entries(params).forEach(([k, v]) => console.log(`LOG → ${k}:`, v));
+
+  /* ---------- Pflichtfelder ---------- */
   const {
-    cutoff = 900,
-    mode = "WALK",
-    speed = 1.4,
-    date = "2025-04-14",
-    time = "10:00:00",
-    label = "Benutzer-Isochrone",
-    drawnReqId = null, // ⚠️ kommt von außen
-    addressReqId = null,
+    mode, // jetzt direkt vom Frontend (“WALK” | “BICYCLE” | “TRANSIT”)
+    speed: rawSpeed,
+    reqName,
+    addressReqId,
+    drawnReqId,
   } = params;
 
-  // Array zum Speichern der Isochronen-Geometrien
-  const isochrones = [];
+  if (!mode || rawSpeed === undefined || !reqName) {
+    throw new Error("Fehlende Parameter: mode, speed oder reqName");
+  }
 
-  // Für jeden Punkt wird eine Isochrone berechnet und gespeichert
+  /* ---------- speed in Zahl wandeln ---------- */
+  const speed = typeof rawSpeed === "string" ? parseFloat(rawSpeed) : rawSpeed;
+  if (isNaN(speed)) throw new Error(`Ungültige Geschwindigkeit: ${rawSpeed}`);
+
+  /* ---------- Übergangs-Defaults ---------- */
+  const cutoff = 900;
+  const date = "2025-04-14";
+  const time = "10:00:00";
+  const label = reqName;
+
+  /* ---------- Isochronen erzeugen ---------- */
+  const isochrones: any[] = [];
+
   for (const raw of coordinates) {
     const coord = toLatLon(raw);
+
     const result = await fetchOtpApi({
       corDict: { userPoints: [{ coord }] },
       url: "http://localhost:8080/otp/routers/current/isochrone",
       precision: 10,
       cutoff,
-      mode,
+      mode, // ← direkt weitergereicht
       speed,
       date,
       time,
     });
 
     const feature = result.results["userPoints"]?.[0]?.features?.[0];
-
-    if (!feature) {
+    if (!feature)
       throw new Error(
         `Isochrone konnte nicht ermittelt werden für Punkt ${coord}`
       );
-    }
 
-    // Die Geometrie der Isochrone in das Array aufnehmen
     isochrones.push(feature.geometry);
 
-    // Isochrone für diesen Punkt speichern
     await insertUserIsochrone({
       userId,
       label,
       cutoff,
       mode,
-      center: coord, // Der aktuelle Punkt
+      center: coord,
       geojsonPolygon: feature,
-      drawnReqId, // ⚠️ mitgeben
+      drawnReqId,
       addressReqId,
     });
 
-    // Matching der Jobs für den Punkt
     await matchJobsToPolygone(userId);
   }
 
-  // Wenn wir mehr als eine Isochrone haben, diese zusammenführen
+  /* ---------- ggf. Isochronen mergen ---------- */
   if (isochrones.length > 1) {
-    const mergedGeoJSON = await mergeIsochrones(isochrones); // Merging der Isochronen
-    // Speichern der zusammengeführten Isochrone in die Datenbank
+    const mergedGeoJSON = await mergeIsochrones(isochrones);
     await insertUserIsochrone({
       userId,
       label: `${label} (Merged)`,
@@ -81,10 +89,9 @@ export const processPoints = async ({
       mode,
       center: toLatLon(coordinates[0]),
       geojsonPolygon: mergedGeoJSON,
-      drawnReqId, // ⚠️ mitgeben
+      drawnReqId,
       addressReqId,
     });
-    // Matching der Jobs für die zusammengeführte Isochrone
     await matchJobsToPolygone(userId);
   }
 

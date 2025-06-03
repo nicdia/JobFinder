@@ -39,7 +39,7 @@ export interface ProcessPointsParams {
     speed?: number;
     date?: string;
     time?: string;
-    label?: string;
+    req_name?: string;
     drawnReqId?: number | null;
     addressReqId?: number | null;
     reqName?: string;
