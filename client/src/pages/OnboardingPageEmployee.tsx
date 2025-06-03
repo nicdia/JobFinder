@@ -29,6 +29,11 @@ const questions = [
     options: ["Software Engineering", "AI/Data", "Projektmanagement"],
   },
   {
+    key: "cutoff",
+    text: "Wie hoch darf die Anreisezeit maximal sein?",
+    options: "text",
+  },
+  {
     key: "address",
     text: "Wie lautet deine Startadresse?",
     options: "address",

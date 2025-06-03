@@ -8,20 +8,21 @@ export async function insertAddressSearchRequest(
   data: any
 ): Promise<number> {
   const query = `
-    INSERT INTO account.user_search_requests (
-      req_name, user_id, job_type, speed,
-      address_display, address_lat, address_lon,
-      house_number, transport_mode
-    ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9
-    )
-    RETURNING id;
-  `;
+  INSERT INTO account.user_search_requests (
+    req_name, user_id, job_type, cutoff_seconds, speed,
+    address_display, address_lat, address_lon,
+    house_number, transport_mode
+  ) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+  )
+  RETURNING id;
+`;
 
   const values = [
     data.reqName,
     userId,
     data.jobType,
+    data.cutoff, // ➜ muss in Sekunden vorliegen!
     data.speed,
     data.address?.display,
     data.address?.coords?.lat,
@@ -50,6 +51,7 @@ export async function queryAddressRequest(userId: number) {
       jsonb_build_object(
         'req_name',        r.req_name,
         'job_type',        r.job_type,
+        'cutoff',          r.cutoff_seconds,
         'speed',           r.speed,
         'address_display', r.address_display,
         'house_number',    r.house_number,

@@ -22,7 +22,7 @@ Mermaid angucken--> in Git Markdown
 
 Funktionen die noch kommen müssen:
 
-1. Man soll seinem Suchauftrag einen Namen geben können und der soll dann auch so in der layer list dargestellt werden
+1. Die Jobliste soll sich anpassen, abhängig davon, welche Gruppe aktiv ist in der
 2. Update, Delete Suchaufträge
 3. Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
 4. archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt

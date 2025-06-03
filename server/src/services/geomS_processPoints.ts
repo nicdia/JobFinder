@@ -19,25 +19,25 @@ export const processPoints = async ({
 
   /* ---------- Pflichtfelder ---------- */
   const {
-    mode, // jetzt direkt vom Frontend (“WALK” | “BICYCLE” | “TRANSIT”)
+    mode,
     speed: rawSpeed,
+    cutoff,
     reqName,
     addressReqId,
     drawnReqId,
   } = params;
 
-  if (!mode || rawSpeed === undefined || !reqName) {
-    throw new Error("Fehlende Parameter: mode, speed oder reqName");
+  if (!mode || rawSpeed === undefined || cutoff === undefined || !reqName) {
+    throw new Error("Fehlende Parameter: mode, speed, cutoff oder reqName");
   }
 
   /* ---------- speed in Zahl wandeln ---------- */
   const speed = typeof rawSpeed === "string" ? parseFloat(rawSpeed) : rawSpeed;
   if (isNaN(speed)) throw new Error(`Ungültige Geschwindigkeit: ${rawSpeed}`);
 
-  /* ---------- Übergangs-Defaults ---------- */
-  const cutoff = 900;
-  const date = "2025-04-14";
-  const time = "10:00:00";
+  /* ---------- aktuelles Datum & Zeit ---------- */
+  const time = "14:00:00";
+  const date = "2024-12-12";
   const label = reqName;
 
   /* ---------- Isochronen erzeugen ---------- */

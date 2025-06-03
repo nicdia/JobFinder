@@ -26,9 +26,12 @@ export async function processAddressSearchRequest(
   const otpParams = {
     mode: mapFrontendTransportToOtpMode(requestData.transport),
     speed: requestData.speed ?? 1.4,
-    addressReqId, // ➜ an Geometry-Service durchreichen
+    cutoff:
+      (typeof requestData.cutoff === "string"
+        ? parseFloat(requestData.cutoff)
+        : requestData.cutoff) * 60,
+    addressReqId,
     reqName: requestData.reqName,
   };
-
   await processRequestDrawnGeometry(userId, geometry, otpParams);
 }

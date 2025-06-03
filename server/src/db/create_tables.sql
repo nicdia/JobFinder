@@ -53,6 +53,7 @@ CREATE TABLE account.user_search_requests (
   req_name TEXT,
   job_type TEXT NOT NULL,
   speed TEXT,
+  cutoff_seconds INTEGER,
   address_display TEXT,
   address_lat DOUBLE PRECISION,
   address_lon DOUBLE PRECISION,
