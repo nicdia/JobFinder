@@ -39,8 +39,3 @@ es werden noch alle einzelnen Isochrone bei Line Zeichenn ausgegeben aber es sol
 Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
 Suchauftragsdialog nimmt m/s --> das muss noch umgecodet werden dass er km/h nimmt + dass man auch die Zeit angeben kann die man brauchen will
-
-03.06
---> req_name soll als Feld rein in search areas
---> dafür sorgen dass in search areas statt Benutzer Isochrone lieber {req_name} - Erreichbarkeitsbereich
---> im Frontend statt label aus search_area (Benutzer-Isochrone) soll req_name verwendet werden
