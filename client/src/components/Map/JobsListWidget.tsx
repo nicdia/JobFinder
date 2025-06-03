@@ -31,14 +31,14 @@ export default function JobsListWidget({ jobs, onSelect }: Props) {
       <Tooltip title="Job‑Liste">
         <Fab
           color="primary"
-          sx={{ position: "absolute", bottom: 24, right: 24, zIndex: 1100 }}
+          sx={{ position: "absolute", bottom: 24, left: 24, zIndex: 1100 }} // ← hier!
           onClick={() => setOpen((p) => !p)}
         >
           {open ? <CloseIcon /> : <WorkIcon />}
         </Fab>
       </Tooltip>
 
-      <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
+      <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <Box sx={{ width: 320, p: 2 }}>
           <List dense>
             {jobs.map((j) => (
