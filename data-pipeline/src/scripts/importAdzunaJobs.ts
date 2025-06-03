@@ -1,25 +1,44 @@
+// src/scripts/importAdzunaJobs.ts
 import { fetchAdzunaJobs } from "../modules/adzunaFetcher";
 import { loadPipelineConfig } from "../util/loadConfig";
 import pool from "../util/db";
 
 const config = loadPipelineConfig();
-const [keyword, city] = config.searchParamsInApis;
 
-async function mainGetDataFromAdzunaAPI() {
+/**
+ * Lädt zu jedem [keyword, city]-Paar aus der Config die Jobs
+ * und schreibt sie in die Staging-Tabelle.
+ */
+async function main() {
   try {
-    const jobs = await fetchAdzunaJobs(keyword, city);
+    const allJobs: any[] = [];
 
-    console.log(`✅ ${jobs.length} Jobs erhalten.`);
+    // → hier liegt der Typ jetzt eindeutig als Array von Tupeln vor
+    const searchPairs = config.searchParamsInApis as [string, string][];
 
-    await storeJobsToDatabase(jobs);
+    for (const [keyword, city] of searchPairs) {
+      console.log(`🔍 Hole Jobs für "${keyword}" in ${city} …`);
+      const jobs = await fetchAdzunaJobs(keyword, city);
+      console.log(`   → ${jobs.length} Treffer`);
+      allJobs.push(...jobs);
+    }
+
+    console.log(`\n📦 ${allJobs.length} Jobs insgesamt – speichere in DB …`);
+    await storeJobsToDatabase(allJobs);
+    console.log("✅ Adzuna-Import abgeschlossen!");
   } catch (err) {
-    console.error("❌ Fehler beim Abrufen:", err);
+    console.error("❌ Import Adzuna fehlgeschlagen:", err);
+    process.exit(1);
+  } finally {
+    await pool.end(); // DB-Pool sauber schließen
   }
 }
 
+/* ------------------------------------------------------------------ */
+
 async function storeJobsToDatabase(jobs: any[]) {
   for (const job of jobs) {
-    const externalId = job.refnr || null;
+    const externalId = job.refnr || null; // falls Adzuna 'id' benutzt, ggf. anpassen
 
     try {
       await pool.query(
@@ -34,8 +53,8 @@ async function storeJobsToDatabase(jobs: any[]) {
       );
     }
   }
-
-  console.log("✅ Alle Jobs gespeichert.");
 }
 
-mainGetDataFromAdzunaAPI();
+/* ------------------------------------------------------------------ */
+
+main();

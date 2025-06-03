@@ -1,21 +1,43 @@
+// src/scripts/importBAJobs.ts
 import { fetchJobsFromBA } from "../modules/baFetcher";
+import { loadPipelineConfig } from "../util/loadConfig";
 import pool from "../util/db";
 
-async function mainGetDataFromBAAPI() {
+const config = loadPipelineConfig();
+
+/**
+ * Lädt zu jedem [keyword, city]-Paar aus der Config die Jobs
+ * und schreibt sie in die Staging-Tabelle.
+ */
+async function main() {
   try {
-    const jobs = await fetchJobsFromBA("entwickler", "Hamburg");
+    const allJobs: any[] = [];
 
-    console.log(`✅ ${jobs.length} Jobs erhalten.`);
+    const searchPairs = config.searchParamsInApis as [string, string][];
 
-    await storeJobsToDatabase(jobs);
+    for (const [keyword, city] of searchPairs) {
+      console.log(`🔍 Hole BA-Jobs für "${keyword}" in ${city} …`);
+      const jobs = await fetchJobsFromBA(keyword, city);
+      console.log(`   → ${jobs.length} Treffer`);
+      allJobs.push(...jobs);
+    }
+
+    console.log(`\n📦 ${allJobs.length} Jobs insgesamt – speichere in DB …`);
+    await storeJobsToDatabase(allJobs);
+    console.log("✅ BA-Import abgeschlossen!");
   } catch (err) {
-    console.error("❌ Fehler beim Abrufen:", err);
+    console.error("❌ Import BA fehlgeschlagen:", err);
+    process.exit(1);
+  } finally {
+    await pool.end(); // DB-Pool sauber schließen
   }
 }
 
+/* ------------------------------------------------------------------ */
+
 async function storeJobsToDatabase(jobs: any[]) {
   for (const job of jobs) {
-    const externalId = job.refnr || null;
+    const externalId = job.refnr || null; // BA-eindeutige Kennung
 
     try {
       await pool.query(
@@ -30,8 +52,8 @@ async function storeJobsToDatabase(jobs: any[]) {
       );
     }
   }
-
-  console.log("✅ Alle Jobs gespeichert.");
 }
 
-mainGetDataFromBAAPI();
+/* ------------------------------------------------------------------ */
+
+main();

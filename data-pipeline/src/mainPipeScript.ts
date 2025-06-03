@@ -16,7 +16,14 @@ async function runSqlFile(filePath: string) {
 
 async function runScript(label: string, scriptPath: string) {
   console.log(`▶️ Starte Script: ${label}`);
-  await execAsync(`ts-node ${scriptPath}`);
+
+  // Kindprozess starten, warten bis fertig
+  const { stdout, stderr } = await execAsync(`ts-node ${scriptPath}`);
+
+  // ──> Ausgaben durchreichen
+  if (stdout) process.stdout.write(stdout);
+  if (stderr) process.stderr.write(stderr);
+
   console.log(`✅ Script beendet: ${label}`);
 }
 

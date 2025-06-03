@@ -22,14 +22,21 @@ Mermaid angucken--> in Git Markdown
 
 Funktionen die noch kommen müssen:
 
-1. Die Jobliste soll sich anpassen, abhängig davon, welche Gruppe aktiv ist in der
-2. Update, Delete Suchaufträge
-3. Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
-4. archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
-5. Jobs speicherbar machen
-6. Die Navigation zwischen den Seiten verbessern
-7. Dem Icon wenn man angemeldet ist weitere Funktionen geben
-8. Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
+Jobs speicherbar machen 1. Archiv in DB einrichten für vergangene Jobs 2. im Frontend Button einrichten zum Speichern 3. in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
+
+Update, Delete Suchaufträge
+
+Usermanagement
+
+Pipeline erweitern
+Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
+archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
+
+Legende einrichten
+
+Die Navigation zwischen den Seiten verbessern
+Dem Icon wenn man angemeldet ist weitere Funktionen geben
+Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
 
 BUGLISTE
 manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktberechnung
@@ -39,3 +46,7 @@ es werden noch alle einzelnen Isochrone bei Line Zeichenn ausgegeben aber es sol
 Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
 Suchauftragsdialog nimmt m/s --> das muss noch umgecodet werden dass er km/h nimmt + dass man auch die Zeit angeben kann die man brauchen will
+
+Wenn man mit Adressuche anpasst fängt es ab da den Loop wieder an, aber es soll wieder zurück in die Übersicht springen
+
+API hat keine Daten reingeladen, aber zeigt keine Fehler an

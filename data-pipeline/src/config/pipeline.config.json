@@ -1,5 +1,10 @@
 {
-  "searchParamsInApis": ["entwickler", "Hamburg"],
+  "searchParamsInApis": [
+    ["Data Engineering", "Hamburg"],
+    ["Software Engineering", "Hamburg"],
+    ["GIS", "Hamburg"]
+  ],
+
   "tablesToBeGeocoded": [
     {
       "table": "base.jobs_adzuna",
