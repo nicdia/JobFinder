@@ -32,3 +32,4 @@ SELECT
   id  -- stage.id
 FROM stage.raw_jobs_adzuna_api
 WHERE source = 'Adzuna';
+  

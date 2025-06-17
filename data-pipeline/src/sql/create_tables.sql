@@ -82,3 +82,25 @@ CREATE TABLE mart.jobs (
   published_at TIMESTAMP,
   starting_date TIMESTAMP
 );
+
+-- Erstellt die Archivtabelle einmalig, falls noch nicht vorhanden
+CREATE TABLE IF NOT EXISTS mart.jobs_archive (
+  archive_id  SERIAL PRIMARY KEY,           -- eigenes PK für das Archiv
+  snapshot_at TIMESTAMP NOT NULL,           -- Zeitstempel der Übernahme
+  mart_id     INTEGER,                      -- ursprüngliche ID aus mart.jobs
+
+  source  TEXT,
+  external_id TEXT,
+  title   TEXT,
+  company TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
+  location TEXT,
+  description TEXT,
+  external_url TEXT,
+  lat DOUBLE PRECISION,
+  lon DOUBLE PRECISION,
+  geom GEOMETRY(Point, 4326),
+  published_at TIMESTAMP,
+  starting_date TIMESTAMP
+);

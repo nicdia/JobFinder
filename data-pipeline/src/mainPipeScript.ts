@@ -31,25 +31,23 @@ async function main() {
   try {
     console.log("🚀 Pipeline gestartet...");
 
-    // 1. Stage leeren
-    await runSqlFile("src/sql/empty_stage.sql");
+    /* 1 */ await runSqlFile("src/sql/empty_stage.sql");
 
-    // 2. Daten abrufen und in Stage einfügen
-    await runScript("BA API Fetch", "src/scripts/importBAJobs.ts");
+    /* 2 */ await runScript("BA API Fetch", "src/scripts/importBAJobs.ts");
     await runScript("Adzuna API Fetch", "src/scripts/importAdzunaJobs.ts");
 
-    // 3. Wenn beide erfolgreich waren → Base und Mart leeren
+    /* 3a  🔒 Aktuellen Mart sichern ------------- */
+    await runSqlFile("src/sql/insert_current_mart_into_archive.sql");
+
+    /* 3b  🧹 Base & Mart leeren ------------------ */
     await runSqlFile("src/sql/empty_base_and_mart.sql");
 
-    // 4. Stage → Base Transformation
-    await runSqlFile("src/sql/insert_into_base_ba.sql");
+    /* 4 */ await runSqlFile("src/sql/insert_into_base_ba.sql");
     await runSqlFile("src/sql/insert_into_base_adzuna.sql");
 
-    // 5. Geocoding
-    await runScript("Geocode Adzuna", "src/scripts/geocodingDoing.ts");
+    /* 5 */ await runScript("Geocode Adzuna", "src/scripts/geocodingDoing.ts");
 
-    // 6. Base → Mart
-    await runSqlFile("src/sql/insert_into_mart.sql");
+    /* 6 */ await runSqlFile("src/sql/insert_into_mart.sql");
 
     console.log("🏁 Pipeline erfolgreich abgeschlossen!");
   } catch (err) {
