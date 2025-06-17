@@ -4,6 +4,8 @@ CREATE TABLE stage.raw_jobs_ba_api (
   raw_data JSONB NOT NULL,
   fetched_at TIMESTAMP DEFAULT NOW(),
   external_id TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
   status TEXT DEFAULT 'new'
 );
 
@@ -13,6 +15,8 @@ CREATE TABLE stage.raw_jobs_adzuna_api (
   raw_data JSONB NOT NULL,
   fetched_at TIMESTAMP DEFAULT NOW(),
   external_id TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
   status TEXT DEFAULT 'new'
 );
 
@@ -22,6 +26,8 @@ CREATE TABLE base.jobs_ba (
   title TEXT,
   ad_title TEXT,
   company TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
   location TEXT,
   postal_code TEXT,
   country TEXT,
@@ -43,6 +49,8 @@ CREATE TABLE base.jobs_adzuna (
   external_id TEXT,
   title TEXT,
   company TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
   location TEXT,
   country TEXT,
   region TEXT,
@@ -63,6 +71,8 @@ CREATE TABLE mart.jobs (
   external_id TEXT,
   title TEXT,
   company TEXT,
+  search_category TEXT,
+  search_address_location TEXT,
   location TEXT,
   description TEXT,
   external_url TEXT,

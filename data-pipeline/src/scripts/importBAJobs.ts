@@ -6,8 +6,8 @@ import pool from "../util/db";
 const config = loadPipelineConfig();
 
 /**
- * Lädt zu jedem [keyword, city]-Paar aus der Config die Jobs
- * und schreibt sie in die Staging-Tabelle.
+ * Lädt zu jedem [keyword, city]-Paar aus der Config die BA-Jobs
+ * und schreibt sie inkl. Such-Metadaten in die Staging-Tabelle.
  */
 async function main() {
   try {
@@ -19,7 +19,13 @@ async function main() {
       console.log(`🔍 Hole BA-Jobs für "${keyword}" in ${city} …`);
       const jobs = await fetchJobsFromBA(keyword, city);
       console.log(`   → ${jobs.length} Treffer`);
-      allJobs.push(...jobs);
+
+      // ➜ Metadaten anreichern
+      for (const j of jobs) {
+        j.search_category = keyword;
+        j.search_address_location = city;
+        allJobs.push(j);
+      }
     }
 
     console.log(`\n📦 ${allJobs.length} Jobs insgesamt – speichere in DB …`);
@@ -29,25 +35,38 @@ async function main() {
     console.error("❌ Import BA fehlgeschlagen:", err);
     process.exit(1);
   } finally {
-    await pool.end(); // DB-Pool sauber schließen
+    await pool.end();
   }
 }
 
 /* ------------------------------------------------------------------ */
 
 async function storeJobsToDatabase(jobs: any[]) {
+  const text = `
+    INSERT INTO stage.raw_jobs_ba_api
+      (source,
+       raw_data,
+       external_id,
+       search_category,
+       search_address_location)
+    VALUES ($1, $2, $3, $4, $5)
+    ON CONFLICT DO NOTHING;   -- optional: falls UNIQUE-Index existiert
+  `;
+
   for (const job of jobs) {
-    const externalId = job.refnr || null; // BA-eindeutige Kennung
+    const externalId = job.refnr ?? null; // BA-eindeutige Kennung
 
     try {
-      await pool.query(
-        `INSERT INTO stage.raw_jobs_ba_api (source, raw_data, external_id)
-         VALUES ($1, $2, $3)`,
-        ["BA", job, externalId]
-      );
+      await pool.query(text, [
+        "BA",
+        job,
+        externalId,
+        job.search_category,
+        job.search_address_location,
+      ]);
     } catch (err) {
       console.error(
-        `❌ Fehler beim Speichern von Job ${externalId || "unknown"}:`,
+        `❌ Fehler beim Speichern von Job ${externalId ?? "?"}:`,
         err
       );
     }

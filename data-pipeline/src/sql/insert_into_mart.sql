@@ -11,7 +11,9 @@ INSERT INTO mart.jobs (
   lon,
   geom,
   published_at,
-  starting_date
+  starting_date,
+  search_category,
+  search_address_location
 )
 
 -- Teil 1: BA
@@ -27,7 +29,9 @@ SELECT
   lon,
   geom,
   published_at,
-  starting_date
+  starting_date,
+  search_category,
+  search_address_location
 FROM base.jobs_ba
 WHERE geom IS NOT NULL
 
@@ -46,6 +50,8 @@ SELECT
   lon,
   geom,
   published_at,
-  NULL AS starting_date          -- Adzuna hat kein Startdatum
+  NULL AS starting_date,
+  search_category,
+  search_address_location         -- Adzuna hat kein Startdatum
 FROM base.jobs_adzuna
 WHERE geom IS NOT NULL;

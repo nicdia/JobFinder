@@ -17,6 +17,8 @@ INSERT INTO base.jobs_ba (
   modified_at,
   published_at,
   fetched_at,
+  search_category,
+  search_address_location,
   stage_id
 )
 SELECT
@@ -43,6 +45,8 @@ SELECT
   (raw_data->>'modifikationsTimestamp')::timestamp,
   (raw_data->>'aktuelleVeroeffentlichungsdatum')::date,
   fetched_at,
+  search_category,
+  search_address_location,
   id  -- 🔁 das ist die stage.id → kommt in stage_id
 FROM stage.raw_jobs_ba_api
 WHERE source = 'BA';

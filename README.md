@@ -8,7 +8,7 @@ einbinden --> check
 bereitstellen (optional, bspw. mit MapServer)
 Koordinatenerfassung --> check
 Tool zur Pflege der Vektordaten (CRUD)
-Routing (optional)
+Routing (optional) --> Openrouteservice
 Geolocation (optional)
 Nominatim-Tool (optional) --> check
 Attribut-Darstellung
@@ -30,6 +30,12 @@ Usermanagement
 
 Pipeline erweitern
 Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
+--> DA BIN ICH GERADE DRAN; PIPELINE KANN JETZT NACH DEN DREI BEGRIFFEN SUCHEN, ABER ES MUSS NOCH KORREKT ANGEPASST WERDEN IM FRONTEND UND BACKEND
+
+    --> AUCH NÄCHSTE WOCHE: FÜR DRAW FEATURES MUSS DAS MIT DEN ADRESSUCHE PARAMETERN RAUS + LABEL NAME WIRD NICHT KORREKT ANGEZEIGT WENN MAN EIN POLYGON ZEICHNET, DA WERDEN JA KEINE ISOCHRONE BERECHNET
+
+Drawn Features UPDATE, DELETE --> man soll bereits gezeichnete Features anpassen können und löschen s
+
 archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
 
 Legende einrichten
@@ -48,5 +54,3 @@ Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitw
 Suchauftragsdialog nimmt m/s --> das muss noch umgecodet werden dass er km/h nimmt + dass man auch die Zeit angeben kann die man brauchen will
 
 Wenn man mit Adressuche anpasst fängt es ab da den Loop wieder an, aber es soll wieder zurück in die Übersicht springen
-
-API hat keine Daten reingeladen, aber zeigt keine Fehler an
