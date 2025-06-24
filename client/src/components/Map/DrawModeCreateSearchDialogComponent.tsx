@@ -30,6 +30,11 @@ export default function FeatureCreateDialog({
       options: ["Software Engineering", "Data Engineering", "GIS"],
     },
     {
+      key: "cutoff",
+      label: "Wie hoch darf die Anreisezeit maximal sein?",
+      options: "text",
+    },
+    {
       key: "transport",
       label: "Welches Transportmittel möchtest du nutzen?",
       options: ["Zu Fuß", "Radverkehr", "ÖPNV"],
@@ -38,7 +43,7 @@ export default function FeatureCreateDialog({
       key: "speed",
       label:
         "Wie hoch ist deine Geschwindigkeit mit deinem ausgewählten Transportmittel?",
-      options: "text" as const, // normales Eingabefeld
+      options: "text",
     },
   ];
 

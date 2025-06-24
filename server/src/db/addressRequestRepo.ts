@@ -9,9 +9,16 @@ export async function insertAddressSearchRequest(
 ): Promise<number> {
   const query = `
   INSERT INTO account.user_search_requests (
-    req_name, user_id, job_type, cutoff_seconds, speed,
-    address_display, address_lat, address_lon,
-    house_number, transport_mode
+    req_name,
+    user_id,
+    job_type,
+    cutoff_seconds,
+    speed,
+    address_display,
+    address_lat,
+    address_lon,
+    house_number,
+    transport_mode
   ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
   )

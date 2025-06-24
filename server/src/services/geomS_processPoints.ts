@@ -14,9 +14,6 @@ export const processPoints = async ({
   message: string;
   points?: [number, number][];
 }> => {
-  /* ---------- Debug ---------- */
-  Object.entries(params).forEach(([k, v]) => console.log(`LOG → ${k}:`, v));
-
   /* ---------- Pflichtfelder ---------- */
   const {
     mode,
@@ -25,6 +22,7 @@ export const processPoints = async ({
     reqName,
     addressReqId,
     drawnReqId,
+    saveOnlyMerged = false,
   } = params;
 
   if (!mode || rawSpeed === undefined || cutoff === undefined || !reqName) {
@@ -35,13 +33,11 @@ export const processPoints = async ({
   const speed = typeof rawSpeed === "string" ? parseFloat(rawSpeed) : rawSpeed;
   if (isNaN(speed)) throw new Error(`Ungültige Geschwindigkeit: ${rawSpeed}`);
 
-  /* ---------- aktuelles Datum & Zeit ---------- */
+  /* ---------- Isochronen erzeugen ---------- */
+  const isochrones: any[] = [];
   const time = "14:00:00";
   const date = "2024-12-12";
   const label = reqName;
-
-  /* ---------- Isochronen erzeugen ---------- */
-  const isochrones: any[] = [];
 
   for (const raw of coordinates) {
     const coord = toLatLon(raw);
@@ -51,7 +47,7 @@ export const processPoints = async ({
       url: "http://localhost:8080/otp/routers/current/isochrone",
       precision: 10,
       cutoff,
-      mode, // ← direkt weitergereicht
+      mode,
       speed,
       date,
       time,
@@ -65,23 +61,45 @@ export const processPoints = async ({
 
     isochrones.push(feature.geometry);
 
-    await insertUserIsochrone({
-      userId,
-      label,
-      cutoff,
-      mode,
-      center: coord,
-      geojsonPolygon: feature,
-      drawnReqId,
-      addressReqId,
-    });
+    /* Zwischen-Isochrone nur speichern, wenn NICHT saveOnlyMerged */
+    if (!saveOnlyMerged) {
+      await insertUserIsochrone({
+        userId,
+        label,
+        cutoff,
+        mode,
+        center: coord,
+        geojsonPolygon: feature,
+        drawnReqId,
+        addressReqId,
+      });
+      await matchJobsToPolygone(userId);
+    }
+  } // ← for-Schleife ENDE  ✅
 
-    await matchJobsToPolygone(userId);
-  }
-
-  /* ---------- ggf. Isochronen mergen ---------- */
-  if (isochrones.length > 1) {
+  /* ---------- finales Speichern ---------- */
+  if (isochrones.length === 1) {
+    if (saveOnlyMerged) {
+      // Nur ein Polygon + bislang nichts gespeichert
+      await insertUserIsochrone({
+        userId,
+        label,
+        cutoff,
+        mode,
+        center: toLatLon(coordinates[0]),
+        geojsonPolygon: {
+          type: "Polygon",
+          coordinates: isochrones[0].coordinates,
+        },
+        drawnReqId,
+        addressReqId,
+      });
+      await matchJobsToPolygone(userId);
+    }
+  } else {
+    // mehrere → mergen und nur das Merge speichern
     const mergedGeoJSON = await mergeIsochrones(isochrones);
+
     await insertUserIsochrone({
       userId,
       label: `${label} (Merged)`,

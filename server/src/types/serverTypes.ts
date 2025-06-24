@@ -43,5 +43,6 @@ export interface ProcessPointsParams {
     drawnReqId?: number | null;
     addressReqId?: number | null;
     reqName?: string;
+    saveOnlyMerged?: boolean;
   };
 }

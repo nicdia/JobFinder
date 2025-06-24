@@ -64,8 +64,11 @@ CREATE TABLE account.user_search_requests (
 
 CREATE TABLE account.user_drawn_search_requests (
   id             SERIAL PRIMARY KEY,
-  req_name       TEXT NOT NULL,
   user_id        INTEGER REFERENCES account.users(id) ON DELETE CASCADE,
+  req_name       TEXT NOT NULL,
+  job_type TEXT NOT NULL,
+  speed TEXT,
+  cutoff_seconds INTEGER,
   job_type       TEXT,
   transport_mode TEXT,
   geom_type      TEXT NOT NULL CHECK (geom_type IN ('Point','LineString','Polygon')),

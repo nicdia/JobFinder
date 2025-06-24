@@ -1,6 +1,6 @@
 // src/services/searchRequestService.ts
 import { insertAddressSearchRequest } from "../db/addressRequestRepo";
-import { processRequestDrawnGeometry } from "./DrawnRequestGeometryService";
+import { processRequestDrawnGeometry } from "./DrawnRequestService";
 import { mapFrontendTransportToOtpMode } from "../utils/transportMapper";
 
 export async function processAddressSearchRequest(

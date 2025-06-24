@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { processRequestDrawnGeometry } from "../services/DrawnRequestGeometryService";
+import { processRequestDrawnGeometry } from "../services/DrawnRequestService";
 import { queryDrawnRequest } from "../db/drawnRequestRepo";
 
 export async function handleDrawnGeometryInput(req: Request, res: Response) {

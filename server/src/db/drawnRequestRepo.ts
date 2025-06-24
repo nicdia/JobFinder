@@ -36,27 +36,46 @@ export async function insertUserDrawnPolygon(
  * in account.user_drawn_search_requests und gibt die neue ID zurück.
  */
 // src/db/geometryOpsRepo.ts
+// db/drawnRequestRepo.ts (oder ähnlich)
 export async function insertUserDrawnRequest(
   userId: number,
   geometry: any,
-  reqName = "Zeichnung"
+  reqName: string,
+  jobType: string,
+  transport: string,
+  cutoff: string,
+  speed: string
 ): Promise<number> {
-  const geomType = geometry.type;
+  const sql = `
+  INSERT INTO account.user_drawn_search_requests (
+    req_name,
+    user_id,
+    job_type,
+    transport_mode,
+    cutoff_seconds,
+    speed,
+    geom,
+    geom_type
+  )
+  VALUES (
+    $1, $2, $3, $4, $5, $6, ST_SetSRID(ST_GeomFromGeoJSON($7), 4326), $8
+  )
+  RETURNING id;
+`;
 
-  const result = await pool.query(
-    `
-    INSERT INTO account.user_drawn_search_requests (
-      user_id, req_name, geom_type, geom
-    )
-    VALUES (
-      $1, $2, $3,
-      ST_SetSRID(ST_GeomFromGeoJSON($4),4326)
-    )
-    RETURNING id;
-    `,
-    [userId, reqName, geomType, JSON.stringify(geometry)]
-  );
-  return result.rows[0].id;
+  const vals = [
+    reqName,
+    userId,
+    jobType,
+    transport,
+    cutoff,
+    speed,
+    JSON.stringify(geometry),
+    geometry.type,
+  ];
+
+  const { rows } = await pool.query(sql, vals);
+  return rows[0].id;
 }
 
 /**
@@ -82,7 +101,17 @@ export async function getLatestPolygonIdByUser(
 export async function unionOpsPolygon(geoJSON: any): Promise<string> {
   const result = await pool.query(
     `
-    SELECT ST_AsGeoJSON(ST_Union(ST_GeomFromGeoJSON($1))) AS merged
+    SELECT ST_AsGeoJSON(
+             ST_UnaryUnion(
+               ST_Collect(sub.geometries)
+             )
+           ) AS merged
+    FROM (
+      SELECT ST_Buffer(
+               ST_GeomFromGeoJSON(value), 0
+             ) AS geometries
+      FROM json_array_elements(($1::json)->'geometries') AS g(value)
+    ) sub;
     `,
     [JSON.stringify(geoJSON)]
   );
