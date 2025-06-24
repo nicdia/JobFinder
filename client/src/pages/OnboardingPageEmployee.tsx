@@ -76,6 +76,21 @@ const OnboardingPageEmployee = () => {
 
   const current = questions[step];
 
+  const startEditStep = (index: number) => {
+    setEditingStep(index);
+    setStep(index);
+
+    const q = questions[index];
+    const prev = answers[q.key];
+
+    if (q.options === "text") {
+      setTextInput(prev ?? "");
+    } else if (q.options === "address") {
+      setAddressInput(prev?.display ?? "");
+      setAddressCoords(prev?.coords ?? null);
+    }
+    // Für Select-Felder musst du nichts tun – der Wert ist in answers
+  };
   const handleNext = (value?: any) => {
     if (current.options === "text") {
       setAnswers((prev) => ({ ...prev, [current.key]: textInput }));
@@ -237,7 +252,7 @@ const OnboardingPageEmployee = () => {
                     </Box>
                     <EditIcon
                       sx={{ cursor: "pointer", color: "primary.main" }}
-                      onClick={() => setStep(index)}
+                      onClick={() => startEditStep(index)}
                     />
                   </Paper>
                 ))}
