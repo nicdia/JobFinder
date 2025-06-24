@@ -8,7 +8,7 @@ const SaveSuccessPage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/found-jobs?mode=customVisible");
     }, 3000);
 
     return () => clearTimeout(timer);
