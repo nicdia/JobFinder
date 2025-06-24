@@ -43,9 +43,4 @@ manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktbere
 
 Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
-Wenn man mit Adressuche anpasst fängt es ab da den Loop wieder an, aber es soll wieder zurück in die Übersicht springen
-
 Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
-
-LETZTER STAND 17.06
-AKTUELL IM FRONTEND+BACKEND DRAWN POLYGON VERHALTEN ANPASSEN

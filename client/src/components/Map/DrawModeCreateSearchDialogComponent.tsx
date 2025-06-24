@@ -9,7 +9,7 @@ import {
   Stack,
   MenuItem,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 /* ---------- neue Prop --------------------------- */
 export interface FeatureCreateDialogProps {
@@ -47,23 +47,27 @@ export default function FeatureCreateDialog({
   ];
 
   /* ---------- dynamisch filtern ------------------- */
-  const questions =
-    geometryType === "Polygon"
-      ? allQuestions.filter(
-          (q) => !["cutoff", "transport", "speed"].includes(q.key)
-        )
-      : allQuestions;
+
+  const questions = useMemo(
+    () =>
+      geometryType === "Polygon"
+        ? allQuestions.filter(
+            (q) => !["cutoff", "transport", "speed"].includes(q.key)
+          )
+        : allQuestions,
+    [geometryType]
+  );
 
   /* ---------- State / Handler --------------------- */
   const [form, setForm] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (open) {
       const empty: Record<string, string> = {};
       questions.forEach((q) => (empty[q.key] = ""));
       setForm(empty);
     }
-  }, [open, questions]);
-
+  }, [open, questions]); // ✅ ESLint zufrieden, keine Schleife
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
