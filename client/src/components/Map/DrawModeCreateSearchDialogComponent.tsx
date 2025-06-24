@@ -27,7 +27,7 @@ export default function FeatureCreateDialog({
     {
       key: "jobType",
       label: "In welchem Bereich möchtest du arbeiten?",
-      options: ["Software Engineering", "AI/Data", "Projektmanagement"],
+      options: ["Software Engineering", "Data Engineering", "GIS"],
     },
     {
       key: "transport",

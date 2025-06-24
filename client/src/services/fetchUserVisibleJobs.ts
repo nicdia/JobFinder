@@ -33,5 +33,6 @@ export const fetchUserVisibleJobs = async (user?: {
 
   const data = await res.json();
   console.log("[fetchUserVisibleJobs] Loaded jobs:", data);
+  console.log(`This is data: ${data}`);
   return data; // GeoJSON FeatureCollection
 };

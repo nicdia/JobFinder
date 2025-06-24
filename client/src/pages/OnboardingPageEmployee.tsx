@@ -20,13 +20,13 @@ import { submitSearchRequest } from "../services/postAddressSearchRequestApi";
 const questions = [
   {
     key: "reqName",
-    label: "Wie soll dein Suchauftrag genannt werden?",
+    text: "Wie soll dein Suchauftrag genannt werden?",
     options: "text" as const,
   },
   {
     key: "jobType",
     text: "In welchem Bereich möchtest du arbeiten?",
-    options: ["Software Engineering", "AI/Data", "Projektmanagement"],
+    options: ["Software Engineering", "Data Engineering", "GIS"],
   },
   {
     key: "cutoff",
