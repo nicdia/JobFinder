@@ -10,18 +10,26 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { FeatureCreateDialogProps } from "../../types/types";
+
+/* ---------- neue Prop --------------------------- */
+export interface FeatureCreateDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: Record<string, string>) => void;
+  geometryType: "Point" | "LineString" | "Polygon"; // 🔄
+}
 
 export default function FeatureCreateDialog({
   open,
   onClose,
   onSave,
+  geometryType, // 🔄
 }: FeatureCreateDialogProps) {
-  /** Fragen‑Konfiguration */
-  const questions = [
+  /* ---------- komplette Fragenliste --------------- */
+  const allQuestions = [
     {
       key: "reqName",
-      label: "Wie soll dein Suchauftrag genannt werden?",
+      label: "Wie soll dein Suchauftrag heißen?",
       options: "text" as const,
     },
     {
@@ -29,54 +37,50 @@ export default function FeatureCreateDialog({
       label: "In welchem Bereich möchtest du arbeiten?",
       options: ["Software Engineering", "Data Engineering", "GIS"],
     },
-    {
-      key: "cutoff",
-      label: "Wie hoch darf die Anreisezeit maximal sein?",
-      options: "text",
-    },
+    { key: "cutoff", label: "Max. Anreisezeit (Min.)", options: "text" },
     {
       key: "transport",
-      label: "Welches Transportmittel möchtest du nutzen?",
+      label: "Transportmittel",
       options: ["Zu Fuß", "Radverkehr", "ÖPNV"],
     },
-    {
-      key: "speed",
-      label:
-        "Wie hoch ist deine Geschwindigkeit mit deinem ausgewählten Transportmittel?",
-      options: "text",
-    },
+    { key: "speed", label: "Geschwindigkeit (km/h)", options: "text" },
   ];
 
-  const [form, setForm] = useState<Record<string, string>>({});
+  /* ---------- dynamisch filtern ------------------- */
+  const questions =
+    geometryType === "Polygon"
+      ? allQuestions.filter(
+          (q) => !["cutoff", "transport", "speed"].includes(q.key)
+        )
+      : allQuestions;
 
-  /** Beim Öffnen leere Felder anlegen */
+  /* ---------- State / Handler --------------------- */
+  const [form, setForm] = useState<Record<string, string>>({});
   useEffect(() => {
     if (open) {
       const empty: Record<string, string> = {};
       questions.forEach((q) => (empty[q.key] = ""));
       setForm(empty);
     }
-  }, [open]);
+  }, [open, questions]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = () => {
     onSave(form);
     onClose();
   };
 
+  /* ---------- Render ------------------------------ */
   return (
     <Dialog
       open={open}
       fullWidth
       maxWidth="sm"
-      onClose={(_, reason) => reason !== "backdropClick" && onClose()}
+      onClose={(_, r) => r !== "backdropClick" && onClose()}
     >
       <DialogTitle>Neues Feature eintragen</DialogTitle>
-
       <DialogContent dividers>
         <Stack spacing={3} mt={1}>
           {questions.map((q) =>
@@ -89,9 +93,7 @@ export default function FeatureCreateDialog({
                 onChange={handleChange}
                 fullWidth
                 select
-                SelectProps={{
-                  MenuProps: { disablePortal: true }, // Dropdown IM Dialog
-                }}
+                SelectProps={{ MenuProps: { disablePortal: true } }}
               >
                 {q.options.map((opt) => (
                   <MenuItem key={opt} value={opt}>
@@ -112,7 +114,6 @@ export default function FeatureCreateDialog({
           )}
         </Stack>
       </DialogContent>
-
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose}>Abbrechen</Button>
         <Button variant="contained" onClick={handleSubmit}>

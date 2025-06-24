@@ -111,12 +111,12 @@ const DrawAreaPage = () => {
         }}
         onSubmitDraw={() => newFeature && setFormOpen(true)}
       />
-
       {formOpen && (
         <FeatureCreateDialog
           open={formOpen}
           onClose={() => setFormOpen(false)}
-          onSave={handleSaveFeature} // ⬅️  neuer Callback
+          onSave={handleSaveFeature}
+          geometryType={drawType as any}
         />
       )}
     </Box>
