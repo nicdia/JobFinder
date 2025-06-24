@@ -206,26 +206,52 @@ export default function MapPage() {
             });
 
             let reqPointLayer: VectorLayer | null = null;
+
             if (reqPointFeat) {
-              reqPointLayer = new VectorLayer({
-                source: new VectorSource({
-                  features: [
-                    new GeoJSON().readFeature(reqPointFeat, {
-                      dataProjection: "EPSG:4326",
-                      featureProjection: "EPSG:3857",
-                    }),
-                  ],
-                }),
-                title: "Startpunkt",
-                type: "overlay",
-                style: new Style({
-                  image: new CircleStyle({
-                    radius: 6,
-                    fill: new Fill({ color: "#1976d2" }),
-                    stroke: new Stroke({ color: "#fff", width: 1.5 }),
+              const geomType = reqPointFeat.geometry?.type; // "Point" | "LineString" | …
+
+              /* ---------- Punkt (alter Stil) ---------- */
+              if (geomType === "Point") {
+                reqPointLayer = new VectorLayer({
+                  source: new VectorSource({
+                    features: [
+                      new GeoJSON().readFeature(reqPointFeat, {
+                        dataProjection: "EPSG:4326",
+                        featureProjection: "EPSG:3857",
+                      }),
+                    ],
                   }),
-                }),
-              });
+                  title: "Startpunkt",
+                  type: "overlay",
+                  style: new Style({
+                    image: new CircleStyle({
+                      radius: 6,
+                      fill: new Fill({ color: "#1976d2" }),
+                      stroke: new Stroke({ color: "#fff", width: 1.5 }),
+                    }),
+                  }),
+                });
+              } else if (geomType === "LineString") {
+
+              /* ---------- LineString (neuer Stil) ---------- */
+                reqPointLayer = new VectorLayer({
+                  source: new VectorSource({
+                    features: [
+                      new GeoJSON().readFeature(reqPointFeat, {
+                        dataProjection: "EPSG:4326",
+                        featureProjection: "EPSG:3857",
+                      }),
+                    ],
+                  }),
+                  title: "Gezeichnete Linie",
+                  type: "overlay",
+                  style: new Style({
+                    stroke: new Stroke({ color: "#1976d2", width: 3 }),
+                  }),
+                });
+              }
+
+              /* ---------- weitere Geometrietypen optional ---------- */
             }
 
             const group = new LayerGroup({
