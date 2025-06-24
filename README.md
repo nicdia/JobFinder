@@ -33,6 +33,7 @@ Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im
 --> DA BIN ICH GERADE DRAN; PIPELINE KANN JETZT NACH DEN DREI BEGRIFFEN SUCHEN, ABER ES MUSS NOCH KORREKT ANGEPASST WERDEN IM FRONTEND UND BACKEND
 
     --> AUCH NÄCHSTE WOCHE: FÜR DRAW FEATURES MUSS DAS MIT DEN ADRESSUCHE PARAMETERN RAUS + LABEL NAME WIRD NICHT KORREKT ANGEZEIGT WENN MAN EIN POLYGON ZEICHNET, DA WERDEN JA KEINE ISOCHRONE BERECHNET
+    --> Bei Punkt und Line identisch wie bei Address, für Polygon eine eigene Logik und da auch weniger Sachen zum ausfüllen
 
 Drawn Features UPDATE, DELETE --> man soll bereits gezeichnete Features anpassen können und löschen s
 
@@ -54,6 +55,8 @@ Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitw
 Suchauftragsdialog nimmt m/s --> das muss noch umgecodet werden dass er km/h nimmt + dass man auch die Zeit angeben kann die man brauchen will
 
 Wenn man mit Adressuche anpasst fängt es ab da den Loop wieder an, aber es soll wieder zurück in die Übersicht springen
+
+Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
 LETZTER STAND 17.06
 HAB DIE SQL QUERY ERWEITERT FÜR FETCH VISIBILE JOBS; ER GUCKT JETZT AUF job_type in den beiden requests tabellen --> im frontend müssen die inhalte noch angepasst werden für Data Engineering usw und kontrollierne, ob es jetzt die jobs filtert
