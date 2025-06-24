@@ -1,18 +1,20 @@
 WEB GIS AUFGABEN UND ZIEL
 OpenStreetMap-Layer o.ä. --> check
-Rasterdaten-Layer (optional)
 Vektordaten-Layer (Punkt, Linie, Fläche) --> check
 Daten aus einem DBMS u./o. aus Dateien (bspw. GeoJSON) --> check
-WMS-Layer
-einbinden --> check
-bereitstellen (optional, bspw. mit MapServer)
 Koordinatenerfassung --> check
-Tool zur Pflege der Vektordaten (CRUD)
-Routing (optional) --> Openrouteservice
-Geolocation (optional)
+Tool zur Pflege der Vektordaten (CRUD) --> Create + Read implementiert
+Geolocation (optional) --> check
 Nominatim-Tool (optional) --> check
-Attribut-Darstellung
-Texte und/oder Bilder
+Attribut-Darstellung --> check
+
+Noch Offen
+Rasterdaten-Layer (optional)
+WMS-Layer
+einbinden / bereitstellen (optional, bspw. mit MapServer)
+Tool zur Pflege der Vektordaten (CRUD) --> Update + Delete
+Routing (optional) --> Openrouteservice
+Bilder im Attribut einstellen?
 
 OTP Server starten:
 java -Xmx8G -jar otp.jar --router current --graphs graphs --server
@@ -22,9 +24,9 @@ Mermaid angucken--> in Git Markdown
 
 Funktionen die noch kommen müssen:
 
-Jobs speicherbar machen 1. Archiv in DB einrichten für vergangene Jobs 2. im Frontend Button einrichten zum Speichern 3. in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
+Update, Delete Suchaufträge --> DAS ALS NÄCHSTES
 
-Update, Delete Suchaufträge
+Jobs speicherbar machen 1. Archiv in DB einrichten für vergangene Jobs 2. im Frontend Button einrichten zum Speichern 3. in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
 
 Usermanagement
 
@@ -32,17 +34,12 @@ Pipeline erweitern
 Pipeline für drei verschiedene Suchbegriffe definieren und die enstsprechend im Frontend darstellen
 --> DA BIN ICH GERADE DRAN; PIPELINE KANN JETZT NACH DEN DREI BEGRIFFEN SUCHEN, ABER ES MUSS NOCH KORREKT ANGEPASST WERDEN IM FRONTEND UND BACKEND
 
-    --> AUCH NÄCHSTE WOCHE: FÜR DRAW FEATURES MUSS DAS MIT DEN ADRESSUCHE PARAMETERN RAUS + LABEL NAME WIRD NICHT KORREKT ANGEZEIGT WENN MAN EIN POLYGON ZEICHNET, DA WERDEN JA KEINE ISOCHRONE BERECHNET
-    --> Bei Punkt und Line identisch wie bei Address, für Polygon eine eigene Logik und da auch weniger Sachen zum ausfüllen
-
-Drawn Features UPDATE, DELETE --> man soll bereits gezeichnete Features anpassen können und löschen s
-
-archiv in data pipeline erstellen --> darein werden alle generierten Jobs kopiert mit zeitstempel wenn der neue Zyklus beginnt
-
 Legende einrichten
 
 Die Navigation zwischen den Seiten verbessern
+
 Dem Icon wenn man angemeldet ist weitere Funktionen geben
+
 Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
 
 BUGLISTE
@@ -59,4 +56,4 @@ Wenn man mit Adressuche anpasst fängt es ab da den Loop wieder an, aber es soll
 Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
 LETZTER STAND 17.06
-HAB DIE SQL QUERY ERWEITERT FÜR FETCH VISIBILE JOBS; ER GUCKT JETZT AUF job_type in den beiden requests tabellen --> im frontend müssen die inhalte noch angepasst werden für Data Engineering usw und kontrollierne, ob es jetzt die jobs filtert
+AKTUELL IM FRONTEND+BACKEND DRAWN POLYGON VERHALTEN ANPASSEN
