@@ -1,42 +1,25 @@
 // src/services/fetchUserIsochrones.ts
-export const fetchUserIsochrones = async (user?: {
-  id?: number;
-  token?: string;
-}) => {
-  /* 1) User- und Token-Infos besorgen ------------------------ */
-  const id = user?.id ?? JSON.parse(localStorage.getItem("user") || "null")?.id;
+import { api } from "../utils/api"; // Pfad ggf. anpassen
+
+type UserLite = { id?: number; token?: string };
+
+export const fetchUserIsochrones = async (user?: UserLite) => {
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const id = user?.id ?? storedUser?.id;
   const token = user?.token ?? localStorage.getItem("token");
 
   console.log("[fetchUserIsochrones] id:", id, "token:", token?.slice(0, 8));
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  /* 2) Ziel-URL ---------------------------------------------- */
-  const url = `http://localhost:3001/api/userIsochrones/${id}`;
-  console.log("[fetchUserIsochrones] GET", url);
+  // Token ggf. speichern, damit api ihn automatisch setzt
+  if (user?.token) localStorage.setItem("token", user.token);
 
-  /* 3) Anfrage abschicken ------------------------------------ */
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const path = `/userIsochrones/${id}`;
+  console.log("[fetchUserIsochrones] GET", path);
 
-  console.log(
-    "[fetchUserIsochrones] Response status:",
-    res.status,
-    res.ok ? "OK" : "FAIL"
-  );
-
-  /* 4) Fehlerbehandlung -------------------------------------- */
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("[fetchUserIsochrones] Error-body:", errorText);
-    throw new Error(
-      `Fehler beim Laden der Isochronen (${res.status}): ${errorText}`
-    );
-  }
-
-  /* 5) GeoJSON-FeatureCollection zurückgeben ----------------- */
-  const data = await res.json();
+  const data = await api.get<any>(path); // <any> bei Bedarf durch FeatureCollection-Typ ersetzen
   console.log("[fetchUserIsochrones] Loaded isochrones:", data);
-  return data; // { type: "FeatureCollection", features: [...] }
+
+  return data;
 };

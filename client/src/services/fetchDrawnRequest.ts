@@ -1,42 +1,25 @@
 // src/services/fetchDrawnRequests.ts
-export const fetchDrawnRequests = async (user?: {
-  id?: number;
-  token?: string;
-}) => {
-  // 1) User- und Token-Infos holen (aus Param oder localStorage)
-  const id = user?.id ?? JSON.parse(localStorage.getItem("user") || "null")?.id;
+import { api } from "../utils/api"; // Pfad anpassen
+
+type UserLite = { id?: number; token?: string };
+
+export const fetchDrawnRequests = async (user?: UserLite) => {
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const id = user?.id ?? storedUser?.id;
   const token = user?.token ?? localStorage.getItem("token");
 
   console.log("[fetchDrawnRequests] id:", id, "token:", token?.slice(0, 8));
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  // 2) URL zusammenbauen
-  const url = `http://localhost:3001/api/drawRequest/${id}`;
-  console.log("[fetchDrawnRequests] GET", url);
+  // Falls Token übergeben wurde → in localStorage speichern, damit api es nutzt
+  if (user?.token) localStorage.setItem("token", user.token);
 
-  // 3) Request absenden (Bearer-Auth)
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const path = `/drawRequest/${id}`;
+  console.log("[fetchDrawnRequests] GET", path);
 
-  console.log(
-    "[fetchDrawnRequests] Response status:",
-    res.status,
-    res.ok ? "OK" : "FAIL"
-  );
-
-  // 4) Fehler auffangen
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("[fetchDrawnRequests] Error-body:", errorText);
-    throw new Error(
-      `Fehler beim Laden der Draw-Requests (${res.status}): ${errorText}`
-    );
-  }
-
-  // 5) GeoJSON-FeatureCollection zurückgeben
-  const data = await res.json();
+  const data = await api.get<any>(path); // <any> durch FeatureCollection-Typ ersetzen falls vorhanden
   console.log("[fetchDrawnRequests] Loaded drawn requests:", data);
-  return data; // { type: "FeatureCollection", features: [...] }
+
+  return data;
 };

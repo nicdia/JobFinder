@@ -1,24 +1,14 @@
+// irgendwo in client/src/... (wo deine auth-Funktionen liegen)
+import { api } from "../utils/api";
+
 export const loginUser = async (email: string, password: string) => {
-  const response = await fetch("http://localhost:3001/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error?.error || "Login fehlgeschlagen");
-  }
-
-  const data = await response.json();
+  const data = await api.post<{ id: string; name: string; token: string }>(
+    "/auth/login",
+    { email, password }
+  );
 
   localStorage.setItem("token", data.token);
-
-  return {
-    id: data.id,
-    name: data.name,
-    token: data.token,
-  };
+  return { id: data.id, name: data.name, token: data.token };
 };
 
 export const registerUser = async (
@@ -26,27 +16,11 @@ export const registerUser = async (
   email: string,
   password: string
 ) => {
-  const res = await fetch("http://localhost:3001/api/auth/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name, email, password }),
-  });
+  const data = await api.post<{ id: string; name: string; token: string }>(
+    "/auth/register",
+    { name, email, password }
+  );
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error?.error || "Registrierung fehlgeschlagen");
-  }
-
-  const data = await res.json();
-
-  // Optional: Token auch hier speichern, falls gebraucht
   localStorage.setItem("token", data.token);
-
-  return {
-    id: data.id,
-    name: data.name,
-    token: data.token,
-  };
+  return { id: data.id, name: data.name, token: data.token };
 };

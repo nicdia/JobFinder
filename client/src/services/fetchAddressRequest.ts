@@ -1,9 +1,14 @@
 // src/services/fetchUserSearchRequests.ts
-export const fetchUserSearchRequests = async (user?: {
-  id?: number;
-  token?: string;
-}) => {
-  const id = user?.id ?? JSON.parse(localStorage.getItem("user") || "null")?.id;
+import { api } from "../utils/api";
+
+type UserLite = { id?: number; token?: string };
+
+// optional: wenn du ein Rückgabe-Typ kennst, hier eintragen
+// type SearchRequests = GeoJSON.FeatureCollection | any;
+
+export const fetchUserSearchRequests = async (user?: UserLite) => {
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const id = user?.id ?? storedUser?.id;
   const token = user?.token ?? localStorage.getItem("token");
 
   console.log(
@@ -15,28 +20,15 @@ export const fetchUserSearchRequests = async (user?: {
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  const url = `http://localhost:3001/api/userInputSearchRequest/${id}`;
-  console.log("[fetchUserSearchRequests] GET", url);
+  // Der api-Helper liest das Token aus localStorage.
+  // Wenn eins übergeben wurde, legen wir es sicherheitshalber dort ab.
+  if (user?.token) localStorage.setItem("token", user.token);
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const path = `/userInputSearchRequest/${id}`;
+  console.log("[fetchUserSearchRequests] GET", path);
 
-  console.log(
-    "[fetchUserSearchRequests] Response status:",
-    res.status,
-    res.ok ? "OK" : "FAIL"
-  );
+  const data = await api.get<any>(path); // <any> ggf. durch deinen Typ ersetzen
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("[fetchUserSearchRequests] Error-body:", errorText);
-    throw new Error(
-      `Fehler beim Laden der Such-Requests (${res.status}): ${errorText}`
-    );
-  }
-
-  const data = await res.json();
   console.log("[fetchUserSearchRequests] Loaded requests:", data);
-  return data; // FeatureCollection der Search-Requests
+  return data;
 };

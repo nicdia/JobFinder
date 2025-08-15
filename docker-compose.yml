@@ -50,6 +50,20 @@ services:
         condition: service_healthy
     networks: [app-net]
 
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        BUILD_DIR: dist # Vite-Output
+    container_name: client
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-3000}:80" # öffnet http://localhost:3000
+    depends_on:
+      - api
+    networks: [app-net]
+
 volumes:
   db-data:
 
