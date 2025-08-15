@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "Backend",
   "main": "index.js",
-  "scripts": {
-    "test": "jest --silent=false",
-    "dev": "ts-node src/app.ts"
-  },
+"scripts": {
+  "build": "tsc",
+  "start": "node dist/app.js",
+  "dev": "ts-node src/app.ts",
+  "test": "jest --silent=false"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nicdia/JobFinder.git"
