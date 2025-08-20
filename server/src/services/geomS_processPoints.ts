@@ -38,13 +38,22 @@ export const processPoints = async ({
   const time = "14:00:00";
   const date = "2024-12-12";
   const label = reqName;
+  const BASE = process.env.OTP_BASE_URL ?? "http://localhost:8080";
 
+  // Präfix ohne trailing slash:
+  const PREF = (process.env.OTP_PATH_PREFIX ?? "/otp").replace(/\/$/, "");
+
+  // Router-ID (häufig: "default"; manche Setups: "current")
+  const RID = process.env.OTP_ROUTER_ID ?? "current";
+
+  // Finaler Endpunkt:
+  const url = `${BASE}${PREF}/routers/${RID}/isochrone`;
   for (const raw of coordinates) {
     const coord = toLatLon(raw);
 
     const result = await fetchOtpApi({
       corDict: { userPoints: [{ coord }] },
-      url: "http://localhost:8080/otp/routers/current/isochrone",
+      url: url,
       precision: 10,
       cutoff,
       mode,

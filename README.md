@@ -27,8 +27,14 @@ Doockercontainer starten
 
 docker compose up -d
 docker compose logs -f --tail=100
-
-                        Funktionen die noch kommen müssen:
+docker compose logs -f --tail=100
+docker compose logs -f api # nur Backend
+docker compose logs -f client # nur Frontend
+docker compose logs -f otp # OTP
+docker compose logs -f db # DB
+docker compose ps -- ports und status angucken der container
+docker compose build api client && docker compose up -d -- nach Codeänderungen
+Funktionen die noch kommen müssen:
 
 Update, Delete Suchaufträge + Geometrien --> DAS ALS NÄCHSTES
 
@@ -43,6 +49,8 @@ Dem Icon wenn man angemeldet ist weitere Funktionen geben
 Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
 
 Usermanagement
+
+INIT SQL einrichten
 
 BUGLISTE
 manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktberechnung

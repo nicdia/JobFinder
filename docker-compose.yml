@@ -34,6 +34,9 @@ services:
       PG_DATABASE: ${PG_DATABASE}
       PG_USER: ${PG_USER}
       PG_PASSWORD: ${PG_PASSWORD}
+      OTP_BASE_URL: ${OTP_BASE_URL}
+      OTP_PATH_PREFIX: ${OTP_PATH_PREFIX}
+      OTP_ROUTER_ID: ${OTP_ROUTER_ID}
     ports:
       - "8080:3001"
     depends_on:
