@@ -1,11 +1,21 @@
-// mainPipeScript.ts
-
+// src/mainPipeScript.ts
 import { exec } from "child_process";
 import { promisify } from "util";
 import { readFileSync } from "fs";
 import pool from "./util/db";
 
 const execAsync = promisify(exec);
+
+// Hilfsfunktion: ts-node (Dev) vs. node dist (Prod)
+function resolveRunner(scriptTsPath: string) {
+  const isProd = process.env.NODE_ENV === "production";
+  if (!isProd) return { cmd: "ts-node", file: scriptTsPath };
+  // src/foo/bar.ts -> dist/foo/bar.js
+  const jsPath = scriptTsPath
+    .replace(/^src[\\/]/, "dist/")
+    .replace(/\.ts$/, ".js");
+  return { cmd: "node", file: jsPath };
+}
 
 async function runSqlFile(filePath: string) {
   const sql = readFileSync(filePath, "utf-8");
@@ -14,44 +24,33 @@ async function runSqlFile(filePath: string) {
   console.log(`✅ SQL abgeschlossen: ${filePath}`);
 }
 
-async function runScript(label: string, scriptPath: string) {
+async function runScript(label: string, scriptPathTs: string) {
   console.log(`▶️ Starte Script: ${label}`);
-
-  // Kindprozess starten, warten bis fertig
-  const { stdout, stderr } = await execAsync(`ts-node ${scriptPath}`);
-
-  // ──> Ausgaben durchreichen
+  const { cmd, file } = resolveRunner(scriptPathTs);
+  const { stdout, stderr } = await execAsync(`${cmd} ${file}`);
   if (stdout) process.stdout.write(stdout);
   if (stderr) process.stderr.write(stderr);
-
   console.log(`✅ Script beendet: ${label}`);
 }
 
 async function main() {
   try {
     console.log("🚀 Pipeline gestartet...");
-
-    /* 1 */ await runSqlFile("src/sql/empty_stage.sql");
-
-    /* 2 */ await runScript("BA API Fetch", "src/scripts/importBAJobs.ts");
+    await runSqlFile("src/sql/empty_stage.sql");
+    await runScript("BA API Fetch", "src/scripts/importBAJobs.ts");
     await runScript("Adzuna API Fetch", "src/scripts/importAdzunaJobs.ts");
-
-    /* 3a  🔒 Aktuellen Mart sichern ------------- */
     await runSqlFile("src/sql/insert_current_mart_into_archive.sql");
-
-    /* 3b  🧹 Base & Mart leeren ------------------ */
     await runSqlFile("src/sql/empty_base_and_mart.sql");
-
-    /* 4 */ await runSqlFile("src/sql/insert_into_base_ba.sql");
+    await runSqlFile("src/sql/insert_into_base_ba.sql");
     await runSqlFile("src/sql/insert_into_base_adzuna.sql");
-
-    /* 5 */ await runScript("Geocode Adzuna", "src/scripts/geocodingDoing.ts");
-
-    /* 6 */ await runSqlFile("src/sql/insert_into_mart.sql");
-
+    await runScript("Geocode Adzuna", "src/scripts/geocodingDoing.ts");
+    await runSqlFile("src/sql/insert_into_mart.sql");
     console.log("🏁 Pipeline erfolgreich abgeschlossen!");
   } catch (err) {
     console.error("❌ Fehler in der Pipeline:", err);
+    process.exitCode = 1;
+  } finally {
+    await pool.end?.();
   }
 }
 

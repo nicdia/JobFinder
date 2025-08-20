@@ -87,6 +87,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+  pipeline:
+    build:
+      context: ./data-pipeline
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./data-pipeline/.env # <-- oder ./.env, je nachdem wo deine Keys liegen
+    environment:
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_DATABASE: ${PG_DATABASE}
+      PG_USER: ${PG_USER}
+      PG_PASSWORD: ${PG_PASSWORD}
+    networks: [app-net]
+    profiles: ["manual"]
 
 volumes:
   db-data:

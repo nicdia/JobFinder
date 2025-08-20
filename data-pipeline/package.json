@@ -4,7 +4,9 @@
   "description": "Pipeline die zyklisch neue Jobangebote importiert ",
   "main": "src/mainPipeScript.ts",
   "scripts": {
-    "pipeline": "ts-node src/mainPipeScript.ts"
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/mainPipeScript.js",
+    "start:dev": "ts-node src/mainPipeScript.ts"
   },
   "repository": {
     "type": "git",
