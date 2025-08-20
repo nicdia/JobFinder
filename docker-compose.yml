@@ -1,18 +1,15 @@
 services:
   db:
-    image: postgres:16-alpine
-    container_name: db
-    restart: unless-stopped
+    image: postgis/postgis:17-3.4 # statt postgres:16-alpine
     environment:
-      # Postgres-Image erwartet POSTGRES_* -> mappen aus deinen PG_*
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_DB: ${PG_DATABASE}
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-dia}
+      POSTGRES_DB: ${PG_DATABASE:-jobhunter}
     ports:
-      # Host-Port = dein PG_PORT (z.B. 5433), Container-Port bleibt 5432
-      - "${PG_PORT:-5433}:5432"
+      - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+
       # Init-SQL beim ersten Start eines leeren Volumes
       - ./server/src/db/create_tables.sql:/docker-entrypoint-initdb.d/01_create_tables.sql:ro
     healthcheck:
@@ -30,21 +27,15 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 8080
+      PORT: 3001 # <— hier auf 3001
       JWT_SECRET: ${JWT_SECRET}
-
-      # ---- Deine bestehenden Variablen-Namen (für den Code) ----
-      # Wichtig: im Container ist die DB unter Host "db" erreichbar
       PG_HOST: db
-      PG_PORT: 5432 # im Container immer 5432
+      PG_PORT: 5432
       PG_DATABASE: ${PG_DATABASE}
       PG_USER: ${PG_USER}
       PG_PASSWORD: ${PG_PASSWORD}
-
-      # Optional: falls dein Code auch eine DSN akzeptiert
-      DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@db:5432/${PG_DATABASE}
     ports:
-      - "8080:8080" # oder "${SERVER_PORT:-8080}:8080"
+      - "8080:3001"
     depends_on:
       db:
         condition: service_healthy

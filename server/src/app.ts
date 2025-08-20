@@ -16,6 +16,14 @@ const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/api/auth", register);
 app.use("/api/auth", login);
 app.use("/api/users", userRoutes);
