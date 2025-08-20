@@ -55,6 +55,36 @@ services:
       - api
     networks: [app-net]
 
+  otp:
+    image: eclipse-temurin:11-jre # Java 11 Runtime (passt für OTP1)
+    container_name: otp
+    working_dir: /otp
+    volumes:
+      - ./otp:/otp # <-- dein Ordner mit otp.jar, graphs/, lucene/, …
+    ports:
+      - "8082:8080" # Host 8082 -> OTP 8080
+    command:
+      [
+        "java",
+        "-Xmx8G",
+        "-jar",
+        "otp.jar",
+        "--router",
+        "current",
+        "--graphs",
+        "graphs",
+        "--server",
+      ]
+    restart: unless-stopped
+    networks: [app-net]
+    # optional, einfacher Healthcheck:
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -qO- http://localhost:8080/otp/routers || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
 volumes:
   db-data:
 

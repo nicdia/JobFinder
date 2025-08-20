@@ -23,6 +23,11 @@ java -Xmx8G -jar otp.jar --router current --graphs graphs --server
 Doku/UML Modell:
 Mermaid angucken--> in Git Markdown
 
+Doockercontainer starten
+
+docker compose up -d
+docker compose logs -f --tail=100
+
                         Funktionen die noch kommen müssen:
 
 Update, Delete Suchaufträge + Geometrien --> DAS ALS NÄCHSTES
@@ -36,6 +41,7 @@ Die Navigation zwischen den Seiten verbessern
 Dem Icon wenn man angemeldet ist weitere Funktionen geben
 
 Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
+
 Usermanagement
 
 BUGLISTE
