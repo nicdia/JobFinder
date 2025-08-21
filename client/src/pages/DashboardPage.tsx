@@ -1,17 +1,138 @@
-import { Box, Container, Typography, Divider } from "@mui/material";
+// src/pages/DashboardPage.tsx
+import { useEffect, useMemo, useState } from "react";
+import {
+  Box,
+  Container,
+  Typography,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+  Button,
+  Chip,
+  CircularProgress,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import AppsIcon from "@mui/icons-material/Apps";
+import SearchIcon from "@mui/icons-material/Search";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
+
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AppHeader from "../components/UI/AppHeaderComponent";
-import SearchIcon from "@mui/icons-material/Search"; // oben ergänzen
-import BarChartIcon from "@mui/icons-material/BarChart";
-import { useNavigate } from "react-router-dom";
-import DashboardSection from "../components/UI/DashboardSectionComponent"; // Navigation
+import DashboardSection from "../components/UI/DashboardSectionComponent";
+
+import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
+import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
+// -------- Hilfen zum Normalisieren ----------
+type AnyFeature = {
+  id?: number | string;
+  type: "Feature";
+  geometry?: any;
+  properties?: Record<string, any>;
+};
+
+type UnifiedRequest = {
+  id: number | string;
+  type: "address" | "drawn";
+  name: string;
+  createdAt?: string;
+  raw: AnyFeature;
+};
+
+function extractFeatures(input: any): AnyFeature[] {
+  // Akzeptiere sowohl FeatureCollection als auch Array<Feature>
+  if (!input) return [];
+  if (Array.isArray(input)) return input as AnyFeature[];
+  if (input.type === "FeatureCollection" && Array.isArray(input.features)) {
+    return input.features as AnyFeature[];
+  }
+  // Fallback: einzelnes Feature?
+  if (input.type === "Feature") return [input as AnyFeature];
+  return [];
+}
+
+function pickName(props: Record<string, any> = {}, id: number | string) {
+  return (
+    props.req_name ??
+    props.label ??
+    props.title ??
+    props.address_display ??
+    `Suchauftrag #${id}`
+  );
+}
+// --------------------------------------------
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [expanded, setExpanded] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [addrData, setAddrData] = useState<AnyFeature[]>([]);
+  const [drawnData, setDrawnData] = useState<AnyFeature[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Beim Mount laden
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [addrResp, drawnResp] = await Promise.all([
+          fetchUserSearchRequests(user || undefined),
+          fetchDrawnRequests(user || undefined),
+        ]);
+        if (!alive) return;
+        setAddrData(extractFeatures(addrResp));
+        setDrawnData(extractFeatures(drawnResp));
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.message ?? "Fehler beim Laden der Suchaufträge.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  // Vereinheitlichte Liste
+  const requests: UnifiedRequest[] = useMemo(() => {
+    const a = addrData.map((f) => {
+      const id = (f.id ?? f.properties?.id) as number | string;
+      const props = f.properties ?? {};
+      return {
+        id,
+        type: "address" as const,
+        name: pickName(props, id),
+        createdAt: props.created_at,
+        raw: f,
+      };
+    });
+    const d = drawnData.map((f) => {
+      const id = (f.id ?? f.properties?.id) as number | string;
+      const props = f.properties ?? {};
+      return {
+        id,
+        type: "drawn" as const,
+        name: pickName(props, id),
+        createdAt: props.created_at,
+        raw: f,
+      };
+    });
+    // Wunsch: gemischt anzeigen; alternativ hier sortieren
+    return [...a, ...d];
+  }, [addrData, drawnData]);
 
   return (
     <>
@@ -21,7 +142,7 @@ const DashboardPage = () => {
           py: 4,
           backgroundColor: "#f5f5f5",
           minHeight: "100vh",
-          px: 2, // ⬅️ Seitenabstand!
+          px: 2,
         }}
       >
         <Container maxWidth="md">
@@ -32,7 +153,9 @@ const DashboardPage = () => {
             Hier ist deine Jobsuche im Überblick.
           </Typography>
         </Container>
+
         <Divider sx={{ my: 2 }} />
+
         <DashboardSection
           icon={
             <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />
@@ -44,6 +167,7 @@ const DashboardPage = () => {
         />
 
         <Divider sx={{ my: 2 }} />
+
         <DashboardSection
           icon={
             <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
@@ -53,15 +177,19 @@ const DashboardPage = () => {
           buttonLabel="Anzeigen"
           onClick={() => console.log("Gespeicherte Jobs")}
         />
+
         <Divider sx={{ my: 2 }} />
+
         <DashboardSection
           icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
           title="Alle Jobs"
-          description="Du willst einfach mal alle Jobs ungefiltert ansehen? Kicke hier."
+          description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
           buttonLabel="Anzeigen"
           onClick={() => navigate("/map?mode=all")}
         />
+
         <Divider sx={{ my: 2 }} />
+
         <DashboardSection
           icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
           title="Jobs per Adresse suchen"
@@ -69,7 +197,9 @@ const DashboardPage = () => {
           buttonLabel="Erstellen"
           onClick={() => navigate("/onboarding")}
         />
+
         <Divider sx={{ my: 2 }} />
+
         <DashboardSection
           icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
           title="Suchgebiet/-Ort einzeichnen"
@@ -77,15 +207,94 @@ const DashboardPage = () => {
           buttonLabel="Zeichnen"
           onClick={() => navigate("/draw-search")}
         />
-        <Divider sx={{ my: 2 }} />
-        <DashboardSection
-          icon={<BarChartIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Statistiken"
-          description="Hier kannst du dir Statistiken vergangener Jobangebote anschauen."
-          buttonLabel="Anzeigen"
-          onClick={() => console.log("Gespeicherte Jobs")}
-        />
-        <Divider sx={{ my: 2 }} />
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* --------- NEU: eine kombinierte, aufklappbare Sektion --------- */}
+        <Accordion
+          expanded={expanded}
+          onChange={(_, v) => setExpanded(v)}
+          sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <EditLocationAltIcon color="primary" />
+              <Typography fontWeight={600}>
+                Suchaufträge (bearbeiten & löschen)
+              </Typography>
+              <Chip
+                size="small"
+                label={loading ? "lädt…" : `${requests.length}`}
+              />
+            </Stack>
+          </AccordionSummary>
+
+          <AccordionDetails>
+            {loading ? (
+              <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Typography color="error">{error}</Typography>
+            ) : requests.length === 0 ? (
+              <Typography color="text.secondary">
+                Du hast noch keine Suchaufträge erstellt.
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {requests.map((r) => (
+                  <ListItem
+                    key={`${r.type}-${r.id}`}
+                    divider
+                    secondaryAction={
+                      <Stack direction="row" spacing={1}>
+                        {/* Nur UI – noch ohne Funktion */}
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<EditLocationAltIcon />}
+                          onClick={() => {}}
+                        >
+                          Bearbeiten
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteOutlineIcon />}
+                          onClick={() => {}}
+                        >
+                          Löschen
+                        </Button>
+                      </Stack>
+                    }
+                  >
+                    <ListItemText
+                      primary={
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography>{r.name}</Typography>
+                          <Chip
+                            size="small"
+                            label={
+                              r.type === "address" ? "Adresse" : "Geometrie"
+                            }
+                          />
+                        </Stack>
+                      }
+                      secondary={
+                        r.createdAt
+                          ? new Date(r.createdAt).toLocaleString("de-DE")
+                          : undefined
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        <Divider sx={{ my: 3 }} />
       </Box>
     </>
   );
