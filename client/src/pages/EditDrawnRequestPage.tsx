@@ -1,3 +1,4 @@
+// src/pages/EditDrawnRequestPage.tsx
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -10,6 +11,8 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Fade,
+  Paper,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
@@ -251,7 +254,6 @@ export default function EditDrawnRequestPage() {
       }
     }
 
-    // Cleanup falls Komponente unmountet
     return () => {
       if (modifyInteractionRef.current) {
         map.removeInteraction(modifyInteractionRef.current);
@@ -320,31 +322,33 @@ export default function EditDrawnRequestPage() {
     <Box sx={{ width: "100vw", height: "100vh" }}>
       <AppHeader />
 
-      {/* Header */}
-      {/* Header */}
+      {/* Obere Bar: zentriert und fixiert */}
       <Box
         sx={{
-          position: "fixed", // fixiert über der Map
+          position: "fixed",
           top: 72,
-          left: 16,
-          right: 16,
-          zIndex: 3000, // deutlich über OL-Controls
-          pointerEvents: "none", // Wrapper klickt NICHT
+          left: 0,
+          right: 0,
+          zIndex: 3000,
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none", // Wrapper nicht klickbar
         }}
       >
-        <Container maxWidth="md" disableGutters>
+        <Paper
+          elevation={1}
+          sx={{
+            pointerEvents: "auto", // Panel selbst klickbar
+            borderRadius: 2,
+            px: 2,
+            py: 1,
+            width: "min(920px, calc(100% - 32px))", // max-breite + Seitenrand
+          }}
+        >
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{
-              px: 2,
-              py: 1,
-              bgcolor: "white",
-              borderRadius: 2,
-              boxShadow: 1,
-              pointerEvents: "auto", // Panel selbst klickbar
-            }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
               <IconButton onClick={() => navigate(-1)} size="small">
@@ -377,7 +381,7 @@ export default function EditDrawnRequestPage() {
                   color="primary"
                   onClick={() => setEditing(true)}
                 >
-                  TEST
+                  Bearbeiten starten
                 </Button>
               ) : (
                 <Button
@@ -392,12 +396,26 @@ export default function EditDrawnRequestPage() {
             </Stack>
           </Stack>
 
+          {/* Info-Hinweis nur im Edit‑Modus */}
+          <Fade in={editing} unmountOnExit>
+            <Alert
+              severity="info"
+              sx={{
+                mt: 1,
+                borderRadius: 1.5,
+              }}
+            >
+              Ziehe an der Geometrie, um die Form zu verändern. Drücke danach
+              erneut auf den Knopf, um die Änderungen zu speichern.{" "}
+            </Alert>
+          </Fade>
+
           {error && (
-            <Alert severity="error" sx={{ mt: 1, pointerEvents: "auto" }}>
+            <Alert severity="error" sx={{ mt: 1 }}>
               {error}
             </Alert>
           )}
-        </Container>
+        </Paper>
       </Box>
 
       {/* Karte */}
