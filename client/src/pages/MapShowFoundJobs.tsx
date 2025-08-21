@@ -213,6 +213,13 @@ export default function MapPage() {
               }),
               title: "Jobs",
               type: "overlay",
+              style: new Style({
+                image: new CircleStyle({
+                  radius: 6,
+                  fill: new Fill({ color: "#424242" }), // ⬅️ wie in der Legende
+                  stroke: new Stroke({ color: "#212121", width: 1 }), // ⬅️ dunkler Rand
+                }),
+              }),
             });
 
             let reqPointLayer: VectorLayer | null = null;
