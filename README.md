@@ -37,21 +37,16 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-sicherstellen dass bei Geokodierung nur Adressen in Hamburg akzeptiert werden + evtl. eine geojson einladen womit man filtern kann das alles außerhalb ausgegraut wird auf der Karte
-
 Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id --> CRUD
 
 Usermanagement - CRUD
+
+sicherstellen dass bei Geokodierung nur Adressen in Hamburg akzeptiert werden + evtl. eine geojson einladen womit man filtern kann das alles außerhalb ausgegraut wird auf der Karte
+
+Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
 Responsive
 
 INIT SQL einrichten
 
                                     BUGLISTE
-
-manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktberechnung
-
-Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
-
-AKTUELL
-Meine drawn search request tabelle
