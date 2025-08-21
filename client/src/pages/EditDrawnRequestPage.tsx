@@ -1,5 +1,4 @@
-// src/pages/EditDrawnRequestPage.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -22,11 +21,14 @@ import VectorLayer from "ol/layer/Vector";
 import LayerGroup from "ol/layer/Group";
 import { Style, Stroke, Fill, Circle as CircleStyle } from "ol/style";
 import { unByKey } from "ol/Observable";
+import Modify from "ol/interaction/Modify";
+import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 
 import AppHeader from "../components/UI/AppHeaderComponent";
 import MapComponent from "../components/Map/MapComponent";
 import { useAuth } from "../context/AuthContext";
 import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
+import { updateDrawnRequest } from "../services/updateDrawnRequest";
 
 type AnyFeature = {
   id?: number | string;
@@ -46,15 +48,19 @@ export default function EditDrawnRequestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feature, setFeature] = useState<AnyFeature | null>(null);
+  const [editing, setEditing] = useState(false);
 
-  // 1) Gewählten Drawn-Request laden
+  const modifyInteractionRef = useRef<Modify | null>(null);
+  const contextMenuListenerRef = useRef<(evt: MouseEvent) => void>();
+  const doubleClickListenerRef = useRef<(evt: any) => void>();
+
+  // --- 1) Drawn-Request laden ---
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         setLoading(true);
         setError(null);
-
         const data = await fetchDrawnRequests(user || undefined);
         const feats: AnyFeature[] =
           data?.type === "FeatureCollection"
@@ -62,7 +68,6 @@ export default function EditDrawnRequestPage() {
             : Array.isArray(data)
             ? data
             : [];
-
         const match =
           feats.find(
             (f) => String(f.id ?? f.properties?.id) === String(requestId)
@@ -87,12 +92,12 @@ export default function EditDrawnRequestPage() {
     };
   }, [user, requestId]);
 
-  // 2) LayerGroup wie in MapPage, aber nur für EINEN Suchauftrag
+  // --- 2) LayerGroup mit EINEM Feature aufbauen und fitten ---
   useEffect(() => {
     const map = olMapRef.current;
     if (!map) return;
 
-    // alte Edit-Gruppe(n) entfernen
+    // Alte Edit-Gruppen weg
     map
       .getLayers()
       .getArray()
@@ -106,26 +111,24 @@ export default function EditDrawnRequestPage() {
     const props = feature.properties ?? {};
     const label = props.req_name ?? `Geometrie #${feature.id}`;
 
-    // Geometrie-Feature erzeugen
+    // Feature erzeugen (und ID setzen, wichtig fürs Speichern)
+    const olFeature = new GeoJSON().readFeature(
+      feature.type === "Feature"
+        ? feature
+        : {
+            type: "Feature",
+            geometry: feature.geometry,
+            properties: props,
+            id: feature.id,
+          },
+      { dataProjection: "EPSG:4326", featureProjection: "EPSG:3857" }
+    );
+    if (feature.id != null && olFeature.getId() == null) {
+      olFeature.setId(feature.id);
+    }
+
     const geomLayer = new VectorLayer({
-      source: new VectorSource({
-        features: [
-          new GeoJSON().readFeature(
-            feature.type === "Feature"
-              ? feature
-              : {
-                  type: "Feature",
-                  geometry: feature.geometry,
-                  properties: props,
-                  id: feature.id,
-                },
-            {
-              dataProjection: "EPSG:4326",
-              featureProjection: "EPSG:3857",
-            }
-          ),
-        ],
-      }),
+      source: new VectorSource({ features: [olFeature] }),
       title: "Geometrie",
       type: "overlay",
       style: (() => {
@@ -144,7 +147,6 @@ export default function EditDrawnRequestPage() {
             stroke: new Stroke({ color: "#1976d2", width: 3 }),
           });
         }
-        // Polygon (oder MultiPolygon) – rot wie in MapPage
         return new Style({
           stroke: new Stroke({ color: "#ff1744", width: 2 }),
           fill: new Fill({ color: "rgba(255,23,68,0.15)" }),
@@ -161,8 +163,8 @@ export default function EditDrawnRequestPage() {
 
     map.addLayer(group);
 
-    // Fit auf die Geometrie
-    const src = (geomLayer as any).getSource() as VectorSource;
+    // Fit auf Geometrie
+    const src = geomLayer.getSource() as VectorSource;
     const extent = src.getExtent();
     const view = map.getView();
     setTimeout(() => {
@@ -181,15 +183,136 @@ export default function EditDrawnRequestPage() {
       }
     }, 0);
 
-    // Cleanup
     return () => {
-      if (olMapRef.current) {
-        olMapRef.current.removeLayer(group);
-      }
+      if (olMapRef.current) olMapRef.current.removeLayer(group);
     };
   }, [feature]);
 
-  // 3) MapComponent: wie in MapPage – eigene Layer über olMapRef steuern
+  // --- 3) Edit-Modus an/aus (Modify + Events) ---
+  useEffect(() => {
+    const map = olMapRef.current;
+    if (!map) return;
+
+    if (editing) {
+      // Source der Edit-Gruppe finden
+      let source: VectorSource | null = null;
+      const editGroup = map
+        .getLayers()
+        .getArray()
+        .find((l: any) => l.get && l.get("layerType") === "editDrawnGroup");
+      if (editGroup) {
+        const layers = (editGroup as LayerGroup).getLayers().getArray();
+        if (layers.length > 0) {
+          source = (layers[0] as VectorLayer).getSource() as VectorSource;
+        }
+      }
+      if (!source) return;
+
+      // Modify aktivieren
+      const modify = new Modify({ source });
+      map.addInteraction(modify);
+      modifyInteractionRef.current = modify;
+
+      // DoubleClickZoom aus, damit wir Doppelklick zum Beenden nutzen können
+      map.getInteractions().forEach((i) => {
+        if (i instanceof DoubleClickZoom) i.setActive(false);
+      });
+
+      // Rechtsklick => speichern
+      const handleContextMenu = (evt: MouseEvent) => {
+        evt.preventDefault();
+        handleSave();
+      };
+      map.getViewport().addEventListener("contextmenu", handleContextMenu);
+      contextMenuListenerRef.current = handleContextMenu;
+
+      // Doppelklick => speichern
+      const handleDoubleClick = () => handleSave();
+      map.on("dblclick", handleDoubleClick as any);
+      doubleClickListenerRef.current = handleDoubleClick;
+    } else {
+      // Modify & Listener entfernen, DoubleClickZoom wieder an
+      if (modifyInteractionRef.current) {
+        map.removeInteraction(modifyInteractionRef.current);
+        modifyInteractionRef.current = null;
+      }
+      map.getInteractions().forEach((i) => {
+        if (i instanceof DoubleClickZoom) i.setActive(true);
+      });
+      if (contextMenuListenerRef.current) {
+        map
+          .getViewport()
+          .removeEventListener("contextmenu", contextMenuListenerRef.current);
+        contextMenuListenerRef.current = undefined;
+      }
+      if (doubleClickListenerRef.current) {
+        map.un("dblclick", doubleClickListenerRef.current as any);
+        doubleClickListenerRef.current = undefined;
+      }
+    }
+
+    // Cleanup falls Komponente unmountet
+    return () => {
+      if (modifyInteractionRef.current) {
+        map.removeInteraction(modifyInteractionRef.current);
+        modifyInteractionRef.current = null;
+      }
+      if (contextMenuListenerRef.current) {
+        map
+          .getViewport()
+          .removeEventListener("contextmenu", contextMenuListenerRef.current);
+        contextMenuListenerRef.current = undefined;
+      }
+      if (doubleClickListenerRef.current) {
+        map.un("dblclick", doubleClickListenerRef.current as any);
+        doubleClickListenerRef.current = undefined;
+      }
+      map.getInteractions().forEach((i) => {
+        if (i instanceof DoubleClickZoom) i.setActive(true);
+      });
+    };
+  }, [editing]);
+
+  // --- 4) Speichern ---
+  const handleSave = async () => {
+    const map = olMapRef.current;
+    if (!map) return;
+
+    let updatedFeature;
+    const editGroup = map
+      .getLayers()
+      .getArray()
+      .find((l: any) => l.get && l.get("layerType") === "editDrawnGroup");
+    if (editGroup) {
+      const src = (
+        (editGroup as LayerGroup).getLayers().item(0) as VectorLayer
+      ).getSource() as VectorSource;
+      updatedFeature = src.getFeatures()[0];
+    }
+    if (!updatedFeature) {
+      setEditing(false);
+      return;
+    }
+
+    const geojson = new GeoJSON().writeFeatureObject(updatedFeature, {
+      featureProjection: "EPSG:3857",
+      dataProjection: "EPSG:4326",
+    });
+    if (updatedFeature.getId()) {
+      geojson.id = updatedFeature.getId();
+    }
+
+    try {
+      await updateDrawnRequest(user, requestId!, geojson);
+      setEditing(false);
+      navigate(-1);
+    } catch (e: any) {
+      console.error("Error saving edited geometry:", e);
+      setError(e?.message ?? "Fehler beim Speichern der Änderungen.");
+    }
+  };
+
+  // Dummy fetch for MapComponent
   const fetchFunction = () =>
     Promise.resolve({ type: "FeatureCollection", features: [] });
 
@@ -197,9 +320,17 @@ export default function EditDrawnRequestPage() {
     <Box sx={{ width: "100vw", height: "100vh" }}>
       <AppHeader />
 
-      {/* Header-Bar */}
+      {/* Header */}
+      {/* Header */}
       <Box
-        sx={{ position: "absolute", top: 72, left: 16, right: 16, zIndex: 10 }}
+        sx={{
+          position: "fixed", // fixiert über der Map
+          top: 72,
+          left: 16,
+          right: 16,
+          zIndex: 3000, // deutlich über OL-Controls
+          pointerEvents: "none", // Wrapper klickt NICHT
+        }}
       >
         <Container maxWidth="md" disableGutters>
           <Stack
@@ -212,6 +343,7 @@ export default function EditDrawnRequestPage() {
               bgcolor: "white",
               borderRadius: 2,
               boxShadow: 1,
+              pointerEvents: "auto", // Panel selbst klickbar
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
@@ -238,21 +370,37 @@ export default function EditDrawnRequestPage() {
             </Stack>
 
             <Stack direction="row" spacing={1}>
-              <Button size="small" variant="outlined" disabled>
-                EDIT‑MODUS (BALD)
-              </Button>
+              {!editing ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setEditing(true)}
+                >
+                  TEST
+                </Button>
+              ) : (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSave}
+                >
+                  Änderungen speichern
+                </Button>
+              )}
             </Stack>
           </Stack>
 
           {error && (
-            <Alert severity="error" sx={{ mt: 1 }}>
+            <Alert severity="error" sx={{ mt: 1, pointerEvents: "auto" }}>
               {error}
             </Alert>
           )}
         </Container>
       </Box>
 
-      {/* Karte; Layers steuern wir selbst via olMapRef */}
+      {/* Karte */}
       <MapComponent
         mapRef={olMapRef}
         fetchFunction={fetchFunction}
