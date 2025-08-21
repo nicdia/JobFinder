@@ -69,7 +69,6 @@ CREATE TABLE account.user_drawn_search_requests (
   job_type TEXT NOT NULL,
   speed TEXT,
   cutoff_seconds INTEGER,
-  job_type       TEXT,
   transport_mode TEXT,
   geom_type      TEXT NOT NULL CHECK (geom_type IN ('Point','LineString','Polygon')),
   geom           GEOMETRY(Geometry, 4326) NOT NULL,

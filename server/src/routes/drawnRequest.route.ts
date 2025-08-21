@@ -1,9 +1,11 @@
+// src/routes/drawnRequest.route.ts
 import { Router } from "express";
 import { authenticateToken } from "../middleware/authMiddleware";
 import {
   handleDrawnGeometryInput,
   getDrawnRequest,
-  deleteDrawnSearchRequest, // ⬅️ neu
+  deleteDrawnSearchRequest,
+  updateDrawnSearchRequest, // ⬅️ neu
 } from "../controllers/drawnRequestController";
 
 const router = Router();
@@ -14,10 +16,10 @@ router
   .get(getDrawnRequest as any)
   .post(handleDrawnGeometryInput as any);
 
-// DELETE /api/drawRequest/:userId/:requestId
 router
   .route("/drawRequest/:userId/:requestId")
   .all(authenticateToken)
-  .delete(deleteDrawnSearchRequest as any); // ⬅️ neu
+  .delete(deleteDrawnSearchRequest as any)
+  .put(updateDrawnSearchRequest as any); // ⬅️ neu
 
 export default router;

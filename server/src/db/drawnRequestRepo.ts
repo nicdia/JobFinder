@@ -226,3 +226,69 @@ export async function deleteDrawnRequestCascade(
     client.release();
   }
 }
+
+export async function getDrawnRequestById(userId: number, requestId: number) {
+  const { rows } = await pool.query(
+    `
+    SELECT
+      id,
+      user_id,
+      req_name,
+      job_type,
+      transport_mode,
+      cutoff_seconds,
+      speed,
+      geom_type,
+      ST_AsGeoJSON(geom)::json AS geometry
+    FROM account.user_drawn_search_requests
+    WHERE user_id = $1 AND id = $2
+    `,
+    [userId, requestId]
+  );
+  return rows[0] || null;
+}
+
+/** Updatet die Geometrie (und geom_type) eines Drawn-Requests */
+export async function updateDrawnRequestGeometry(
+  userId: number,
+  requestId: number,
+  geometry: any
+): Promise<number> {
+  const { rowCount } = await pool.query(
+    `
+    UPDATE account.user_drawn_search_requests
+    SET geom = ST_SetSRID(ST_GeomFromGeoJSON($1), 4326),
+        geom_type = $2
+    WHERE id = $3 AND user_id = $4
+    `,
+    [JSON.stringify(geometry), geometry.type, requestId, userId]
+  );
+  return rowCount ?? 0;
+}
+
+/** Löscht abhängige Daten für einen Drawn-Request (Areas + Jobs) */
+export async function clearDependentsForDrawn(
+  userId: number,
+  requestId: number
+) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `DELETE FROM account.user_jobs_within_search_area
+       WHERE user_id = $1 AND drawn_req_id = $2`,
+      [userId, requestId]
+    );
+    await client.query(
+      `DELETE FROM account.user_search_areas
+       WHERE user_id = $1 AND drawn_req_id = $2`,
+      [userId, requestId]
+    );
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+}

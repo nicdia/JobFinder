@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { processRequestDrawnGeometry } from "../services/DrawnRequestService";
+import { processUpdateDrawnGeometry } from "../services/DrawnRequestUpdateService"; // ⬅️ neu
 import {
   queryDrawnRequest,
   deleteDrawnRequestCascade,
-} from "../db/drawnRequestRepo"; // ⬅️ import erweitert
+} from "../db/drawnRequestRepo";
 
 export async function handleDrawnGeometryInput(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
@@ -86,5 +87,42 @@ export async function deleteDrawnSearchRequest(req: Request, res: Response) {
       err
     );
     res.status(500).json({ error: err.message || "Interner Serverfehler" });
+  }
+}
+
+export async function updateDrawnSearchRequest(req: Request, res: Response) {
+  const tokenUserId = (req as any).user?.id;
+  const paramUserId = parseInt(req.params.userId, 10);
+  const requestId = parseInt(req.params.requestId, 10);
+  const geometry = req.body?.geometry;
+
+  if (tokenUserId !== paramUserId) {
+    return res.status(403).json({ error: "Nicht autorisiert" });
+  }
+  if (
+    !geometry ||
+    !["Polygon", "Point", "LineString"].includes(geometry.type)
+  ) {
+    return res.status(400).json({ error: "Ungültige Geometrie" });
+  }
+  if (Number.isNaN(requestId)) {
+    return res.status(400).json({ error: "Ungültige requestId" });
+  }
+
+  try {
+    const result = await processUpdateDrawnGeometry(
+      paramUserId,
+      requestId,
+      geometry
+    );
+    return res.json({ message: "Suchauftrag aktualisiert", ...result });
+  } catch (err: any) {
+    console.error(
+      `[PUT /api/drawRequest/${paramUserId}/${requestId}] Fehler:`,
+      err
+    );
+    return res
+      .status(500)
+      .json({ error: err.message || "Interner Serverfehler" });
   }
 }

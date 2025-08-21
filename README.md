@@ -63,3 +63,6 @@ manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktbere
 Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
 Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
+
+AKTUELL
+Meine drawn search request tabelle
