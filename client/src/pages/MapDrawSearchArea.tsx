@@ -1,3 +1,4 @@
+// src/pages/MapDrawSearchArea.tsx (DrawAreaPage)
 import { useRef, useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import { Map } from "ol";
@@ -15,8 +16,13 @@ import AppHeader from "../components/UI/AppHeaderComponent";
 import { useDraw } from "../hooks/useDraw";
 import { saveSearchArea } from "../services/postDrawSearchRequestApi";
 
+// 👇 NEU
+import { useNavigate } from "react-router-dom";
+
 const DrawAreaPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); // 👈 NEU
+
   // OpenLayers Refs
   const mapRef = useRef<Map | null>(null);
   const drawRef = useRef<Draw | null>(null);
@@ -30,16 +36,14 @@ const DrawAreaPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [newFeature, setNewFeature] = useState<Feature<Geometry> | null>(null);
 
-  // Effects
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     map.getInteractions().forEach((i) => {
       if (i instanceof DragPan) i.setActive(!formOpen);
     });
   }, [formOpen]);
-  // Hook
+
   useDraw({
     mapRef,
     drawType,
@@ -49,7 +53,7 @@ const DrawAreaPage = () => {
       setFormOpen(true);
     },
   });
-  // Speichern des Features
+
   const handleSaveFeature = async (formData: Record<string, string>) => {
     if (!newFeature || !mapRef.current) return;
     if (!user?.id || !user?.token) {
@@ -57,14 +61,12 @@ const DrawAreaPage = () => {
       return;
     }
     try {
-      /* 1)  Geometrie in GeoJSON umwandeln */
       const geojson = new GeoJSON();
       const geometry = geojson.writeGeometryObject(newFeature.getGeometry()!, {
-        featureProjection: mapRef.current.getView().getProjection(), // Karten‑Proj.
-        dataProjection: "EPSG:4326", // Backend‑Proj.
+        featureProjection: mapRef.current.getView().getProjection(),
+        dataProjection: "EPSG:4326",
       });
 
-      /* 3)  API‑Call */
       const res = await saveSearchArea({
         userId: user.id,
         token: user.token,
@@ -73,11 +75,11 @@ const DrawAreaPage = () => {
       });
       console.log("✅ Data sent successfully:", res);
 
-      console.log("✅ Data sent successfully:", res);
+      // 👉 Direkt nach MapPage leiten, die die sichtbaren Jobs lädt
+      navigate("/found-jobs?mode=customVisible", { replace: true });
     } catch (err) {
       console.error("❌ Fehler beim Senden:", err);
     } finally {
-      /* 4)  UI zurücksetzen */
       setFormOpen(false);
       setNewFeature(null);
       setDrawType(null);

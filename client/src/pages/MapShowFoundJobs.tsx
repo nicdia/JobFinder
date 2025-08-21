@@ -161,13 +161,17 @@ export default function MapPage() {
           /** Für jede Isochrone eine LayerGroup ----------------- */
           isoFC.features.forEach((isoFeat: any, idx: number) => {
             const areaId = isoFeat.id;
-            const areaLabel =
-              isoFeat.properties?.label ?? `Isochrone ${idx + 1}`;
+
+            const drawnReqId = isoFeat.properties?.drawn_req_id;
+            const addressReqId = isoFeat.properties?.address_req_id;
 
             const reqPointFeat =
-              drawnReqMap[isoFeat.properties?.drawn_req_id] ??
-              addressReqMap[isoFeat.properties?.address_req_id] ??
-              null;
+              drawnReqMap[drawnReqId] ?? addressReqMap[addressReqId] ?? null;
+
+            const areaLabel =
+              (drawnReqId && drawnReqMap[drawnReqId]?.properties?.req_name) ||
+              isoFeat.properties?.label ||
+              `Isochrone ${idx + 1}`;
 
             const polyLayer = new VectorLayer({
               source: new VectorSource({
@@ -232,8 +236,7 @@ export default function MapPage() {
                   }),
                 });
               } else if (geomType === "LineString") {
-
-              /* ---------- LineString (neuer Stil) ---------- */
+                /* ---------- LineString (neuer Stil) ---------- */
                 reqPointLayer = new VectorLayer({
                   source: new VectorSource({
                     features: [
@@ -263,11 +266,10 @@ export default function MapPage() {
             group.set("layerType", "searchAreaGroup");
             group.set("searchAreaId", areaId);
 
-            // Sichtbarkeits-Änderungen dieser Gruppe beobachten
             const key = group.on("change:visible", updateVisibleJobs);
             layerListenerKeys.current.push(key);
 
-            olMapRef.current.addLayer(group);
+            olMapRef.current!.addLayer(group);
           });
         }
 
