@@ -8,11 +8,11 @@ Tool zur Pflege der Vektordaten (CRUD) --> check
 Geolocation (optional) --> check
 Nominatim-Tool (optional) --> check
 Attribut-Darstellung --> check
+WMS-Layer einbinden / bereitstellen (optional, bspw. mit MapServer) --> check
 
                                 Noch Offen - Aufgabenstellung
 
 Rasterdaten-Layer (optional)
-WMS-Layer einbinden / bereitstellen (optional, bspw. mit MapServer)
 Routing (optional) --> Openrouteservice
 Bilder im Attribut einstellen?
 
@@ -45,7 +45,11 @@ sicherstellen dass bei Geokodierung nur Adressen in Hamburg akzeptiert werden + 
 
 Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
-Responsive
+Startbildschirm anpassen - Tutorial was die App kann
+
+Wenn man sich abmeldet oder eine URl direkt aufruft soll man immer zum Startbildschirm weitergeleitet werden -- codex
+
+Responsive -- codex
 
 INIT SQL einrichten
 
