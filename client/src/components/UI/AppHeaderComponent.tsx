@@ -321,7 +321,7 @@ const AppHeader = () => {
 
   return (
     <>
-      <AppBar position="static" color="primary">
+      <AppBar position="fixed" color="primary">
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           {/* 🏠 Home */}
           <IconButton

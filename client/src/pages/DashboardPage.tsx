@@ -26,7 +26,8 @@ import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import AppHeader from "../components/UI/AppHeaderComponent";
+// ⛔️ AppHeader entfernen – kommt global aus App.tsx
+// import AppHeader from "../components/UI/AppHeaderComponent";
 import DashboardSection from "../components/UI/DashboardSectionComponent";
 
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
@@ -178,195 +179,191 @@ const DashboardPage = () => {
   };
 
   return (
-    <>
-      <AppHeader />
-      <Box
-        sx={{
-          py: 4,
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-          px: 2,
-        }}
+    // ⬇️ nutzt die volle Höhe des Route-Containers und scrollt darin
+    <Box
+      sx={{
+        height: "100%",
+        minHeight: 0,
+        overflow: "auto",
+        py: 4,
+        px: 2,
+        bgcolor: "#f5f5f5",
+      }}
+    >
+      <Container maxWidth="md">
+        <Typography variant="h5" fontWeight={600}>
+          Hallo {user?.name || "Nutzer"},
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 4 }}>
+          Hier ist deine Jobsuche im Überblick.
+        </Typography>
+      </Container>
+
+      <Divider sx={{ my: 2 }} />
+
+      <DashboardSection
+        icon={<WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+        title="Gefundene Jobs"
+        description="Hier findest du die gefundenen Jobs, basierend auf deinen Suchanfragen."
+        buttonLabel="Anzeigen"
+        onClick={() => navigate("/found-jobs?mode=customVisible")}
+      />
+
+      <Divider sx={{ my: 2 }} />
+
+      <DashboardSection
+        icon={
+          <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
+        }
+        title="Keine gespeicherten Jobs"
+        description="Hier siehst du eine Übersicht der Jobs, die du mit einem Herz markiert hast."
+        buttonLabel="Anzeigen"
+        onClick={() => console.log("Gespeicherte Jobs")}
+      />
+
+      <Divider sx={{ my: 2 }} />
+
+      <DashboardSection
+        icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+        title="Jobs per Adresse suchen"
+        description="Erstelle hier einen neuen Suchauftrag basierend auf den Erreichbarkeitsverhältnissen deiner Adresse."
+        buttonLabel="Erstellen"
+        onClick={() => navigate("/onboarding")}
+      />
+
+      <Divider sx={{ my: 2 }} />
+
+      <DashboardSection
+        icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+        title="Suchgebiet/-Ort einzeichnen"
+        description="Zeichne hier ein, in welchem Bereich du Jobs angezeigt bekommen möchtest."
+        buttonLabel="Zeichnen"
+        onClick={() => navigate("/draw-search")}
+      />
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* --------- kombinierte, aufklappbare Sektion --------- */}
+      <Accordion
+        expanded={expanded}
+        onChange={(_, v) => setExpanded(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
       >
-        <Container maxWidth="md">
-          <Typography variant="h5" fontWeight={600}>
-            Hallo {user?.name || "Nutzer"},
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 4 }}>
-            Hier ist deine Jobsuche im Überblick.
-          </Typography>
-        </Container>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <EditLocationAltIcon color="primary" />
+            <Typography fontWeight={600}>
+              Suchaufträge (bearbeiten & löschen)
+            </Typography>
+            <Chip
+              size="small"
+              label={loading ? "lädt…" : `${requests.length}`}
+            />
+          </Stack>
+        </AccordionSummary>
 
-        <Divider sx={{ my: 2 }} />
+        <AccordionDetails>
+          {loading ? (
+            <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : requests.length === 0 ? (
+            <Typography color="text.secondary">
+              Du hast noch keine Suchaufträge erstellt.
+            </Typography>
+          ) : (
+            <List disablePadding>
+              {requests.map((r) => {
+                const key = `${r.type}-${r.id}`;
+                const isDeleting = !!deletingIds[key];
 
-        <DashboardSection
-          icon={
-            <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />
-          }
-          title="Gefundene Jobs"
-          description="Hier findest du die gefundenen Jobs, basierend auf deinen Suchanfragen."
-          buttonLabel="Anzeigen"
-          onClick={() => navigate("/found-jobs?mode=customVisible")}
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <DashboardSection
-          icon={
-            <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
-          }
-          title="Keine gespeicherten Jobs"
-          description="Hier siehst du eine Übersicht der Jobs, die du mit einem Herz markiert hast."
-          buttonLabel="Anzeigen"
-          onClick={() => console.log("Gespeicherte Jobs")}
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <DashboardSection
-          icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Jobs per Adresse suchen"
-          description="Erstelle hier einen neuen Suchauftrag basierend auf den Erreichbarkeitsverhältnissen deiner Adresse."
-          buttonLabel="Erstellen"
-          onClick={() => navigate("/onboarding")}
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <DashboardSection
-          icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Suchgebiet/-Ort einzeichnen"
-          description="Zeichne hier ein, in welchem Bereich du Jobs angezeigt bekommen möchtest."
-          buttonLabel="Zeichnen"
-          onClick={() => navigate("/draw-search")}
-        />
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* --------- kombinierte, aufklappbare Sektion --------- */}
-        <Accordion
-          expanded={expanded}
-          onChange={(_, v) => setExpanded(v)}
-          sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <EditLocationAltIcon color="primary" />
-              <Typography fontWeight={600}>
-                Suchaufträge (bearbeiten & löschen)
-              </Typography>
-              <Chip
-                size="small"
-                label={loading ? "lädt…" : `${requests.length}`}
-              />
-            </Stack>
-          </AccordionSummary>
-
-          <AccordionDetails>
-            {loading ? (
-              <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : error ? (
-              <Typography color="error">{error}</Typography>
-            ) : requests.length === 0 ? (
-              <Typography color="text.secondary">
-                Du hast noch keine Suchaufträge erstellt.
-              </Typography>
-            ) : (
-              <List disablePadding>
-                {requests.map((r) => {
-                  const key = `${r.type}-${r.id}`;
-                  const isDeleting = !!deletingIds[key];
-
-                  return (
-                    <ListItem
-                      key={key}
-                      divider
-                      secondaryAction={
-                        <Stack direction="row" spacing={1}>
-                          {/* Bearbeiten NUR für "drawn" */}
-                          {r.type === "drawn" && (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              startIcon={<EditLocationAltIcon />}
-                              onClick={() => navigate(`/edit-drawn/${r.id}`)}
-                            >
-                              Bearbeiten
-                            </Button>
-                          )}
-                          {/* Löschen für beide Typen */}
+                return (
+                  <ListItem
+                    key={key}
+                    divider
+                    secondaryAction={
+                      <Stack direction="row" spacing={1}>
+                        {r.type === "drawn" && (
                           <Button
                             size="small"
                             variant="outlined"
-                            color="error"
-                            startIcon={<DeleteOutlineIcon />}
-                            onClick={() => handleDelete(r)}
-                            disabled={isDeleting}
+                            startIcon={<EditLocationAltIcon />}
+                            onClick={() => navigate(`/edit-drawn/${r.id}`)}
                           >
-                            {isDeleting ? "Lösche…" : "Löschen"}
+                            Bearbeiten
                           </Button>
-                        </Stack>
-                      }
-                    >
-                      <ListItemText
-                        primary={
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            flexWrap="wrap"
-                          >
-                            <Typography>{r.name}</Typography>
+                        )}
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteOutlineIcon />}
+                          onClick={() => handleDelete(r)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Lösche…" : "Löschen"}
+                        </Button>
+                      </Stack>
+                    }
+                  >
+                    <ListItemText
+                      primary={
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                        >
+                          <Typography>{r.name}</Typography>
+                          <Chip
+                            size="small"
+                            label={
+                              r.type === "address" ? "Adresse" : "Geometrie"
+                            }
+                          />
+                          {r.jobType && (
                             <Chip
                               size="small"
-                              label={
-                                r.type === "address" ? "Adresse" : "Geometrie"
-                              }
+                              label={r.jobType}
+                              variant="outlined"
+                              sx={{
+                                ml: 0.5,
+                                color: "text.secondary",
+                                borderColor: "divider",
+                                bgcolor: "grey.100",
+                              }}
                             />
-                            {r.jobType && (
-                              <Chip
-                                size="small"
-                                label={r.jobType}
-                                variant="outlined"
-                                sx={{
-                                  ml: 0.5,
-                                  color: "text.secondary",
-                                  borderColor: "divider",
-                                  bgcolor: "grey.100",
-                                }}
-                              />
-                            )}
-                          </Stack>
-                        }
-                        secondary={
-                          r.createdAt
-                            ? new Date(r.createdAt).toLocaleString("de-DE")
-                            : undefined
-                        }
-                      />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            )}
-          </AccordionDetails>
-        </Accordion>
+                          )}
+                        </Stack>
+                      }
+                      secondary={
+                        r.createdAt
+                          ? new Date(r.createdAt).toLocaleString("de-DE")
+                          : undefined
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
+        </AccordionDetails>
+      </Accordion>
 
-        <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 3 }} />
 
-        <DashboardSection
-          icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Alle Jobs"
-          description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
-          buttonLabel="Anzeigen"
-          onClick={() => navigate("/map?mode=all")}
-        />
+      <DashboardSection
+        icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+        title="Alle Jobs"
+        description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
+        buttonLabel="Anzeigen"
+        onClick={() => navigate("/map?mode=all")}
+      />
 
-        <Divider sx={{ my: 2 }} />
-      </Box>
-    </>
+      <Divider sx={{ my: 2 }} />
+    </Box>
   );
 };
 
