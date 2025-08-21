@@ -37,11 +37,9 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Die Navigation zwischen den Seiten verbessern -Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
+Layout der Karte verschönern - Legende einrichten sonstigen Schönheitsstuff
 
 Auf Hamburg eingrenzen + Fragen präziser macen - z.b. geschw. in kmh, sicherstellen dass bei Geokodierun nur Adressen in Hamburg ausgegeben werden
-
-Layout der Karte verschönern - Legende einrichten sonstigen Schönheitsstuff
 
 WMS-Layer einbinden
 
