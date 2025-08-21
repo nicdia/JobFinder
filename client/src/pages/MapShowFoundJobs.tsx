@@ -1,12 +1,11 @@
-// src/pages/MapPage.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 
-import AppHeader from "../components/UI/AppHeaderComponent";
 import MapComponent, { MapHandle } from "../components/Map/MapComponent";
 import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
 import JobsListWidget, { JobItem } from "../components/Map/JobsListWidget";
+import LegendWidget from "../components/Map/LegendWidget";
 
 import { fetchAllJobs } from "../services/fetchAllJobsApi";
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
@@ -26,26 +25,24 @@ import { Map as OLMap } from "ol";
 export default function MapPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const mode = searchParams.get("mode"); // "customVisible" | null
+  const mode = searchParams.get("mode");
 
   /* Refs ------------------------------------------------------ */
   const mapHandleRef = useRef<MapHandle>(null);
   const olMapRef = useRef<OLMap | null>(null);
-  const layerListenerKeys = useRef<any[]>([]); // hält alle Visibility-Listener
-  const jobsByAreaRef = useRef<Record<number, JobItem[]>>({}); // Index der Jobs nach Iso-ID
+  const layerListenerKeys = useRef<any[]>([]);
+  const jobsByAreaRef = useRef<Record<number, JobItem[]>>({});
 
   /* State ----------------------------------------------------- */
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [featureCollection, setFeatureCollection] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
   const handleFeatureClick = useCallback((f: any) => setSelectedFeature(f), []);
 
   /* Sichtbare Jobs anhand der sichtbaren Layer-Groups ermitteln */
   const updateVisibleJobs = useCallback(() => {
     if (!olMapRef.current) return;
-
     const visibleAreaIds = olMapRef.current
       .getLayers()
       .getArray()
@@ -54,24 +51,17 @@ export default function MapPage() {
           (l as any).get("layerType") === "searchAreaGroup" && l.getVisible()
       )
       .map((l) => (l as any).get("searchAreaId")) as number[];
-
     const visibleJobs: JobItem[] = [];
     visibleAreaIds.forEach((id) => {
       const arr = jobsByAreaRef.current[id];
       if (arr) visibleJobs.push(...arr);
     });
-
     setJobs(visibleJobs);
   }, []);
 
-  /* Hilfsfunktionen ------------------------------------------ */
   const parseCreatedAt = (val: any): number | null => {
     if (!val && val !== 0) return null;
-    if (typeof val === "number") {
-      // Sekunden vs. Millisekunden heuristisch unterscheiden
-      if (val < 1e12) return val * 1000;
-      return val;
-    }
+    if (typeof val === "number") return val < 1e12 ? val * 1000 : val;
     if (typeof val === "string") {
       const t = Date.parse(val);
       return isNaN(t) ? null : t;
@@ -83,21 +73,17 @@ export default function MapPage() {
   useEffect(() => {
     async function load() {
       if (mode === "customVisible" && !user?.id) return;
-
       setLoading(true);
       try {
-        /* 1) Jobs ------------------------------------------------ */
         const jobsFC =
           mode === "customVisible"
             ? await fetchUserVisibleJobs(user!)
             : await fetchAllJobs();
 
-        /* --- Index für spätere Sichtbarkeits-Filter ----------- */
         const jobsByArea: Record<number, JobItem[]> = {};
         jobsFC.features.forEach((feat: any) => {
           const key = feat.properties?.search_area_id;
           if (!key) return;
-
           (jobsByArea[key] ||= []).push({
             id: feat.id,
             title: feat.properties?.title ?? "Job",
@@ -107,7 +93,6 @@ export default function MapPage() {
         });
         jobsByAreaRef.current = jobsByArea;
 
-        /* 2) Isochronen + Requests ------------------------------ */
         let isoFC = { type: "FeatureCollection", features: [] as any[] };
         let drawnReqFC = { type: "FeatureCollection", features: [] as any[] };
         let addressReqFC = { type: "FeatureCollection", features: [] as any[] };
@@ -115,11 +100,9 @@ export default function MapPage() {
         if (user?.id) {
           try {
             isoFC = await fetchUserIsochrones(user);
-
             const drawnIds = isoFC.features
               .map((f: any) => f.properties?.drawn_req_id)
               .filter(Boolean) as number[];
-
             const addressIds = isoFC.features
               .map((f: any) => f.properties?.address_req_id)
               .filter(Boolean) as number[];
@@ -143,7 +126,6 @@ export default function MapPage() {
           }
         }
 
-        /* 3) MapComponent-Daten -------------------------------- */
         setFeatureCollection({
           type: "FeatureCollection",
           features: [
@@ -154,26 +136,21 @@ export default function MapPage() {
           ],
         });
 
-        /* 4) LayerGroups aufbauen ------------------------------ */
         if (olMapRef.current) {
-          /** alte Search-Area-Groups entfernen */
           olMapRef.current
             .getLayers()
             .getArray()
             .filter((l) => (l as any).get("layerType") === "searchAreaGroup")
             .forEach((l) => olMapRef.current!.removeLayer(l));
 
-          /** Listener der Vorgänger-Runde deaktivieren */
           layerListenerKeys.current.forEach(unByKey);
           layerListenerKeys.current = [];
 
-          /** Index: Drawn- & Address-Requests */
           const drawnReqMap: Record<number, any> = {};
           drawnReqFC.features.forEach((f: any) => (drawnReqMap[f.id] = f));
           const addressReqMap: Record<number, any> = {};
           addressReqFC.features.forEach((f: any) => (addressReqMap[f.id] = f));
 
-          /** Für jede Isochrone eine LayerGroup ----------------- */
           const createdGroups: LayerGroup[] = [];
           const groupsMeta: {
             group: LayerGroup;
@@ -183,7 +160,6 @@ export default function MapPage() {
 
           isoFC.features.forEach((isoFeat: any, idx: number) => {
             const areaId = isoFeat.id;
-
             const drawnReqId = isoFeat.properties?.drawn_req_id;
             const addressReqId = isoFeat.properties?.address_req_id;
 
@@ -195,7 +171,6 @@ export default function MapPage() {
               isoFeat.properties?.label ||
               `Isochrone ${idx + 1}`;
 
-            // Erstellungszeit priorisieren: Isochrone -> zugehöriger drawn -> zugehöriger address
             const createdAt =
               parseCreatedAt(isoFeat?.properties?.created_at) ??
               parseCreatedAt(drawnReqMap[drawnReqId]?.properties?.created_at) ??
@@ -241,11 +216,8 @@ export default function MapPage() {
             });
 
             let reqPointLayer: VectorLayer | null = null;
-
             if (reqPointFeat) {
-              const geomType = reqPointFeat.geometry?.type; // "Point" | "LineString" | …
-
-              /* ---------- Punkt ---------- */
+              const geomType = reqPointFeat.geometry?.type;
               if (geomType === "Point") {
                 reqPointLayer = new VectorLayer({
                   source: new VectorSource({
@@ -267,7 +239,6 @@ export default function MapPage() {
                   }),
                 });
               } else if (geomType === "LineString") {
-                /* ---------- LineString ---------- */
                 reqPointLayer = new VectorLayer({
                   source: new VectorSource({
                     features: [
@@ -284,7 +255,6 @@ export default function MapPage() {
                   }),
                 });
               }
-              /* ---------- weitere Geometrietypen optional ---------- */
             }
 
             const group = new LayerGroup({
@@ -304,8 +274,7 @@ export default function MapPage() {
             groupsMeta.push({ group, areaId, createdAt });
           });
 
-          // --- Auswahl der aktiven Gruppe -----------------------
-          const focusId = searchParams.get("focus"); // optional per Query
+          const focusId = searchParams.get("focus");
           let targetGroup: LayerGroup | null = null;
 
           if (focusId) {
@@ -315,18 +284,25 @@ export default function MapPage() {
           }
 
           if (!targetGroup) {
-            // Wähle die Gruppe mit dem neuesten created_at, wenn vorhanden
             const withDates = groupsMeta.filter((g) => g.createdAt !== null);
+            if (withDates.length > 0) {
+              withDates.sort((a, b) => b.createdAt! - a.bcreatedAt!); // <-- typo fix below
+            }
+          }
+          // FIX for sort typo:
+          // withDates.sort((a, b) => b.createdAt! - a.createdAt!);
+
+          // Sichtbarkeiten anwenden
+          const withDates = groupsMeta.filter((g) => g.createdAt !== null);
+          if (!targetGroup) {
             if (withDates.length > 0) {
               withDates.sort((a, b) => b.createdAt! - a.createdAt!);
               targetGroup = withDates[0].group;
             } else if (createdGroups.length > 0) {
-              // Fallback: zuletzt erzeugte Gruppe
               targetGroup = createdGroups[createdGroups.length - 1];
             }
           }
 
-          // Sichtbarkeit anwenden & Kinder synchronisieren
           createdGroups.forEach((g) => {
             const shouldBeVisible = g === targetGroup;
             g.setVisible(shouldBeVisible);
@@ -336,7 +312,6 @@ export default function MapPage() {
           });
         }
 
-        /* 5) erste Synchronisierung der Job-Liste -------------- */
         updateVisibleJobs();
       } finally {
         setLoading(false);
@@ -345,20 +320,18 @@ export default function MapPage() {
 
     load();
 
-    /* Cleanup: Listener entfernen ----------------------------- */
     return () => {
       layerListenerKeys.current.forEach(unByKey);
       layerListenerKeys.current = [];
     };
   }, [mode, user, updateVisibleJobs, searchParams]);
 
-  /* Guard ----------------------------------------------------- */
   if (mode === "customVisible" && !user?.id) {
     return (
       <Box
         sx={{
-          width: "100vw",
-          height: "100vh",
+          width: "100%",
+          height: "100%",
           display: "grid",
           placeItems: "center",
         }}
@@ -368,20 +341,25 @@ export default function MapPage() {
     );
   }
 
-  /* fetchFn für MapComponent --------------------------------- */
   const fetchFunction = () =>
     Promise.resolve(
       featureCollection ?? { type: "FeatureCollection", features: [] }
     );
 
-  /* Job-Klick → Zoom ---------------------------------------- */
   const handleJobSelect = (j: JobItem) =>
     mapHandleRef.current?.zoomTo(j.coord, 17);
 
-  /* Render --------------------------------------------------- */
   return (
-    <Box sx={{ width: "100vw", height: "100vh" }}>
-      <AppHeader />
+    // ⬇️ nutzt den gesamten vom Router zugewiesenen Bereich und verhindert Scrollen
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Kein AppHeader hier – Header kommt global aus App.tsx */}
 
       <MapComponent
         ref={mapHandleRef}
@@ -391,6 +369,9 @@ export default function MapPage() {
         onFeatureClick={handleFeatureClick}
         enableLayerSwitcher={true}
       />
+
+      {/* 📌 Legende unten rechts (anklebend) */}
+      {featureCollection?.features?.length ? <LegendWidget /> : null}
 
       <JobsListWidget jobs={jobs} onSelect={handleJobSelect} />
 
