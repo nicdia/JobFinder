@@ -1,4 +1,3 @@
-// src/pages/DashboardPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -31,6 +30,8 @@ import DashboardSection from "../components/UI/DashboardSectionComponent";
 
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
+import { deleteAddressRequest } from "../services/deleteAdressRequest";
+
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
   id?: number | string;
@@ -44,6 +45,7 @@ type UnifiedRequest = {
   type: "address" | "drawn";
   name: string;
   createdAt?: string;
+  jobType?: string; // ⬅️ neu
   raw: AnyFeature;
 };
 
@@ -65,7 +67,7 @@ function pickName(props: Record<string, any> = {}, id: number | string) {
     props.label ??
     props.title ??
     props.address_display ??
-    `Suchauftrag #${id}`
+    `Suchauftrag #${id}` // ⬅️ fix: Template String
   );
 }
 // --------------------------------------------
@@ -79,6 +81,7 @@ const DashboardPage = () => {
   const [addrData, setAddrData] = useState<AnyFeature[]>([]);
   const [drawnData, setDrawnData] = useState<AnyFeature[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({}); // ⬅️ Busy-State pro Eintrag
 
   // Beim Mount laden
   useEffect(() => {
@@ -116,9 +119,11 @@ const DashboardPage = () => {
         type: "address" as const,
         name: pickName(props, id),
         createdAt: props.created_at,
+        jobType: props.job_type ?? undefined, // ⬅️ neu
         raw: f,
       };
     });
+
     const d = drawnData.map((f) => {
       const id = (f.id ?? f.properties?.id) as number | string;
       const props = f.properties ?? {};
@@ -127,12 +132,48 @@ const DashboardPage = () => {
         type: "drawn" as const,
         name: pickName(props, id),
         createdAt: props.created_at,
+        jobType: props.job_type ?? undefined, // ⬅️ neu
         raw: f,
       };
     });
-    // Wunsch: gemischt anzeigen; alternativ hier sortieren
+
     return [...a, ...d];
   }, [addrData, drawnData]);
+
+  // Delete-Handler (vorerst nur für Address-Requests aktiv)
+  const handleDelete = async (r: UnifiedRequest) => {
+    if (r.type !== "address") {
+      // Drawn folgt später
+      return;
+    }
+    const key = `${r.type}-${r.id}`;
+    const ok = window.confirm(
+      `Möchtest du den Suchauftrag „${r.name}“ wirklich löschen?`
+    );
+    if (!ok) return;
+
+    try {
+      setDeletingIds((s) => ({ ...s, [key]: true }));
+      await deleteAddressRequest(Number(r.id), user || undefined);
+
+      // Optimistic UI: aus Address-Liste entfernen
+      setAddrData((prev) =>
+        prev.filter((f) => String(f.id ?? f.properties?.id) !== String(r.id))
+      );
+    } catch (e: any) {
+      console.error("Delete address request failed:", e);
+      alert(
+        e?.message
+          ? `Löschen fehlgeschlagen: ${e.message}`
+          : "Löschen fehlgeschlagen."
+      );
+    } finally {
+      setDeletingIds((s) => {
+        const { [key]: _drop, ...rest } = s;
+        return rest;
+      });
+    }
+  };
 
   return (
     <>
@@ -181,16 +222,6 @@ const DashboardPage = () => {
         <Divider sx={{ my: 2 }} />
 
         <DashboardSection
-          icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-          title="Alle Jobs"
-          description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
-          buttonLabel="Anzeigen"
-          onClick={() => navigate("/map?mode=all")}
-        />
-
-        <Divider sx={{ my: 2 }} />
-
-        <DashboardSection
           icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
           title="Jobs per Adresse suchen"
           description="Erstelle hier einen neuen Suchauftrag basierend auf den Erreichbarkeitsverhältnissen deiner Adresse."
@@ -210,7 +241,7 @@ const DashboardPage = () => {
 
         <Divider sx={{ my: 3 }} />
 
-        {/* --------- NEU: eine kombinierte, aufklappbare Sektion --------- */}
+        {/* --------- kombinierte, aufklappbare Sektion --------- */}
         <Accordion
           expanded={expanded}
           onChange={(_, v) => setExpanded(v)}
@@ -224,7 +255,7 @@ const DashboardPage = () => {
               </Typography>
               <Chip
                 size="small"
-                label={loading ? "lädt…" : `${requests.length}`}
+                label={loading ? "lädt…" : `${requests.length}`} // ⬅️ fix
               />
             </Stack>
           </AccordionSummary>
@@ -242,59 +273,95 @@ const DashboardPage = () => {
               </Typography>
             ) : (
               <List disablePadding>
-                {requests.map((r) => (
-                  <ListItem
-                    key={`${r.type}-${r.id}`}
-                    divider
-                    secondaryAction={
-                      <Stack direction="row" spacing={1}>
-                        {/* Nur UI – noch ohne Funktion */}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<EditLocationAltIcon />}
-                          onClick={() => {}}
-                        >
-                          Bearbeiten
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteOutlineIcon />}
-                          onClick={() => {}}
-                        >
-                          Löschen
-                        </Button>
-                      </Stack>
-                    }
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography>{r.name}</Typography>
-                          <Chip
+                {requests.map((r) => {
+                  const key = `${r.type}-${r.id}`;
+                  const isDeleting = !!deletingIds[key];
+
+                  return (
+                    <ListItem
+                      key={key} // ⬅️ fix
+                      divider
+                      secondaryAction={
+                        <Stack direction="row" spacing={1}>
+                          {/* Bearbeiten: Platzhalter */}
+                          <Button
                             size="small"
-                            label={
-                              r.type === "address" ? "Adresse" : "Geometrie"
-                            }
-                          />
+                            variant="outlined"
+                            startIcon={<EditLocationAltIcon />}
+                            onClick={() => {}}
+                            disabled={isDeleting}
+                          >
+                            Bearbeiten
+                          </Button>
+                          {/* Löschen: aktiv für Address-Requests */}
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteOutlineIcon />}
+                            onClick={() => handleDelete(r)}
+                            disabled={isDeleting || r.type !== "address"}
+                          >
+                            {isDeleting ? "Lösche…" : "Löschen"}
+                          </Button>
                         </Stack>
                       }
-                      secondary={
-                        r.createdAt
-                          ? new Date(r.createdAt).toLocaleString("de-DE")
-                          : undefined
-                      }
-                    />
-                  </ListItem>
-                ))}
+                    >
+                      <ListItemText
+                        primary={
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
+                          >
+                            <Typography>{r.name}</Typography>
+                            <Chip
+                              size="small"
+                              label={
+                                r.type === "address" ? "Adresse" : "Geometrie"
+                              }
+                            />
+                            {r.jobType && (
+                              <Chip
+                                size="small"
+                                label={r.jobType}
+                                variant="outlined"
+                                sx={{
+                                  ml: 0.5,
+                                  color: "text.secondary",
+                                  borderColor: "divider",
+                                  bgcolor: "grey.100", // dezent eingegraut
+                                }}
+                              />
+                            )}
+                          </Stack>
+                        }
+                        secondary={
+                          r.createdAt
+                            ? new Date(r.createdAt).toLocaleString("de-DE")
+                            : undefined
+                        }
+                      />
+                    </ListItem>
+                  );
+                })}
               </List>
             )}
           </AccordionDetails>
         </Accordion>
 
         <Divider sx={{ my: 3 }} />
+
+        <DashboardSection
+          icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
+          title="Alle Jobs"
+          description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
+          buttonLabel="Anzeigen"
+          onClick={() => navigate("/map?mode=all")}
+        />
+
+        <Divider sx={{ my: 2 }} />
       </Box>
     </>
   );

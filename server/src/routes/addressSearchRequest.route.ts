@@ -3,6 +3,7 @@ import { authenticateToken } from "../middleware/authMiddleware";
 import {
   handleAddressSearchRequest,
   getAddressRequest,
+  deleteAddressSearchRequest, // ⬅️ neu
 } from "../controllers/addressRequestController";
 
 const router = Router();
@@ -12,5 +13,11 @@ router
   .all(authenticateToken)
   .post(handleAddressSearchRequest as any)
   .get(getAddressRequest as any);
+
+// DELETE /api/userInputSearchRequest/:userId/:requestId
+router
+  .route("/userInputSearchRequest/:userId/:requestId")
+  .all(authenticateToken)
+  .delete(deleteAddressSearchRequest as any); // ⬅️ neu
 
 export default router;

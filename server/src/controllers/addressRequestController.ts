@@ -1,7 +1,9 @@
-// src/controllers/inputSearchRequestController.ts
 import { Request, Response } from "express";
 import { processAddressSearchRequest } from "../services/addressRequestService";
-import { queryAddressRequest } from "../db/addressRequestRepo";
+import {
+  queryAddressRequest,
+  deleteAddressRequestCascade,
+} from "../db/addressRequestRepo"; // ⬅️ import erweitert
 
 export async function handleAddressSearchRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
@@ -63,5 +65,47 @@ export async function getAddressRequest(req: Request, res: Response) {
       err
     );
     res.status(500).json({ error: err.message || "Datenbankfehler" });
+  }
+}
+
+/** ⬇️ Neu: DELETE */
+export async function deleteAddressSearchRequest(req: Request, res: Response) {
+  const tokenUserId = (req as any).user?.id;
+  const paramUserId = parseInt(req.params.userId, 10);
+  const requestId = parseInt(req.params.requestId, 10);
+
+  if (Number.isNaN(requestId)) {
+    return res.status(400).json({ error: "Ungültige requestId" });
+  }
+
+  if (tokenUserId !== paramUserId) {
+    console.warn(
+      `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] 403 – User-Mismatch`
+    );
+    return res.status(403).json({ error: "Nicht autorisiert" });
+  }
+
+  try {
+    console.log(
+      `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] → start`
+    );
+    const { deleted } = await deleteAddressRequestCascade(
+      paramUserId,
+      requestId
+    );
+    if (deleted === 0) {
+      // Nichts gelöscht → entweder nicht gefunden oder nicht dem User zugehörig
+      return res.status(404).json({ error: "Suchauftrag nicht gefunden" });
+    }
+    console.log(
+      `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] → success`
+    );
+    res.status(204).send(); // No Content
+  } catch (err: any) {
+    console.error(
+      `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] DB-Fehler:`,
+      err
+    );
+    res.status(500).json({ error: err.message || "Interner Serverfehler" });
   }
 }
