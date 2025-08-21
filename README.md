@@ -4,7 +4,7 @@ OpenStreetMap-Layer o.ä. --> check
 Vektordaten-Layer (Punkt, Linie, Fläche) --> check
 Daten aus einem DBMS u./o. aus Dateien (bspw. GeoJSON) --> check
 Koordinatenerfassung --> check
-Tool zur Pflege der Vektordaten (CRUD) --> Create + Read implementiert
+Tool zur Pflege der Vektordaten (CRUD) --> check
 Geolocation (optional) --> check
 Nominatim-Tool (optional) --> check
 Attribut-Darstellung --> check
@@ -13,7 +13,6 @@ Attribut-Darstellung --> check
 
 Rasterdaten-Layer (optional)
 WMS-Layer einbinden / bereitstellen (optional, bspw. mit MapServer)
-Tool zur Pflege der Vektordaten (CRUD) --> Update + Delete
 Routing (optional) --> Openrouteservice
 Bilder im Attribut einstellen?
 
@@ -38,23 +37,27 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Update, Delete Suchaufträge + Geometrien --> DAS ALS NÄCHSTES
-
-Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
-
-Legende einrichten
-
 Die Navigation zwischen den Seiten verbessern
-
-Dem Icon wenn man angemeldet ist weitere Funktionen geben
-
-Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
-
-Usermanagement
 
 Auf Hamburg eingrenzen
 
+Layout der Karte verschönern - Legende einrichten sonstigen Schönheitsstuff
+
+WMS-Layer einbinden
+
+Fragen präziser macen - z.b. geschw. in kmh, sicherstellen dass bei Geokodierun nur Adressen in Hamburg ausgegeben werden
+
+Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
+
+Usermanagement
+
+Responsive
+
 INIT SQL einrichten
+
+Dem Icon wenn man angemeldet ist weitere Funktionen geben --> Dashboard
+
+Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
 
                                     BUGLISTE
 

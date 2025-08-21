@@ -1,3 +1,4 @@
+// src/pages/DashboardPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -32,6 +33,7 @@ import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
 import { deleteAddressRequest } from "../services/deleteAdressRequest";
 import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
+
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
   id?: number | string;
@@ -45,18 +47,16 @@ type UnifiedRequest = {
   type: "address" | "drawn";
   name: string;
   createdAt?: string;
-  jobType?: string; // ⬅️ neu
+  jobType?: string;
   raw: AnyFeature;
 };
 
 function extractFeatures(input: any): AnyFeature[] {
-  // Akzeptiere sowohl FeatureCollection als auch Array<Feature>
   if (!input) return [];
   if (Array.isArray(input)) return input as AnyFeature[];
   if (input.type === "FeatureCollection" && Array.isArray(input.features)) {
     return input.features as AnyFeature[];
   }
-  // Fallback: einzelnes Feature?
   if (input.type === "Feature") return [input as AnyFeature];
   return [];
 }
@@ -67,7 +67,7 @@ function pickName(props: Record<string, any> = {}, id: number | string) {
     props.label ??
     props.title ??
     props.address_display ??
-    `Suchauftrag #${id}` // ⬅️ fix: Template String
+    `Suchauftrag #${id}`
   );
 }
 // --------------------------------------------
@@ -81,7 +81,7 @@ const DashboardPage = () => {
   const [addrData, setAddrData] = useState<AnyFeature[]>([]);
   const [drawnData, setDrawnData] = useState<AnyFeature[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({}); // ⬅️ Busy-State pro Eintrag
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
 
   // Beim Mount laden
   useEffect(() => {
@@ -119,7 +119,7 @@ const DashboardPage = () => {
         type: "address" as const,
         name: pickName(props, id),
         createdAt: props.created_at,
-        jobType: props.job_type ?? undefined, // ⬅️ neu
+        jobType: props.job_type ?? undefined,
         raw: f,
       };
     });
@@ -132,7 +132,7 @@ const DashboardPage = () => {
         type: "drawn" as const,
         name: pickName(props, id),
         createdAt: props.created_at,
-        jobType: props.job_type ?? undefined, // ⬅️ neu
+        jobType: props.job_type ?? undefined,
         raw: f,
       };
     });
@@ -140,7 +140,7 @@ const DashboardPage = () => {
     return [...a, ...d];
   }, [addrData, drawnData]);
 
-  // Delete-Handler (vorerst nur für Address-Requests aktiv)
+  // Delete-Handler
   const handleDelete = async (r: UnifiedRequest) => {
     const key = `${r.type}-${r.id}`;
     const ok = window.confirm(
@@ -157,12 +157,9 @@ const DashboardPage = () => {
           prev.filter((f) => String(f.id ?? f.properties?.id) !== String(r.id))
         );
       } else {
-        await deleteDrawnRequest(Number(r.id), user || undefined); // ⬅️ neu
-        setDrawnData(
-          (prev) =>
-            prev.filter(
-              (f) => String(f.id ?? f.properties?.id) !== String(r.id)
-            ) // ⬅️ neu
+        await deleteDrawnRequest(Number(r.id), user || undefined);
+        setDrawnData((prev) =>
+          prev.filter((f) => String(f.id ?? f.properties?.id) !== String(r.id))
         );
       }
     } catch (e: any) {
@@ -206,8 +203,8 @@ const DashboardPage = () => {
           icon={
             <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />
           }
-          title="Meine neusten Jobempfehlungen"
-          description="Basierend auf deinem Suchverlauf erstellen wir Empfehlungen. Suche nach Jobs, um personalisierte Vorschläge zu erhalten."
+          title="Gefundene Jobs"
+          description="Hier findest du die gefundenen Jobs, basierend auf deinen Suchanfragen."
           buttonLabel="Anzeigen"
           onClick={() => navigate("/found-jobs?mode=customVisible")}
         />
@@ -260,7 +257,7 @@ const DashboardPage = () => {
               </Typography>
               <Chip
                 size="small"
-                label={loading ? "lädt…" : `${requests.length}`} // ⬅️ fix
+                label={loading ? "lädt…" : `${requests.length}`}
               />
             </Stack>
           </AccordionSummary>
@@ -284,27 +281,22 @@ const DashboardPage = () => {
 
                   return (
                     <ListItem
-                      key={key} // ⬅️ fix
+                      key={key}
                       divider
                       secondaryAction={
                         <Stack direction="row" spacing={1}>
-                          {/* Bearbeiten: Platzhalter */}
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<EditLocationAltIcon />}
-                            onClick={() => {
-                              if (r.type === "drawn") {
-                                navigate(`/edit-drawn/${r.id}`);
-                              } else {
-                                // Adresse später
-                                // navigate(`/edit-address/${r.id}`);
-                              }
-                            }}
-                          >
-                            Bearbeiten
-                          </Button>
-                          {/* Löschen: aktiv für Address-Requests */}
+                          {/* Bearbeiten NUR für "drawn" */}
+                          {r.type === "drawn" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditLocationAltIcon />}
+                              onClick={() => navigate(`/edit-drawn/${r.id}`)}
+                            >
+                              Bearbeiten
+                            </Button>
+                          )}
+                          {/* Löschen für beide Typen */}
                           <Button
                             size="small"
                             variant="outlined"
@@ -342,7 +334,7 @@ const DashboardPage = () => {
                                   ml: 0.5,
                                   color: "text.secondary",
                                   borderColor: "divider",
-                                  bgcolor: "grey.100", // dezent eingegraut
+                                  bgcolor: "grey.100",
                                 }}
                               />
                             )}

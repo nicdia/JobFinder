@@ -30,12 +30,12 @@ const questions = [
   },
   {
     key: "cutoff",
-    text: "Wie hoch darf die Anreisezeit maximal sein?",
+    text: "Wie hoch darf die Anreisezeit zum Job maximal sein (in Minuten)?",
     options: "text",
   },
   {
     key: "address",
-    text: "Wie lautet deine Startadresse?",
+    text: "Wie lautet deine Startadresse? (nur Straße)",
     options: "address",
   },
   {
@@ -50,7 +50,7 @@ const questions = [
   },
   {
     key: "speed",
-    text: "Wie hoch ist deine Geschwindigkeit mit deinem ausgewählten Transportmittel?",
+    text: "Wie hoch ist deine Geschwindigkeit mit deinem ausgewählten Transportmittel (in km/h)?",
     options: "text",
   },
 ];
@@ -126,7 +126,7 @@ const OnboardingPageEmployee = () => {
     try {
       await submitSearchRequest(answers, user.token, user.id);
       setHasSubmitted(true);
-      navigate("/save-success");
+      navigate("/found-jobs?mode=customVisible");
     } catch (err) {
       console.error("❌ Fehler beim Speichern des Suchauftrags", err);
     }
@@ -286,9 +286,7 @@ const OnboardingPageEmployee = () => {
                 <Button
                   variant="outlined"
                   onClick={() => {
-                    setPostLoginRedirect(
-                      "/onboarding-employee?triggerSave=true"
-                    );
+                    setPostLoginRedirect("/onboarding?triggerSave=true");
                     setLoginOpen(true);
                   }}
                   fullWidth
