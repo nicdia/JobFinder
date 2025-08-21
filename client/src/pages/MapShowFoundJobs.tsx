@@ -64,6 +64,21 @@ export default function MapPage() {
     setJobs(visibleJobs);
   }, []);
 
+  /* Hilfsfunktionen ------------------------------------------ */
+  const parseCreatedAt = (val: any): number | null => {
+    if (!val && val !== 0) return null;
+    if (typeof val === "number") {
+      // Sekunden vs. Millisekunden heuristisch unterscheiden
+      if (val < 1e12) return val * 1000;
+      return val;
+    }
+    if (typeof val === "string") {
+      const t = Date.parse(val);
+      return isNaN(t) ? null : t;
+    }
+    return null;
+  };
+
   /* Daten laden ---------------------------------------------- */
   useEffect(() => {
     async function load() {
@@ -93,9 +108,9 @@ export default function MapPage() {
         jobsByAreaRef.current = jobsByArea;
 
         /* 2) Isochronen + Requests ------------------------------ */
-        let isoFC = { type: "FeatureCollection", features: [] };
-        let drawnReqFC = { type: "FeatureCollection", features: [] };
-        let addressReqFC = { type: "FeatureCollection", features: [] };
+        let isoFC = { type: "FeatureCollection", features: [] as any[] };
+        let drawnReqFC = { type: "FeatureCollection", features: [] as any[] };
+        let addressReqFC = { type: "FeatureCollection", features: [] as any[] };
 
         if (user?.id) {
           try {
@@ -159,6 +174,13 @@ export default function MapPage() {
           addressReqFC.features.forEach((f: any) => (addressReqMap[f.id] = f));
 
           /** Für jede Isochrone eine LayerGroup ----------------- */
+          const createdGroups: LayerGroup[] = [];
+          const groupsMeta: {
+            group: LayerGroup;
+            areaId: number | string;
+            createdAt: number | null;
+          }[] = [];
+
           isoFC.features.forEach((isoFeat: any, idx: number) => {
             const areaId = isoFeat.id;
 
@@ -172,6 +194,15 @@ export default function MapPage() {
               (drawnReqId && drawnReqMap[drawnReqId]?.properties?.req_name) ||
               isoFeat.properties?.label ||
               `Isochrone ${idx + 1}`;
+
+            // Erstellungszeit priorisieren: Isochrone -> zugehöriger drawn -> zugehöriger address
+            const createdAt =
+              parseCreatedAt(isoFeat?.properties?.created_at) ??
+              parseCreatedAt(drawnReqMap[drawnReqId]?.properties?.created_at) ??
+              parseCreatedAt(
+                addressReqMap[addressReqId]?.properties?.created_at
+              ) ??
+              null;
 
             const polyLayer = new VectorLayer({
               source: new VectorSource({
@@ -214,7 +245,7 @@ export default function MapPage() {
             if (reqPointFeat) {
               const geomType = reqPointFeat.geometry?.type; // "Point" | "LineString" | …
 
-              /* ---------- Punkt (alter Stil) ---------- */
+              /* ---------- Punkt ---------- */
               if (geomType === "Point") {
                 reqPointLayer = new VectorLayer({
                   source: new VectorSource({
@@ -236,7 +267,7 @@ export default function MapPage() {
                   }),
                 });
               } else if (geomType === "LineString") {
-                /* ---------- LineString (neuer Stil) ---------- */
+                /* ---------- LineString ---------- */
                 reqPointLayer = new VectorLayer({
                   source: new VectorSource({
                     features: [
@@ -253,7 +284,6 @@ export default function MapPage() {
                   }),
                 });
               }
-
               /* ---------- weitere Geometrietypen optional ---------- */
             }
 
@@ -270,6 +300,39 @@ export default function MapPage() {
             layerListenerKeys.current.push(key);
 
             olMapRef.current!.addLayer(group);
+            createdGroups.push(group);
+            groupsMeta.push({ group, areaId, createdAt });
+          });
+
+          // --- Auswahl der aktiven Gruppe -----------------------
+          const focusId = searchParams.get("focus"); // optional per Query
+          let targetGroup: LayerGroup | null = null;
+
+          if (focusId) {
+            targetGroup =
+              groupsMeta.find((g) => String(g.areaId) === String(focusId))
+                ?.group ?? null;
+          }
+
+          if (!targetGroup) {
+            // Wähle die Gruppe mit dem neuesten created_at, wenn vorhanden
+            const withDates = groupsMeta.filter((g) => g.createdAt !== null);
+            if (withDates.length > 0) {
+              withDates.sort((a, b) => b.createdAt! - a.createdAt!);
+              targetGroup = withDates[0].group;
+            } else if (createdGroups.length > 0) {
+              // Fallback: zuletzt erzeugte Gruppe
+              targetGroup = createdGroups[createdGroups.length - 1];
+            }
+          }
+
+          // Sichtbarkeit anwenden & Kinder synchronisieren
+          createdGroups.forEach((g) => {
+            const shouldBeVisible = g === targetGroup;
+            g.setVisible(shouldBeVisible);
+            g.getLayers()
+              .getArray()
+              .forEach((lyr: any) => lyr.setVisible(shouldBeVisible));
           });
         }
 
@@ -287,7 +350,7 @@ export default function MapPage() {
       layerListenerKeys.current.forEach(unByKey);
       layerListenerKeys.current = [];
     };
-  }, [mode, user, updateVisibleJobs]);
+  }, [mode, user, updateVisibleJobs, searchParams]);
 
   /* Guard ----------------------------------------------------- */
   if (mode === "customVisible" && !user?.id) {

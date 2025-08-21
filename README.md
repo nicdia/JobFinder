@@ -37,15 +37,13 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Die Navigation zwischen den Seiten verbessern
+Die Navigation zwischen den Seiten verbessern -Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
-Auf Hamburg eingrenzen
+Auf Hamburg eingrenzen + Fragen präziser macen - z.b. geschw. in kmh, sicherstellen dass bei Geokodierun nur Adressen in Hamburg ausgegeben werden
 
 Layout der Karte verschönern - Legende einrichten sonstigen Schönheitsstuff
 
 WMS-Layer einbinden
-
-Fragen präziser macen - z.b. geschw. in kmh, sicherstellen dass bei Geokodierun nur Adressen in Hamburg ausgegeben werden
 
 Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
 
@@ -62,8 +60,6 @@ Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Positio
                                     BUGLISTE
 
 manchmal kommt ein Fehler wenn man Line über die Alster macht bei der Punktberechnung
-
-Der Appheader soll immer mitwandern, wenn man also nach unten zoomt soll er mitwandern dass er nicht manchnal verschwindet --> bei der Karte relevant
 
 Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
