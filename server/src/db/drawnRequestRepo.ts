@@ -136,3 +136,93 @@ export async function queryDrawnRequest(userId: number) {
 
   return result.rows; // Array<Feature>
 }
+
+export async function deleteDrawnRequestCascade(
+  userId: number,
+  requestId: number
+): Promise<{ deleted: number }> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Helper: Tabellen-Existenz
+    const hasTable = async (qualified: string) => {
+      const { rows } = await client.query<{ exists: boolean }>(
+        `SELECT to_regclass($1) IS NOT NULL AS exists;`,
+        [qualified]
+      );
+      return rows?.[0]?.exists === true;
+    };
+
+    // 1) user_search_areas bereinigen (drawn_req_id)
+    if (await hasTable("account.user_search_areas")) {
+      try {
+        const delAreas = await client.query(
+          `DELETE FROM account.user_search_areas
+           WHERE user_id = $1
+             AND drawn_req_id = $2;`,
+          [userId, requestId]
+        );
+        console.log(
+          "[deleteDrawnRequestCascade] search_areas deleted:",
+          delAreas.rowCount
+        );
+      } catch (e: any) {
+        console.warn(
+          "[deleteDrawnRequestCascade] search_areas cleanup failed, continuing:",
+          e.message
+        );
+      }
+    } else {
+      console.log(
+        "[deleteDrawnRequestCascade] table user_search_areas not present, skipping."
+      );
+    }
+
+    // 2) user_jobs_within_search_area bereinigen (drawn_req_id)
+    if (await hasTable("account.user_jobs_within_search_area")) {
+      try {
+        const delJobs = await client.query(
+          `DELETE FROM account.user_jobs_within_search_area
+           WHERE user_id = $1
+             AND drawn_req_id = $2;`,
+          [userId, requestId]
+        );
+        console.log(
+          "[deleteDrawnRequestCascade] jobs_within_search_area deleted:",
+          delJobs.rowCount
+        );
+      } catch (e: any) {
+        console.warn(
+          "[deleteDrawnRequestCascade] jobs_within_search_area cleanup failed, continuing:",
+          e.message
+        );
+      }
+    } else {
+      console.log(
+        "[deleteDrawnRequestCascade] table user_jobs_within_search_area not present, skipping."
+      );
+    }
+
+    // 3) Primärdatensatz löschen
+    const delReq = await client.query(
+      `DELETE FROM account.user_drawn_search_requests
+       WHERE id = $1
+         AND user_id = $2;`,
+      [requestId, userId]
+    );
+    console.log(
+      "[deleteDrawnRequestCascade] drawn_request deleted:",
+      delReq.rowCount
+    );
+
+    await client.query("COMMIT");
+    return { deleted: delReq.rowCount ?? 0 };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("[deleteDrawnRequestCascade] error:", err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}

@@ -31,7 +31,7 @@ import DashboardSection from "../components/UI/DashboardSectionComponent";
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
 import { deleteAddressRequest } from "../services/deleteAdressRequest";
-
+import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
   id?: number | string;
@@ -142,10 +142,6 @@ const DashboardPage = () => {
 
   // Delete-Handler (vorerst nur für Address-Requests aktiv)
   const handleDelete = async (r: UnifiedRequest) => {
-    if (r.type !== "address") {
-      // Drawn folgt später
-      return;
-    }
     const key = `${r.type}-${r.id}`;
     const ok = window.confirm(
       `Möchtest du den Suchauftrag „${r.name}“ wirklich löschen?`
@@ -154,14 +150,23 @@ const DashboardPage = () => {
 
     try {
       setDeletingIds((s) => ({ ...s, [key]: true }));
-      await deleteAddressRequest(Number(r.id), user || undefined);
 
-      // Optimistic UI: aus Address-Liste entfernen
-      setAddrData((prev) =>
-        prev.filter((f) => String(f.id ?? f.properties?.id) !== String(r.id))
-      );
+      if (r.type === "address") {
+        await deleteAddressRequest(Number(r.id), user || undefined);
+        setAddrData((prev) =>
+          prev.filter((f) => String(f.id ?? f.properties?.id) !== String(r.id))
+        );
+      } else {
+        await deleteDrawnRequest(Number(r.id), user || undefined); // ⬅️ neu
+        setDrawnData(
+          (prev) =>
+            prev.filter(
+              (f) => String(f.id ?? f.properties?.id) !== String(r.id)
+            ) // ⬅️ neu
+        );
+      }
     } catch (e: any) {
-      console.error("Delete address request failed:", e);
+      console.error("Delete request failed:", e);
       alert(
         e?.message
           ? `Löschen fehlgeschlagen: ${e.message}`
@@ -300,7 +305,7 @@ const DashboardPage = () => {
                             color="error"
                             startIcon={<DeleteOutlineIcon />}
                             onClick={() => handleDelete(r)}
-                            disabled={isDeleting || r.type !== "address"}
+                            disabled={isDeleting}
                           >
                             {isDeleting ? "Lösche…" : "Löschen"}
                           </Button>
