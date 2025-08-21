@@ -6,6 +6,7 @@ import OnboardingPageEmployee from "./pages/OnboardingPageEmployee";
 import DashboardPage from "./pages/DashboardPage";
 import SaveSuccessPage from "./pages/SaveSuccessPage";
 import DrawAreaPage from "./pages/MapDrawSearchArea";
+import EditDrawnRequestPage from "./pages/EditDrawnRequestPage";
 
 function App() {
   return (
@@ -17,7 +18,10 @@ function App() {
         <Route path="/found-jobs" element={<FoundJobMapPage />} />
         <Route path="/save-success" element={<SaveSuccessPage />} />
         <Route path="/draw-search" element={<DrawAreaPage />} />
-
+        <Route
+          path="/edit-drawn/:requestId"
+          element={<EditDrawnRequestPage />}
+        />
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

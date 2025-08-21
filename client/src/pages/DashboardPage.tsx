@@ -293,8 +293,14 @@ const DashboardPage = () => {
                             size="small"
                             variant="outlined"
                             startIcon={<EditLocationAltIcon />}
-                            onClick={() => {}}
-                            disabled={isDeleting}
+                            onClick={() => {
+                              if (r.type === "drawn") {
+                                navigate(`/edit-drawn/${r.id}`);
+                              } else {
+                                // Adresse später
+                                // navigate(`/edit-address/${r.id}`);
+                              }
+                            }}
                           >
                             Bearbeiten
                           </Button>

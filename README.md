@@ -52,6 +52,8 @@ Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Positio
 
 Usermanagement
 
+Auf Hamburg eingrenzen
+
 INIT SQL einrichten
 
                                     BUGLISTE
