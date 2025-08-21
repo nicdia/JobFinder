@@ -192,7 +192,7 @@ const DashboardPage = () => {
     >
       <Container maxWidth="md">
         <Typography variant="h5" fontWeight={600}>
-          Hallo {user?.name || "Nutzer"},
+          Schön, dass du da bist!
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 4 }}>
           Hier ist deine Jobsuche im Überblick.

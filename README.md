@@ -37,23 +37,15 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Layout der Karte verschönern - Legende einrichten sonstigen Schönheitsstuff
+sicherstellen dass bei Geokodierung nur Adressen in Hamburg akzeptiert werden + evtl. eine geojson einladen womit man filtern kann das alles außerhalb ausgegraut wird auf der Karte
 
-Auf Hamburg eingrenzen + Fragen präziser macen - z.b. geschw. in kmh, sicherstellen dass bei Geokodierun nur Adressen in Hamburg ausgegeben werden
+Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id --> CRUD
 
-WMS-Layer einbinden
-
-Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id
-
-Usermanagement
+Usermanagement - CRUD
 
 Responsive
 
 INIT SQL einrichten
-
-Dem Icon wenn man angemeldet ist weitere Funktionen geben --> Dashboard
-
-Eigene Position bestimmen + Routing zu einem der Jobs mit der bestimmten Position
 
                                     BUGLISTE
 

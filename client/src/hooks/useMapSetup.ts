@@ -9,7 +9,8 @@ import { fromLonLat } from "ol/proj";
 import { defaults as defaultControls } from "ol/control";
 import Zoom from "ol/control/Zoom";
 import ScaleLine from "ol/control/ScaleLine";
-import Control from "ol/control/Control"; // ⬅️ wichtig!
+import Control from "ol/control/Control";
+import TileWMS from "ol/source/TileWMS";
 
 export const useMapSetup = (
   mapRef: React.RefObject<Map | null>,
@@ -19,13 +20,14 @@ export const useMapSetup = (
   controlBarRef?: React.RefObject<HTMLDivElement | null>
 ) => {
   useEffect(() => {
-    // Basemaps
+    // --- Basemaps ---
     const osmLayer = new TileLayer({
       source: new OSM(),
       title: "OSM Standard",
       type: "base",
       visible: true,
     });
+
     const satelliteLayer = new TileLayer({
       source: new XYZ({
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -35,12 +37,59 @@ export const useMapSetup = (
       type: "base",
       visible: false,
     });
+
     const baseGroup = new LayerGroup({
       title: "Basemaps",
       layers: [osmLayer, satelliteLayer],
     });
 
-    // Map
+    // --- Verwaltungsgrenzen WMS (Geoportal HH) ---
+    const wmsUrl = "https://geodienste.hamburg.de/HH_WMS_Verwaltungsgrenzen?";
+
+    const landesgrenzeLayer = new TileLayer({
+      source: new TileWMS({
+        url: wmsUrl,
+        params: {
+          LAYERS: "landesgrenze", // ✅ aus Capabilities
+          STYLES: "default",
+          FORMAT: "image/png",
+          TRANSPARENT: true,
+          VERSION: "1.3.0",
+        },
+        attributions:
+          "Daten: FHH/LGV – ALKIS Verwaltungsgrenzen (Landesgrenze)",
+        crossOrigin: "anonymous",
+      }),
+      title: "Hamburg Landesgrenze (WMS)",
+      type: "overlay",
+      visible: true,
+      opacity: 1,
+    });
+
+    const bezirkeLayer = new TileLayer({
+      source: new TileWMS({
+        url: wmsUrl,
+        params: {
+          LAYERS: "bezirke", // ✅ aus Capabilities
+          STYLES: "default",
+          FORMAT: "image/png",
+          TRANSPARENT: true,
+          VERSION: "1.3.0",
+        },
+        attributions: "Daten: FHH/LGV – ALKIS Verwaltungsgrenzen (Bezirke)",
+        crossOrigin: "anonymous",
+      }),
+      title: "Hamburg Bezirksgrenzen (WMS)",
+      type: "overlay",
+      visible: true, // sichtbar ab Start
+      opacity: 1,
+    });
+
+    // In die Basemap-Gruppe aufnehmen (über OSM/Satellite, Reihenfolge = Zeichenreihenfolge)
+    baseGroup.getLayers().push(landesgrenzeLayer);
+    baseGroup.getLayers().push(bezirkeLayer);
+
+    // --- Map ---
     const map = new Map({
       target: mapElementRef.current!,
       layers: [baseGroup],
@@ -55,16 +104,14 @@ export const useMapSetup = (
 
     const target = controlBarRef?.current ?? undefined;
 
-    // Zoom-Buttons
+    // --- Controls ---
     map.addControl(new Zoom({ target }));
-
-    // Maßstabsleiste (schlank, ohne Balken)
     map.addControl(
       new ScaleLine({
         target,
         units: "metric",
         bar: false,
-        text: true, // z.B. "500 m" / "2 km"
+        text: true,
         minWidth: 120,
       })
     );
@@ -73,15 +120,14 @@ export const useMapSetup = (
     const ratioEl = document.createElement("div");
     ratioEl.className = "ol-scale-ratio ol-unselectable ol-control";
     ratioEl.innerHTML = `<span class="ol-scale-ratio-label">1 :</span><span class="ol-scale-ratio-value">–</span>`;
-    const ratioCtrl = new Control({ element: ratioEl, target });
-    map.addControl(ratioCtrl);
+    map.addControl(new Control({ element: ratioEl, target }));
 
     const updateRatio = () => {
       const view = map.getView();
       const res = view.getResolution();
       if (!res) return;
       const mpu = view.getProjection()?.getMetersPerUnit?.() ?? 1;
-      const DPI = 96; // OpenLayers Default
+      const DPI = 96;
       const INCHES_PER_M = 39.37;
       const scale = Math.round(res * mpu * DPI * INCHES_PER_M);
       ratioEl.querySelector(".ol-scale-ratio-value")!.textContent =
