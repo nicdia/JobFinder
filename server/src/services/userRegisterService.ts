@@ -1,16 +1,16 @@
-import pool from "../utils/db";
-import bcrypt from "bcrypt";
+// src/services/userRegisterService.ts
 import { createUserQuery } from "../db/userManagementRepo";
 
+/**
+ * Registriert einen User mit *Klartext*-Passwort (landet in Spalte password_hash).
+ * Nur für Prototyping geeignet!
+ */
 export async function createUser(email: string, password: string) {
-  const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(password, saltRounds);
-
-  const user = await createUserQuery(email, passwordHash);
+  const user = await createUserQuery(email, password);
 
   return {
     id: user.id,
-    name: "", // oder später: user.name
+    name: "", // optional später
     email: user.email,
   };
 }

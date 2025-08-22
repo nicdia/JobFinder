@@ -43,7 +43,15 @@ import { fetchUserSavedJobs, deleteUserSavedJob } from "../services/savedJobs";
 // Services – Counts für Found/All Jobs
 import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
 import { fetchAllJobs } from "../services/fetchAllJobsApi";
+import TextField from "@mui/material/TextField";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
 
+import {
+  updateUserProfile,
+  deleteUserAccount,
+} from "../services/userManagement";
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
   id?: number | string;
@@ -125,6 +133,27 @@ const DashboardPage = () => {
   const [allCount, setAllCount] = useState<number | null>(null);
   const [allCountLoading, setAllCountLoading] = useState<boolean>(false);
   const [allCountError, setAllCountError] = useState<string | null>(null);
+
+  // Accordion: Account verwalten
+  const [expandedAccount, setExpandedAccount] = useState<boolean>(false);
+
+  // Form-State
+  const initialEmail =
+    (user as any)?.email ??
+    (() => {
+      try {
+        return JSON.parse(localStorage.getItem("user") || "null")?.email || "";
+      } catch {
+        return "";
+      }
+    })();
+
+  const [accEmail, setAccEmail] = useState<string>(initialEmail);
+  const [accPassword, setAccPassword] = useState<string>("");
+
+  const [accSaving, setAccSaving] = useState<boolean>(false);
+  const [accDeleting, setAccDeleting] = useState<boolean>(false);
+  const [accError, setAccError] = useState<string | null>(null);
 
   // Beim Mount laden (Requests)
   useEffect(() => {
@@ -333,6 +362,58 @@ const DashboardPage = () => {
         const { [key]: _drop, ...rest } = s;
         return rest;
       });
+    }
+  };
+
+  const handleSaveAccount = async () => {
+    if (!user?.id) {
+      setAccError("Nicht eingeloggt.");
+      return;
+    }
+
+    const payload: { email?: string; password?: string } = {};
+    if (accEmail && accEmail !== initialEmail) payload.email = accEmail.trim();
+    if (accPassword) payload.password = accPassword;
+
+    if (!payload.email && !payload.password) {
+      setAccError("Bitte neue E-Mail und/oder neues Passwort eingeben.");
+      return;
+    }
+
+    try {
+      setAccError(null);
+      setAccSaving(true);
+      await updateUserProfile(user.id, payload);
+      setAccPassword("");
+      // Optional: UI-Feedback
+      alert("Deine Account-Daten wurden aktualisiert.");
+    } catch (e: any) {
+      setAccError(e?.message ?? "Aktualisierung fehlgeschlagen.");
+    } finally {
+      setAccSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id) {
+      setAccError("Nicht eingeloggt.");
+      return;
+    }
+    const ok = window.confirm(
+      "Willst du deinen Account wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    );
+    if (!ok) return;
+
+    try {
+      setAccError(null);
+      setAccDeleting(true);
+      await deleteUserAccount(user.id);
+      // Token/LocalStorage wird im Service bereits entfernt.
+      navigate("/"); // zurück zur Startseite
+    } catch (e: any) {
+      setAccError(e?.message ?? "Löschen fehlgeschlagen.");
+    } finally {
+      setAccDeleting(false);
     }
   };
 
@@ -698,6 +779,79 @@ const DashboardPage = () => {
               <strong>{allCount ?? 0}</strong>
             </Typography>
           )}
+        </AccordionDetails>
+      </Accordion>
+      <Divider sx={{ my: 2 }} />
+      {/* --------- Account verwalten --------- */}
+      <Accordion
+        expanded={expandedAccount}
+        onChange={(_, v) => setExpandedAccount(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <ManageAccountsIcon color="primary" />
+            <Typography fontWeight={600}>Account verwalten</Typography>
+          </Stack>
+        </AccordionSummary>
+
+        <AccordionDetails>
+          <Stack spacing={2} sx={{ maxWidth: 520 }}>
+            {accError && (
+              <Typography variant="body2" color="error">
+                {accError}
+              </Typography>
+            )}
+
+            <TextField
+              label="E-Mail"
+              type="email"
+              value={accEmail}
+              onChange={(e) => setAccEmail(e.target.value)}
+              InputProps={{
+                startAdornment: <EmailIcon fontSize="small" sx={{ mr: 1 }} />,
+              }}
+              fullWidth
+            />
+
+            <TextField
+              label="Neues Passwort"
+              type="password"
+              value={accPassword}
+              onChange={(e) => setAccPassword(e.target.value)}
+              helperText="Leer lassen, wenn du das Passwort nicht ändern willst."
+              InputProps={{
+                startAdornment: <LockIcon fontSize="small" sx={{ mr: 1 }} />,
+              }}
+              fullWidth
+            />
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Button
+                variant="contained"
+                onClick={handleSaveAccount}
+                disabled={accSaving}
+              >
+                {accSaving ? "Speichere…" : "Änderungen speichern"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleDeleteAccount}
+                disabled={accDeleting}
+                startIcon={<DeleteOutlineIcon />}
+              >
+                {accDeleting ? "Lösche…" : "Account löschen"}
+              </Button>
+            </Stack>
+
+            <Typography variant="caption" color="text.secondary">
+              Hinweis: Das Löschen deines Accounts entfernt dauerhaft alle
+              zugehörigen Daten. Du wirst anschließend zur Startseite
+              weitergeleitet.
+            </Typography>
+          </Stack>
         </AccordionDetails>
       </Accordion>
 

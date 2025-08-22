@@ -1,5 +1,4 @@
-import pool from "../utils/db";
-import bcrypt from "bcrypt";
+// src/services/userLoginService.ts
 import jwt from "jsonwebtoken";
 import { getUserDataByMail } from "../db/userManagementRepo";
 
@@ -16,9 +15,9 @@ export async function handleLogin(
   }
 
   const user = result.rows[0];
-  const passwordValid = await bcrypt.compare(password, user.password_hash);
 
-  if (!passwordValid) {
+  // ⚠️ Klartext-Vergleich, weil Passwort unverschlüsselt gespeichert wird
+  if (user.password_hash !== password) {
     throw new Error("invalid_credentials");
   }
 
@@ -28,7 +27,7 @@ export async function handleLogin(
 
   return {
     id: user.id,
-    name: user.name ?? "", // Falls name nicht existiert
+    name: user.name ?? "",
     token,
   };
 }
