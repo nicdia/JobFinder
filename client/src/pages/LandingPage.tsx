@@ -2,7 +2,6 @@
 import { Box, Button, Stack, Typography, Paper } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppHeader from "../components/UI/AppHeaderComponent";
 import LoginDialog from "../components/UI/LoginDialogComponent";
 import RegisterDialog from "../components/UI/RegisterDialogComponent";
 import { useAuth } from "../context/AuthContext";
@@ -23,7 +22,6 @@ const LandingPage = () => {
 
   return (
     <>
-      <AppHeader />
       <Box sx={{ minHeight: "100vh", backgroundColor: "#fff", py: 8 }}>
         <Stack alignItems="center" spacing={3}>
           {/* Titel + Intro */}
@@ -39,11 +37,25 @@ const LandingPage = () => {
             entdecken – ganz flexibel und auf dich zugeschnitten.
           </Typography>
 
+          {/* Auth-Aktionen UNTER dem Intro, ÜBER dem Feature-Text */}
+          <Stack
+            spacing={2}
+            direction="column"
+            sx={{ width: "100%", maxWidth: 320, mt: 1 }}
+          >
+            <Button variant="outlined" onClick={() => setLoginOpen(true)}>
+              Anmelden
+            </Button>
+            <Button variant="contained" onClick={() => setRegisterOpen(true)}>
+              Registrieren
+            </Button>
+          </Stack>
+
           {/* Feature-Block */}
           <Paper
             elevation={0}
             sx={{
-              mt: 1,
+              mt: 2,
               p: 3,
               maxWidth: 800,
               width: "100%",
@@ -94,20 +106,6 @@ const LandingPage = () => {
               Bedürfnissen.
             </Typography>
           </Paper>
-
-          {/* Auth-Aktionen UNTER dem Text */}
-          <Stack
-            spacing={2}
-            direction="column"
-            sx={{ width: "100%", maxWidth: 320, mt: 3 }}
-          >
-            <Button variant="outlined" onClick={() => setLoginOpen(true)}>
-              Anmelden
-            </Button>
-            <Button variant="contained" onClick={() => setRegisterOpen(true)}>
-              Registrieren
-            </Button>
-          </Stack>
         </Stack>
       </Box>
 

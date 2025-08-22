@@ -1,10 +1,10 @@
 // src/App.tsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Box, Toolbar, CssBaseline } from "@mui/material";
 import AppHeader from "./components/UI/AppHeaderComponent";
 
 import LandingPage from "./pages/LandingPage";
-import AddressSearchWizardPage from "./pages/AddressSearchWizardPage"; // 👈 neu: geschützte Wizard-Page
+import AddressSearchWizardPage from "./pages/AddressSearchWizardPage";
 import DashboardPage from "./pages/DashboardPage";
 import SaveSuccessPage from "./pages/SaveSuccessPage";
 import DrawAreaPage from "./pages/MapDrawSearchArea";
@@ -15,11 +15,13 @@ import MapShowAllJobs from "./pages/MapShowAllJobs";
 import RequireAuth from "./components/auth/RequireAuth";
 
 function App() {
+  const location = useLocation();
+  const showHeader = location.pathname !== "/"; // 👈 LandingPage ohne AppBar
+
   return (
     <>
       <CssBaseline />
 
-      {/* Fullscreen Layout mit fixiertem Header */}
       <Box
         sx={{
           width: "100vw",
@@ -28,13 +30,13 @@ function App() {
           flexDirection: "column",
         }}
       >
-        {/* 🔝 Fixierter Header */}
-        <AppHeader />
+        {/* 🔝 Fixierter Header nur wenn nicht Landing */}
+        {showHeader && <AppHeader />}
 
-        {/* Spacer in Höhe der AppBar/Toolbar, verhindert Überlappung */}
-        <Toolbar />
+        {/* Spacer nur, wenn Header existiert */}
+        {showHeader && <Toolbar />}
 
-        {/* Hauptbereich füllt den Rest; minHeight:0 verhindert Scroll-Jank */}
+        {/* Hauptbereich */}
         <Box component="main" sx={{ flex: 1, minHeight: 0, display: "flex" }}>
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
             <Routes>
