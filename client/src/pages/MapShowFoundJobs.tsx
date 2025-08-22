@@ -38,7 +38,13 @@ export default function MapPage() {
   const [featureCollection, setFeatureCollection] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
-  const handleFeatureClick = useCallback((f: any) => setSelectedFeature(f), []);
+  const handleFeatureClick = useCallback((f: any) => {
+    const p = f?.properties ?? f;
+    if (p?.isJob === true) {
+      setSelectedFeature(f);
+    }
+    // sonst: ignorieren (Isochronen/Startpunkt/Linien etc.)
+  }, []);
 
   /* Sichtbare Jobs anhand der sichtbaren Layer-Groups ermitteln */
   const updateVisibleJobs = useCallback(() => {
@@ -126,10 +132,15 @@ export default function MapPage() {
           }
         }
 
+        const jobFeaturesWithFlag = jobsFC.features.map((f: any) => ({
+          ...f,
+          properties: { ...(f.properties ?? {}), isJob: true },
+        }));
+
         setFeatureCollection({
           type: "FeatureCollection",
           features: [
-            ...jobsFC.features,
+            ...jobFeaturesWithFlag, // ⬅️ statt ...jobsFC.features
             ...isoFC.features,
             ...drawnReqFC.features,
             ...addressReqFC.features,
@@ -196,28 +207,30 @@ export default function MapPage() {
               }),
             });
 
-            const jobLayer = new VectorLayer({
-              source: new VectorSource({
-                features: new GeoJSON().readFeatures(
-                  {
-                    type: "FeatureCollection",
-                    features: (jobsFC.features as any[]).filter(
-                      (f) => f.properties?.search_area_id === areaId
-                    ),
-                  },
-                  {
-                    dataProjection: "EPSG:4326",
-                    featureProjection: "EPSG:3857",
-                  }
+            const jobFeatures = new GeoJSON().readFeatures(
+              {
+                type: "FeatureCollection",
+                features: (jobsFC.features as any[]).filter(
+                  (f) => f.properties?.search_area_id === areaId
                 ),
-              }),
+              },
+              {
+                dataProjection: "EPSG:4326",
+                featureProjection: "EPSG:3857",
+              }
+            );
+            // ✨ Flag an jedes Feature hängen
+            jobFeatures.forEach((feat) => feat.set("isJob", true));
+
+            const jobLayer = new VectorLayer({
+              source: new VectorSource({ features: jobFeatures }),
               title: "Jobs",
               type: "overlay",
               style: new Style({
                 image: new CircleStyle({
                   radius: 6,
-                  fill: new Fill({ color: "#424242" }), // ⬅️ wie in der Legende
-                  stroke: new Stroke({ color: "#212121", width: 1 }), // ⬅️ dunkler Rand
+                  fill: new Fill({ color: "#424242" }),
+                  stroke: new Stroke({ color: "#212121", width: 1 }),
                 }),
               }),
             });
