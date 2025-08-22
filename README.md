@@ -36,13 +36,7 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Jobs speicherbar machen --> im Frontend Button einrichten zum Speichern, in Datenbank neue Tabelle saved jobs einrichten mit foreign key user id und job id --> CRUD
-
 Usermanagement - CRUD
-
-sicherstellen dass bei Geokodierung nur Adressen in Hamburg akzeptiert werden + evtl. eine geojson einladen womit man filtern kann das alles außerhalb ausgegraut wird auf der Karte
-
-Wenn man in der Map wohin klickt, kommt trotzdem ein Eintrag mit Namen "Job Eintrag" - soll nur kommen wenn man auf ein Job klickt
 
 Startbildschirm anpassen - Tutorial was die App kann
 

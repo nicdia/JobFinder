@@ -23,12 +23,13 @@ import AppsIcon from "@mui/icons-material/Apps";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import DashboardSection from "../components/UI/DashboardSectionComponent";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent"; // Pfad wie bei dir
+import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
 
 // Services – bestehend
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
@@ -36,8 +37,12 @@ import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
 import { deleteAddressRequest } from "../services/deleteAdressRequest";
 import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
 
-// Services – NEU für Saved Jobs
+// Services – Saved Jobs
 import { fetchUserSavedJobs, deleteUserSavedJob } from "../services/savedJobs";
+
+// Services – Counts für Found/All Jobs
+import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
+import { fetchAllJobs } from "../services/fetchAllJobsApi";
 
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
@@ -90,25 +95,36 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Accordion: Requests (bestehend)
-  const [expanded, setExpanded] = useState<boolean>(false);
+  // Accordions: States
+  const [expandedReq, setExpandedReq] = useState<boolean>(false);
+  const [expandedSaved, setExpandedSaved] = useState<boolean>(false);
+  const [expandedFound, setExpandedFound] = useState<boolean>(false);
+  const [expandedAll, setExpandedAll] = useState<boolean>(false);
+
+  // Requests laden
   const [loading, setLoading] = useState<boolean>(false);
   const [addrData, setAddrData] = useState<AnyFeature[]>([]);
   const [drawnData, setDrawnData] = useState<AnyFeature[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
 
-  // Accordion: Saved Jobs (NEU)
-  const [savedExpanded, setSavedExpanded] = useState<boolean>(false);
+  // Saved Jobs laden
   const [savedLoading, setSavedLoading] = useState<boolean>(false);
   const [savedError, setSavedError] = useState<string | null>(null);
   const [savedFeatures, setSavedFeatures] = useState<AnyFeature[]>([]);
-  // Popup für gespeicherte Jobs
   const [savedSelected, setSavedSelected] = useState<any | null>(null);
-
   const [deletingSaved, setDeletingSaved] = useState<Record<string, boolean>>(
     {}
   );
+
+  // Counts: Found / All
+  const [foundCount, setFoundCount] = useState<number | null>(null);
+  const [foundCountLoading, setFoundCountLoading] = useState<boolean>(false);
+  const [foundCountError, setFoundCountError] = useState<string | null>(null);
+
+  const [allCount, setAllCount] = useState<number | null>(null);
+  const [allCountLoading, setAllCountLoading] = useState<boolean>(false);
+  const [allCountError, setAllCountError] = useState<string | null>(null);
 
   // Beim Mount laden (Requests)
   useEffect(() => {
@@ -160,6 +176,51 @@ const DashboardPage = () => {
     };
   }, [user]);
 
+  // Counts laden (Found/All)
+  useEffect(() => {
+    let alive = true;
+
+    // Gefundene Jobs (nur sinnvoll, wenn eingeloggt)
+    (async () => {
+      if (!user?.id) {
+        setFoundCount(null);
+        return;
+      }
+      try {
+        setFoundCountLoading(true);
+        setFoundCountError(null);
+        const fc = await fetchUserVisibleJobs(user);
+        if (!alive) return;
+        setFoundCount(Array.isArray(fc?.features) ? fc.features.length : 0);
+      } catch (e: any) {
+        if (!alive) return;
+        setFoundCountError(e?.message ?? "Fehler beim Zählen (Gefundene).");
+      } finally {
+        if (alive) setFoundCountLoading(false);
+      }
+    })();
+
+    // Alle Jobs
+    (async () => {
+      try {
+        setAllCountLoading(true);
+        setAllCountError(null);
+        const fc = await fetchAllJobs();
+        if (!alive) return;
+        setAllCount(Array.isArray(fc?.features) ? fc.features.length : 0);
+      } catch (e: any) {
+        if (!alive) return;
+        setAllCountError(e?.message ?? "Fehler beim Zählen (Alle Jobs).");
+      } finally {
+        if (alive) setAllCountLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
   // Vereinheitlichte Liste (Requests)
   const requests: UnifiedRequest[] = useMemo(() => {
     const a = addrData.map((f) => {
@@ -194,21 +255,20 @@ const DashboardPage = () => {
   // Abgeleitete Liste (Saved Jobs)
   const savedJobs: SavedJob[] = useMemo(() => {
     return savedFeatures.map((f) => {
-      // Feature-ID ist job_id, Properties kommen aus Snapshot
       const id = (f.id ?? f.properties?.job_id) as number | string;
       const p = f.properties ?? {};
       return {
         id,
         title: p.title ?? `Job #${id}`,
         company: p.company ?? undefined,
-        createdAt: p.created_at ?? p.saved_at ?? undefined, // falls vorhanden
+        createdAt: p.created_at ?? p.saved_at ?? undefined,
         externalUrl: p.external_url ?? undefined,
         raw: f,
       };
     });
   }, [savedFeatures]);
 
-  // Delete-Handler (Requests – bestehend)
+  // Delete-Handler (Requests)
   const handleDelete = async (r: UnifiedRequest) => {
     const key = `${r.type}-${r.id}`;
     const ok = window.confirm(
@@ -245,7 +305,7 @@ const DashboardPage = () => {
     }
   };
 
-  // Delete-Handler (Saved Jobs – NEU)
+  // Delete-Handler (Saved Jobs)
   const handleDeleteSaved = async (j: SavedJob) => {
     const key = `saved-${j.id}`;
     const ok = window.confirm(
@@ -275,6 +335,7 @@ const DashboardPage = () => {
       });
     }
   };
+
   return (
     <Box
       sx={{
@@ -297,60 +358,67 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 2 }} />
 
-      <DashboardSection
-        icon={<WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-        title="Gefundene Jobs"
-        description="Hier findest du die gefundenen Jobs, basierend auf deinen Suchanfragen."
-        buttonLabel="Anzeigen"
-        onClick={() => navigate("/found-jobs?mode=customVisible")}
-      />
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Optional: Kachel; echte Liste unten im Accordion */}
-      <DashboardSection
-        icon={
-          <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
-        }
-        title="Gespeicherte Jobs"
-        description="Hier siehst du eine Übersicht der Jobs, die du mit einem Herz markiert hast."
-        buttonLabel="Anzeigen"
-        onClick={() => navigate("/saved-jobs")} // 👈 statt setSavedExpanded(true)
-      />
-      <Divider sx={{ my: 2 }} />
-
-      <DashboardSection
-        icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-        title="Jobs per Adresse suchen"
-        description="Erstelle hier einen neuen Suchauftrag basierend auf den Erreichbarkeitsverhältnissen deiner Adresse."
-        buttonLabel="Erstellen"
-        onClick={() => navigate("/onboarding")}
-      />
-
-      <Divider sx={{ my: 2 }} />
-
-      <DashboardSection
-        icon={<SearchIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-        title="Suchgebiet/-Ort einzeichnen"
-        description="Zeichne hier ein, in welchem Bereich du Jobs angezeigt bekommen möchtest."
-        buttonLabel="Zeichnen"
-        onClick={() => navigate("/draw-search")}
-      />
-
-      <Divider sx={{ my: 3 }} />
-
-      {/* --------- Suchaufträge (bearbeiten & löschen) --------- */}
+      {/* --------- Gefundene Jobs (Accordion mit Count) --------- */}
       <Accordion
-        expanded={expanded}
-        onChange={(_, v) => setExpanded(v)}
+        expanded={expandedFound}
+        onChange={(_, v) => setExpandedFound(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <WorkOutlineIcon color="primary" />
+            <Typography fontWeight={600}>Gefundene Jobs</Typography>
+            <Chip
+              size="small"
+              label={
+                foundCountLoading
+                  ? "lädt…"
+                  : foundCountError
+                  ? "—"
+                  : `${foundCount ?? 0}`
+              }
+            />
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<MapOutlinedIcon />}
+              onClick={() => navigate("/found-jobs?mode=customVisible")}
+              disabled={foundCountLoading}
+            >
+              Auf Karte anzeigen
+            </Button>
+          </Stack>
+
+          {foundCountError ? (
+            <Typography color="error">{foundCountError}</Typography>
+          ) : (
+            <Typography color="text.secondary">
+              Anzahl der aktuell sichtbaren Jobs basierend auf deinen
+              Suchaufträgen: <strong>{foundCount ?? 0}</strong>
+            </Typography>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* --------- Suchaufträge (Aktionen + Liste) --------- */}
+      <Accordion
+        expanded={expandedReq}
+        onChange={(_, v) => setExpandedReq(v)}
         sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <EditLocationAltIcon color="primary" />
-            <Typography fontWeight={600}>
-              Suchaufträge (bearbeiten & löschen)
-            </Typography>
+            <Typography fontWeight={600}>Suchaufträge</Typography>
             <Chip
               size="small"
               label={loading ? "lädt…" : `${requests.length}`}
@@ -359,6 +427,29 @@ const DashboardPage = () => {
         </AccordionSummary>
 
         <AccordionDetails>
+          {/* Aktionen */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<EditLocationAltIcon />}
+              onClick={() => navigate("/draw-search")}
+            >
+              Suchgebiet/Ort einzeichnen
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<SearchIcon />}
+              onClick={() => navigate("/onboarding")}
+            >
+              Per Adresse suchen
+            </Button>
+          </Stack>
+
+          {/* Liste */}
           {loading ? (
             <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
               <CircularProgress />
@@ -448,12 +539,12 @@ const DashboardPage = () => {
         </AccordionDetails>
       </Accordion>
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 2 }} />
 
-      {/* --------- Gespeicherte Jobs (Details & löschen) --------- */}
+      {/* --------- Gespeicherte Jobs (Aktion + Liste) --------- */}
       <Accordion
-        expanded={savedExpanded}
-        onChange={(_, v) => setSavedExpanded(v)}
+        expanded={expandedSaved}
+        onChange={(_, v) => setExpandedSaved(v)}
         sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -468,6 +559,22 @@ const DashboardPage = () => {
         </AccordionSummary>
 
         <AccordionDetails>
+          {/* Aktion */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<MapOutlinedIcon />}
+              onClick={() => navigate("/saved-jobs")}
+            >
+              Auf Karte anzeigen
+            </Button>
+          </Stack>
+
+          {/* Liste */}
           {savedLoading ? (
             <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
               <CircularProgress />
@@ -493,7 +600,7 @@ const DashboardPage = () => {
                           size="small"
                           variant="outlined"
                           startIcon={<InfoOutlinedIcon />}
-                          onClick={() => setSavedSelected(j.raw)} // Popup öffnen
+                          onClick={() => setSavedSelected(j.raw)}
                         >
                           Details
                         </Button>
@@ -543,15 +650,56 @@ const DashboardPage = () => {
         </AccordionDetails>
       </Accordion>
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 2 }} />
 
-      <DashboardSection
-        icon={<AppsIcon sx={{ fontSize: 40, color: "primary.main" }} />}
-        title="Alle Jobs"
-        description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
-        buttonLabel="Anzeigen"
-        onClick={() => navigate("/all-jobs")} // 👈 neue Route
-      />
+      {/* --------- Alle Jobs (Accordion mit Count) --------- */}
+      <Accordion
+        expanded={expandedAll}
+        onChange={(_, v) => setExpandedAll(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <AppsIcon color="primary" />
+            <Typography fontWeight={600}>Alle Jobs</Typography>
+            <Chip
+              size="small"
+              label={
+                allCountLoading
+                  ? "lädt…"
+                  : allCountError
+                  ? "—"
+                  : `${allCount ?? 0}`
+              }
+            />
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<MapOutlinedIcon />}
+              onClick={() => navigate("/all-jobs")}
+              disabled={allCountLoading}
+            >
+              Auf Karte anzeigen
+            </Button>
+          </Stack>
+
+          {allCountError ? (
+            <Typography color="error">{allCountError}</Typography>
+          ) : (
+            <Typography color="text.secondary">
+              Gesamtanzahl aller verfügbaren Jobs:{" "}
+              <strong>{allCount ?? 0}</strong>
+            </Typography>
+          )}
+        </AccordionDetails>
+      </Accordion>
 
       <Divider sx={{ my: 2 }} />
 
@@ -565,4 +713,5 @@ const DashboardPage = () => {
     </Box>
   );
 };
+
 export default DashboardPage;
