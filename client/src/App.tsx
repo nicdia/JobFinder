@@ -4,7 +4,7 @@ import { Box, Toolbar, CssBaseline } from "@mui/material";
 import AppHeader from "./components/UI/AppHeaderComponent";
 
 import LandingPage from "./pages/LandingPage";
-import OnboardingPageEmployee from "./pages/OnboardingPageEmployee";
+import AddressSearchWizardPage from "./pages/AddressSearchWizardPage"; // 👈 neu: geschützte Wizard-Page
 import DashboardPage from "./pages/DashboardPage";
 import SaveSuccessPage from "./pages/SaveSuccessPage";
 import DrawAreaPage from "./pages/MapDrawSearchArea";
@@ -36,14 +36,20 @@ function App() {
 
         {/* Hauptbereich füllt den Rest; minHeight:0 verhindert Scroll-Jank */}
         <Box component="main" sx={{ flex: 1, minHeight: 0, display: "flex" }}>
-          {/* ⬇️ Hier: overflow auf auto statt hidden */}
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
             <Routes>
               {/* öffentlich */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/onboarding" element={<OnboardingPageEmployee />} />
 
               {/* geschützt */}
+              <Route
+                path="/address-search"
+                element={
+                  <RequireAuth>
+                    <AddressSearchWizardPage />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="/dashboard"
                 element={
@@ -101,6 +107,7 @@ function App() {
                 }
               />
 
+              {/* Fallback */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Box>

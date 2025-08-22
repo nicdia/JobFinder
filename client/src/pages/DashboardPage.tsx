@@ -524,7 +524,7 @@ const DashboardPage = () => {
             <Button
               variant="outlined"
               startIcon={<SearchIcon />}
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/address-search")}
             >
               Per Adresse suchen
             </Button>
