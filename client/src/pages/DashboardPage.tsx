@@ -550,7 +550,7 @@ const DashboardPage = () => {
         title="Alle Jobs"
         description="Du willst einfach mal alle Jobs ungefiltert ansehen? Klicke hier."
         buttonLabel="Anzeigen"
-        onClick={() => navigate("/map?mode=all")}
+        onClick={() => navigate("/all-jobs")} // 👈 neue Route
       />
 
       <Divider sx={{ my: 2 }} />

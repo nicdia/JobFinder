@@ -11,7 +11,7 @@ import DrawAreaPage from "./pages/MapDrawSearchArea";
 import EditDrawnRequestPage from "./pages/EditDrawnRequestPage";
 import MapPage from "./pages/MapShowFoundJobs";
 import MapShowSavedJobs from "./pages/MapShowSavedJobs";
-
+import MapShowAllJobs from "./pages/MapShowAllJobs";
 function App() {
   return (
     <>
@@ -48,6 +48,7 @@ function App() {
                 element={<EditDrawnRequestPage />}
               />
               <Route path="/saved-jobs" element={<MapShowSavedJobs />} />
+              <Route path="/all-jobs" element={<MapShowAllJobs />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Box>
