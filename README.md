@@ -36,8 +36,6 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Usermanagement - CRUD
-
 Startbildschirm anpassen - Tutorial was die App kann
 
 Wenn man sich abmeldet oder eine URl direkt aufruft soll man immer zum Startbildschirm weitergeleitet werden -- codex

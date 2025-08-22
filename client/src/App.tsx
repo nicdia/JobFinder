@@ -12,6 +12,8 @@ import EditDrawnRequestPage from "./pages/EditDrawnRequestPage";
 import MapPage from "./pages/MapShowFoundJobs";
 import MapShowSavedJobs from "./pages/MapShowSavedJobs";
 import MapShowAllJobs from "./pages/MapShowAllJobs";
+import RequireAuth from "./components/auth/RequireAuth";
+
 function App() {
   return (
     <>
@@ -37,18 +39,68 @@ function App() {
           {/* ⬇️ Hier: overflow auf auto statt hidden */}
           <Box sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
             <Routes>
+              {/* öffentlich */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/onboarding" element={<OnboardingPageEmployee />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/found-jobs" element={<MapPage />} />
-              <Route path="/save-success" element={<SaveSuccessPage />} />
-              <Route path="/draw-search" element={<DrawAreaPage />} />
+
+              {/* geschützt */}
+              <Route
+                path="/dashboard"
+                element={
+                  <RequireAuth>
+                    <DashboardPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/found-jobs"
+                element={
+                  <RequireAuth>
+                    <MapPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/save-success"
+                element={
+                  <RequireAuth>
+                    <SaveSuccessPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/draw-search"
+                element={
+                  <RequireAuth>
+                    <DrawAreaPage />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="/edit-drawn/:requestId"
-                element={<EditDrawnRequestPage />}
+                element={
+                  <RequireAuth>
+                    <EditDrawnRequestPage />
+                  </RequireAuth>
+                }
               />
-              <Route path="/saved-jobs" element={<MapShowSavedJobs />} />
-              <Route path="/all-jobs" element={<MapShowAllJobs />} />
+              <Route
+                path="/saved-jobs"
+                element={
+                  <RequireAuth>
+                    <MapShowSavedJobs />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/all-jobs"
+                element={
+                  <RequireAuth>
+                    <MapShowAllJobs />
+                  </RequireAuth>
+                }
+              />
+
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Box>
