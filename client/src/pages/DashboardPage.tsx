@@ -27,6 +27,8 @@ import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import DashboardSection from "../components/UI/DashboardSectionComponent";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent"; // Pfad wie bei dir
 
 // Services – bestehend
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
@@ -101,6 +103,9 @@ const DashboardPage = () => {
   const [savedLoading, setSavedLoading] = useState<boolean>(false);
   const [savedError, setSavedError] = useState<string | null>(null);
   const [savedFeatures, setSavedFeatures] = useState<AnyFeature[]>([]);
+  // Popup für gespeicherte Jobs
+  const [savedSelected, setSavedSelected] = useState<any | null>(null);
+
   const [deletingSaved, setDeletingSaved] = useState<Record<string, boolean>>(
     {}
   );
@@ -270,7 +275,6 @@ const DashboardPage = () => {
       });
     }
   };
-
   return (
     <Box
       sx={{
@@ -303,7 +307,7 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Optional: Diese Kachel kann bleiben oder entfernt werden – die echte Liste kommt unten als Accordion */}
+      {/* Optional: Kachel; echte Liste unten im Accordion */}
       <DashboardSection
         icon={
           <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
@@ -371,6 +375,7 @@ const DashboardPage = () => {
               {requests.map((r) => {
                 const key = `${r.type}-${r.id}`;
                 const isDeleting = !!deletingIds[key];
+
                 return (
                   <ListItem
                     key={key}
@@ -446,7 +451,7 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* --------- Gespeicherte Jobs (nur löschen) --------- */}
+      {/* --------- Gespeicherte Jobs (Details & löschen) --------- */}
       <Accordion
         expanded={savedExpanded}
         onChange={(_, v) => setSavedExpanded(v)}
@@ -455,9 +460,7 @@ const DashboardPage = () => {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <FavoriteBorderIcon color="primary" />
-            <Typography fontWeight={600}>
-              Gespeicherte Jobs (löschen)
-            </Typography>
+            <Typography fontWeight={600}>Gespeicherte Jobs</Typography>
             <Chip
               size="small"
               label={savedLoading ? "lädt…" : `${savedJobs.length}`}
@@ -486,16 +489,26 @@ const DashboardPage = () => {
                     key={key}
                     divider
                     secondaryAction={
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteOutlineIcon />}
-                        onClick={() => handleDeleteSaved(j)}
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? "Lösche…" : "Löschen"}
-                      </Button>
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<InfoOutlinedIcon />}
+                          onClick={() => setSavedSelected(j.raw)} // Popup öffnen
+                        >
+                          Details
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteOutlineIcon />}
+                          onClick={() => handleDeleteSaved(j)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Lösche…" : "Löschen"}
+                        </Button>
+                      </Stack>
                     }
                   >
                     <ListItemText
@@ -542,8 +555,15 @@ const DashboardPage = () => {
       />
 
       <Divider sx={{ my: 2 }} />
+
+      {/* Dialog für gespeicherten Job */}
+      {savedSelected && (
+        <FeatureDialog
+          feature={savedSelected}
+          onClose={() => setSavedSelected(null)}
+        />
+      )}
     </Box>
   );
 };
-
 export default DashboardPage;
