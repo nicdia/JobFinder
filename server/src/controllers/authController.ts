@@ -1,3 +1,4 @@
+// src/controllers/authController.ts
 import { Request, Response } from "express";
 import { createUser } from "../services/userRegisterService";
 import { handleLogin } from "../services/userLoginService";
@@ -16,15 +17,21 @@ export async function registerUser(req: Request, res: Response) {
 
     // Direkt einloggen nach erfolgreicher Registrierung:
     const result = await handleLogin(email, password);
-    res.status(200).json(result); // ← Das ist wichtig!
+    return res.status(200).json(result);
   } catch (err: any) {
     console.error("❌ Fehler bei der Registrierung:", err);
 
-    if (err.code === "23505") {
+    // Vorab-Check aus Service
+    if (err?.code === "EMAIL_TAKEN" || err?.status === 409) {
       return res.status(409).json({ error: "Email bereits registriert." });
     }
 
-    res.status(500).json({ error: "Serverfehler" });
+    // Fallback: Unique-Constraint aus der DB (z. B. Postgres)
+    if (err?.code === "23505") {
+      return res.status(409).json({ error: "Email bereits registriert." });
+    }
+
+    return res.status(500).json({ error: "Serverfehler" });
   }
 }
 
@@ -32,15 +39,14 @@ export async function loginUser(req: Request, res: Response) {
   const { email, password } = req.body;
 
   try {
-    const result = await handleLogin(email, password); // ← gib das hier testweise aus
-    console.log("Login result:", result); // 👈
-
-    res.status(200).json(result); // ✅ wichtig: .json(), kein res.sendStatus(...)
+    const result = await handleLogin(email, password);
+    console.log("Login result:", result);
+    return res.status(200).json(result);
   } catch (err: any) {
     console.error("❌ Fehler beim Login:", err);
     if (err.message === "invalid_credentials") {
       return res.status(401).json({ error: "Ungültige Anmeldedaten" });
     }
-    res.status(500).json({ error: "Interner Serverfehler" });
+    return res.status(500).json({ error: "Interner Serverfehler" });
   }
 }

@@ -38,8 +38,6 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
 Startbildschirm anpassen - Tutorial was die App kann
 
-Wenn man sich abmeldet oder eine URl direkt aufruft soll man immer zum Startbildschirm weitergeleitet werden -- codex
-
 Responsive -- codex
 
 INIT SQL einrichten
