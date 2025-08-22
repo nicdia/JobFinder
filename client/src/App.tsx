@@ -10,6 +10,7 @@ import SaveSuccessPage from "./pages/SaveSuccessPage";
 import DrawAreaPage from "./pages/MapDrawSearchArea";
 import EditDrawnRequestPage from "./pages/EditDrawnRequestPage";
 import MapPage from "./pages/MapShowFoundJobs";
+import MapShowSavedJobs from "./pages/MapShowSavedJobs";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                 path="/edit-drawn/:requestId"
                 element={<EditDrawnRequestPage />}
               />
+              <Route path="/saved-jobs" element={<MapShowSavedJobs />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Box>

@@ -315,9 +315,8 @@ const DashboardPage = () => {
         title="Gespeicherte Jobs"
         description="Hier siehst du eine Übersicht der Jobs, die du mit einem Herz markiert hast."
         buttonLabel="Anzeigen"
-        onClick={() => setSavedExpanded(true)}
+        onClick={() => navigate("/saved-jobs")} // 👈 statt setSavedExpanded(true)
       />
-
       <Divider sx={{ my: 2 }} />
 
       <DashboardSection

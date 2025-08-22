@@ -28,6 +28,7 @@ interface Props {
   onSelect: (job: JobItem) => void;
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
+  initialSavedIds?: (string | number)[]; // 👈 neu
 }
 
 function ensureSet<T>(val: unknown): Set<T> {
@@ -39,10 +40,13 @@ export default function JobsListWidget({
   onSelect,
   onOpenPopup,
   userId,
+  initialSavedIds = [],
 }: Props) {
   const [open, setOpen] = useState(false);
 
-  const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string | number>>(
+    new Set(initialSavedIds) // 👈 direkt setzen
+  );
   const [loadingIds, setLoadingIds] = useState<Set<string | number>>(new Set());
 
   const handlePick = (j: JobItem) => {
