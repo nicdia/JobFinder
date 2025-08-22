@@ -26,7 +26,6 @@ Mermaid angucken--> in Git Markdown
 
 docker compose up -d
 docker compose logs -f --tail=100
-docker compose logs -f --tail=100
 docker compose logs -f api # nur Backend
 docker compose logs -f client # nur Frontend
 docker compose logs -f otp # OTP

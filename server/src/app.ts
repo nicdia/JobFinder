@@ -9,6 +9,7 @@ import userRoutes from "./routes/userManagement.route";
 import userDrawRequestRoute from "./routes/drawnRequest.route";
 import userSearchRequestRoute from "./routes/addressSearchRequest.route";
 import userIsochroneRoute from "./routes/userIsochrone.route";
+import savedJobsRoutes from "./routes/savedJobs.route";
 
 dotenv.config();
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api", accessibleJobs);
 app.use("/api", userDrawRequestRoute);
 app.use("/api", userSearchRequestRoute);
 app.use("/api", userIsochroneRoute);
+app.use("/api", savedJobsRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Server läuft unter http://localhost:${PORT}`);

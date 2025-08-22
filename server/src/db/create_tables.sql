@@ -79,3 +79,27 @@ CREATE TABLE account.user_drawn_search_requests (
 CREATE INDEX idx_drawn_requests_geom
   ON account.user_drawn_search_requests
   USING GIST (geom);
+
+CREATE TABLE account.user_saved_jobs (
+  id              SERIAL PRIMARY KEY,
+  user_id         INTEGER NOT NULL REFERENCES account.users(id) ON DELETE CASCADE,
+  job_id          INTEGER NOT NULL REFERENCES account.user_jobs_within_search_area(id) ON DELETE CASCADE,
+  search_area_id  INTEGER REFERENCES account.user_search_areas(id) ON DELETE CASCADE,
+  drawn_req_id    INTEGER REFERENCES account.user_drawn_search_requests(id) ON DELETE CASCADE,
+  address_req_id  INTEGER REFERENCES account.user_search_requests(id)      ON DELETE CASCADE,
+  source          TEXT,
+  external_id     TEXT,
+  title           TEXT,
+  company         TEXT,
+  location        TEXT,
+  description     TEXT,
+  external_url    TEXT,
+  lat             DOUBLE PRECISION,
+  lon             DOUBLE PRECISION,
+  geom            GEOMETRY(Point,4326),
+  published_at    TIMESTAMP,
+  starting_date   TIMESTAMP,
+  search_category TEXT,
+  created_at      TIMESTAMP DEFAULT now(),
+  CONSTRAINT user_saved_jobs_unique UNIQUE (user_id, job_id)
+);

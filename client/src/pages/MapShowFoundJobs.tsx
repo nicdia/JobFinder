@@ -408,8 +408,8 @@ export default function MapPage() {
         jobs={jobs}
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
+        userId={user?.id} // 👈 neu
       />
-
       <FeatureDialog
         feature={selectedFeature}
         onClose={() => setSelectedFeature(null)}
