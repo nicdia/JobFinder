@@ -366,9 +366,20 @@ export default function MapPage() {
       featureCollection ?? { type: "FeatureCollection", features: [] }
     );
 
-  const handleJobSelect = (j: JobItem) =>
+  const handleJobSelect = useCallback((j: JobItem) => {
     mapHandleRef.current?.zoomTo(j.coord, 17);
+  }, []);
 
+  const handleOpenPopup = useCallback(
+    (j: JobItem) => {
+      // passende GeoJSON-Feature zum Job finden und an den Dialog geben
+      const feat = featureCollection?.features?.find(
+        (f: any) => String(f.id) === String(j.id)
+      );
+      if (feat) setSelectedFeature(feat);
+    },
+    [featureCollection]
+  );
   return (
     // ⬇️ nutzt den gesamten vom Router zugewiesenen Bereich und verhindert Scrollen
     <Box
@@ -393,7 +404,11 @@ export default function MapPage() {
       {/* 📌 Legende unten rechts (anklebend) */}
       {featureCollection?.features?.length ? <LegendWidget /> : null}
 
-      <JobsListWidget jobs={jobs} onSelect={handleJobSelect} />
+      <JobsListWidget
+        jobs={jobs}
+        onSelect={handleJobSelect}
+        onOpenPopup={handleOpenPopup}
+      />
 
       <FeatureDialog
         feature={selectedFeature}

@@ -15,24 +15,32 @@ export interface JobItem {
   id: string | number;
   title: string;
   company?: string;
-  coord: [number, number]; // [lon,lat] WGS84
+  coord: [number, number]; // [lon,lat] WGS84
 }
 
 interface Props {
   jobs: JobItem[];
-  onSelect: (job: JobItem) => void;
+  onSelect: (job: JobItem) => void; // z.B. zoomTo(job.coord)
+  onOpenPopup?: (job: JobItem) => void; // optional: Popup öffnen
 }
 
-export default function JobsListWidget({ jobs, onSelect }: Props) {
+export default function JobsListWidget({ jobs, onSelect, onOpenPopup }: Props) {
   const [open, setOpen] = useState(false);
+
+  const handlePick = (j: JobItem) => {
+    onSelect(j); // Zoom (bestehendes Verhalten)
+    onOpenPopup?.(j); // zusätzlich: Popup öffnen (falls übergeben)
+    setOpen(false);
+  };
 
   return (
     <>
-      <Tooltip title="Job‑Liste">
+      <Tooltip title="Job-Liste">
         <Fab
           color="primary"
-          sx={{ position: "absolute", bottom: 24, left: 24, zIndex: 1100 }} // ← hier!
+          sx={{ position: "absolute", bottom: 24, left: 24, zIndex: 1100 }}
           onClick={() => setOpen((p) => !p)}
+          aria-label={open ? "Job-Liste schließen" : "Job-Liste öffnen"}
         >
           {open ? <CloseIcon /> : <WorkIcon />}
         </Fab>
@@ -44,9 +52,9 @@ export default function JobsListWidget({ jobs, onSelect }: Props) {
             {jobs.map((j) => (
               <ListItemButton
                 key={j.id}
-                onClick={() => {
-                  onSelect(j);
-                  setOpen(false);
+                onClick={() => handlePick(j)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") handlePick(j);
                 }}
               >
                 <ListItemText primary={j.title} secondary={j.company} />
