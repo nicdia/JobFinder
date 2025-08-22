@@ -26,14 +26,16 @@ import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-// ⛔️ AppHeader entfernen – kommt global aus App.tsx
-// import AppHeader from "../components/UI/AppHeaderComponent";
 import DashboardSection from "../components/UI/DashboardSectionComponent";
 
+// Services – bestehend
 import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
 import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
 import { deleteAddressRequest } from "../services/deleteAdressRequest";
 import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
+
+// Services – NEU für Saved Jobs
+import { fetchUserSavedJobs, deleteUserSavedJob } from "../services/savedJobs";
 
 // -------- Hilfen zum Normalisieren ----------
 type AnyFeature = {
@@ -49,6 +51,15 @@ type UnifiedRequest = {
   name: string;
   createdAt?: string;
   jobType?: string;
+  raw: AnyFeature;
+};
+
+type SavedJob = {
+  id: number | string; // entspricht job_id
+  title: string;
+  company?: string;
+  createdAt?: string;
+  externalUrl?: string;
   raw: AnyFeature;
 };
 
@@ -77,6 +88,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Accordion: Requests (bestehend)
   const [expanded, setExpanded] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [addrData, setAddrData] = useState<AnyFeature[]>([]);
@@ -84,7 +96,16 @@ const DashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
 
-  // Beim Mount laden
+  // Accordion: Saved Jobs (NEU)
+  const [savedExpanded, setSavedExpanded] = useState<boolean>(false);
+  const [savedLoading, setSavedLoading] = useState<boolean>(false);
+  const [savedError, setSavedError] = useState<string | null>(null);
+  const [savedFeatures, setSavedFeatures] = useState<AnyFeature[]>([]);
+  const [deletingSaved, setDeletingSaved] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  // Beim Mount laden (Requests)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -110,7 +131,31 @@ const DashboardPage = () => {
     };
   }, [user]);
 
-  // Vereinheitlichte Liste
+  // Beim Mount laden (Saved Jobs)
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setSavedLoading(true);
+        setSavedError(null);
+        const savedResp = await fetchUserSavedJobs(user || undefined);
+        if (!alive) return;
+        setSavedFeatures(extractFeatures(savedResp));
+      } catch (e: any) {
+        if (!alive) return;
+        setSavedError(
+          e?.message ?? "Fehler beim Laden der gespeicherten Jobs."
+        );
+      } finally {
+        if (alive) setSavedLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  // Vereinheitlichte Liste (Requests)
   const requests: UnifiedRequest[] = useMemo(() => {
     const a = addrData.map((f) => {
       const id = (f.id ?? f.properties?.id) as number | string;
@@ -141,7 +186,24 @@ const DashboardPage = () => {
     return [...a, ...d];
   }, [addrData, drawnData]);
 
-  // Delete-Handler
+  // Abgeleitete Liste (Saved Jobs)
+  const savedJobs: SavedJob[] = useMemo(() => {
+    return savedFeatures.map((f) => {
+      // Feature-ID ist job_id, Properties kommen aus Snapshot
+      const id = (f.id ?? f.properties?.job_id) as number | string;
+      const p = f.properties ?? {};
+      return {
+        id,
+        title: p.title ?? `Job #${id}`,
+        company: p.company ?? undefined,
+        createdAt: p.created_at ?? p.saved_at ?? undefined, // falls vorhanden
+        externalUrl: p.external_url ?? undefined,
+        raw: f,
+      };
+    });
+  }, [savedFeatures]);
+
+  // Delete-Handler (Requests – bestehend)
   const handleDelete = async (r: UnifiedRequest) => {
     const key = `${r.type}-${r.id}`;
     const ok = window.confirm(
@@ -178,8 +240,38 @@ const DashboardPage = () => {
     }
   };
 
+  // Delete-Handler (Saved Jobs – NEU)
+  const handleDeleteSaved = async (j: SavedJob) => {
+    const key = `saved-${j.id}`;
+    const ok = window.confirm(
+      `Möchtest du den gespeicherten Job „${j.title}“ wirklich entfernen?`
+    );
+    if (!ok) return;
+
+    try {
+      setDeletingSaved((s) => ({ ...s, [key]: true }));
+      await deleteUserSavedJob(Number(j.id), user || undefined);
+      setSavedFeatures((prev) =>
+        prev.filter(
+          (f) => String(f.id ?? f.properties?.job_id) !== String(j.id)
+        )
+      );
+    } catch (e: any) {
+      console.error("Delete saved job failed:", e);
+      alert(
+        e?.message
+          ? `Löschen fehlgeschlagen: ${e.message}`
+          : "Löschen fehlgeschlagen."
+      );
+    } finally {
+      setDeletingSaved((s) => {
+        const { [key]: _drop, ...rest } = s;
+        return rest;
+      });
+    }
+  };
+
   return (
-    // ⬇️ nutzt die volle Höhe des Route-Containers und scrollt darin
     <Box
       sx={{
         height: "100%",
@@ -211,14 +303,15 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 2 }} />
 
+      {/* Optional: Diese Kachel kann bleiben oder entfernt werden – die echte Liste kommt unten als Accordion */}
       <DashboardSection
         icon={
           <FavoriteBorderIcon sx={{ fontSize: 40, color: "primary.main" }} />
         }
-        title="Keine gespeicherten Jobs"
+        title="Gespeicherte Jobs"
         description="Hier siehst du eine Übersicht der Jobs, die du mit einem Herz markiert hast."
         buttonLabel="Anzeigen"
-        onClick={() => console.log("Gespeicherte Jobs")}
+        onClick={() => setSavedExpanded(true)}
       />
 
       <Divider sx={{ my: 2 }} />
@@ -243,7 +336,7 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 3 }} />
 
-      {/* --------- kombinierte, aufklappbare Sektion --------- */}
+      {/* --------- Suchaufträge (bearbeiten & löschen) --------- */}
       <Accordion
         expanded={expanded}
         onChange={(_, v) => setExpanded(v)}
@@ -278,7 +371,6 @@ const DashboardPage = () => {
               {requests.map((r) => {
                 const key = `${r.type}-${r.id}`;
                 const isDeleting = !!deletingIds[key];
-
                 return (
                   <ListItem
                     key={key}
@@ -341,6 +433,93 @@ const DashboardPage = () => {
                       secondary={
                         r.createdAt
                           ? new Date(r.createdAt).toLocaleString("de-DE")
+                          : undefined
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* --------- Gespeicherte Jobs (nur löschen) --------- */}
+      <Accordion
+        expanded={savedExpanded}
+        onChange={(_, v) => setSavedExpanded(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <FavoriteBorderIcon color="primary" />
+            <Typography fontWeight={600}>
+              Gespeicherte Jobs (löschen)
+            </Typography>
+            <Chip
+              size="small"
+              label={savedLoading ? "lädt…" : `${savedJobs.length}`}
+            />
+          </Stack>
+        </AccordionSummary>
+
+        <AccordionDetails>
+          {savedLoading ? (
+            <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : savedError ? (
+            <Typography color="error">{savedError}</Typography>
+          ) : savedJobs.length === 0 ? (
+            <Typography color="text.secondary">
+              Du hast noch keine Jobs gespeichert.
+            </Typography>
+          ) : (
+            <List disablePadding>
+              {savedJobs.map((j) => {
+                const key = `saved-${j.id}`;
+                const isDeleting = !!deletingSaved[key];
+                return (
+                  <ListItem
+                    key={key}
+                    divider
+                    secondaryAction={
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteOutlineIcon />}
+                        onClick={() => handleDeleteSaved(j)}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Lösche…" : "Löschen"}
+                      </Button>
+                    }
+                  >
+                    <ListItemText
+                      primary={
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                        >
+                          <Typography>{j.title}</Typography>
+                          {j.company && (
+                            <Chip
+                              size="small"
+                              label={j.company}
+                              variant="outlined"
+                              sx={{ ml: 0.5 }}
+                            />
+                          )}
+                        </Stack>
+                      }
+                      secondary={
+                        j.createdAt
+                          ? new Date(j.createdAt).toLocaleString("de-DE")
                           : undefined
                       }
                     />
