@@ -55,9 +55,9 @@ export async function postSaveJobForUser(req: Request, res: Response) {
 
   try {
     const result = await saveJobForUser(tokenUserId, jobId);
-    // result: { saved: boolean, alreadyExisted?: boolean, reason?: string }
+
     if (result.saved) return res.status(200).json(result);
-    // z. B. wenn Job nicht (mehr) sichtbar/auffindbar war:
+
     return res
       .status(404)
       .json({ error: "Job nicht gefunden oder nicht sichtbar" });

@@ -8,7 +8,7 @@ export async function insertIsochroneToDB(
   lon: number,
   lat: number,
   geometry: string,
-  drawnReqId: number | null, // genau eine ID übergeben
+  drawnReqId: number | null,
   addressReqId: number | null
 ) {
   await pool.query(

@@ -4,7 +4,6 @@ import { AuthRequest } from "../types/serverTypes";
 
 const secret = process.env.JWT_SECRET || "supersecret";
 
-// explizit typisiert als RequestHandler mit korrekten Generics
 export const authenticateToken: RequestHandler = (
   req,
   res: Response,
@@ -19,7 +18,6 @@ export const authenticateToken: RequestHandler = (
 
   try {
     const decoded = jwt.verify(token, secret) as { userId: number };
-    // Cast auf AuthRequest – da Express das im Handler nicht direkt weiß
     (req as AuthRequest).user = { id: decoded.userId };
     next();
   } catch (err) {

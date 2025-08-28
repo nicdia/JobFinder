@@ -84,7 +84,7 @@ export const processPoints = async ({
       });
       await matchJobsToPolygone(userId);
     }
-  } // ← for-Schleife ENDE  ✅
+  }
 
   /* ---------- finales Speichern ---------- */
   if (isochrones.length === 1) {

@@ -12,8 +12,8 @@ export async function insertUserIsochrone({
   mode,
   center,
   geojsonPolygon,
-  drawnReqId = null, // ⚠️ neu   (optional)
-  addressReqId = null, // ⚠️ neu   (optional)
+  drawnReqId = null,
+  addressReqId = null,
 }: ImportIsochroneParams) {
   const [lon, lat] = center;
   const geometry = JSON.stringify(

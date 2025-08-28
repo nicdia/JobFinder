@@ -9,10 +9,6 @@ export async function getUserDataByMail(email: string) {
   return result;
 }
 
-/**
- * Registrierung: Passwort jetzt OHNE Hash speichern.
- * Hinweis: wir behalten die Spalte "password_hash" bei, um kein DB-Migration zu brauchen.
- */
 export async function createUserQuery(email: string, password: string) {
   const result = await pool.query(
     `
@@ -26,12 +22,6 @@ export async function createUserQuery(email: string, password: string) {
   return result.rows[0];
 }
 
-/**
- * Update: email / password (Klartext) setzen.
- * - password landet in "password_hash", damit keine Migration nötig ist.
- */
-
-// Klartext in password_hash ablegen (du hast das so gewollt)
 export async function updateUser(
   userId: number,
   updates: { email?: string; password?: string }
@@ -45,7 +35,7 @@ export async function updateUser(
     values.push(updates.email);
   }
   if (updates.password) {
-    fields.push(`password_hash = $${i++}`); // 👈 kein crypt/bcrypt mehr
+    fields.push(`password_hash = $${i++}`);
     values.push(updates.password);
   }
   if (!fields.length) return;

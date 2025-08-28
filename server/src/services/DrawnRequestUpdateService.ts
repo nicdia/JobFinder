@@ -34,7 +34,6 @@ export async function processUpdateDrawnGeometry(
 
   // 3) Branch je nach Geometrie
   if (geometry.type === "Polygon") {
-    // neues SearchArea-Polygon direkt speichern
     const searchAreaId = await insertUserDrawnPolygon(
       userId,
       geometry,
@@ -45,7 +44,7 @@ export async function processUpdateDrawnGeometry(
   }
 
   if (geometry.type === "Point") {
-    const [lon, lat] = geometry.coordinates; // Achtung: dein Format ist [lon,lat] in DB, hier GeoJSON → [lon,lat]
+    const [lon, lat] = geometry.coordinates;
     const otpParams = {
       ...buildOtpParamsFromDrawnInput({
         jobType: req.job_type,

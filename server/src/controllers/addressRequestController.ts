@@ -3,7 +3,7 @@ import { processAddressSearchRequest } from "../services/addressRequestService";
 import {
   queryAddressRequest,
   deleteAddressRequestCascade,
-} from "../db/addressRequestRepo"; // ⬅️ import erweitert
+} from "../db/addressRequestRepo";
 
 export async function handleAddressSearchRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
@@ -68,7 +68,6 @@ export async function getAddressRequest(req: Request, res: Response) {
   }
 }
 
-/** ⬇️ Neu: DELETE */
 export async function deleteAddressSearchRequest(req: Request, res: Response) {
   const tokenUserId = (req as any).user?.id;
   const paramUserId = parseInt(req.params.userId, 10);
@@ -94,13 +93,12 @@ export async function deleteAddressSearchRequest(req: Request, res: Response) {
       requestId
     );
     if (deleted === 0) {
-      // Nichts gelöscht → entweder nicht gefunden oder nicht dem User zugehörig
       return res.status(404).json({ error: "Suchauftrag nicht gefunden" });
     }
     console.log(
       `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] → success`
     );
-    res.status(204).send(); // No Content
+    res.status(204).send();
   } catch (err: any) {
     console.error(
       `[DELETE /api/userInputSearchRequest/${paramUserId}/${requestId}] DB-Fehler:`,

@@ -5,7 +5,7 @@ import {
   handleDrawnGeometryInput,
   getDrawnRequest,
   deleteDrawnSearchRequest,
-  updateDrawnSearchRequest, // ⬅️ neu
+  updateDrawnSearchRequest,
 } from "../controllers/drawnRequestController";
 
 const router = Router();
@@ -20,6 +20,6 @@ router
   .route("/drawRequest/:userId/:requestId")
   .all(authenticateToken)
   .delete(deleteDrawnSearchRequest as any)
-  .put(updateDrawnSearchRequest as any); // ⬅️ neu
+  .put(updateDrawnSearchRequest as any);
 
 export default router;

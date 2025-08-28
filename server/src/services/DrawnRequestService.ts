@@ -78,7 +78,6 @@ export async function processRequestDrawnGeometry(
   }
 
   /* ---------- LineString ----------------------------------- */
-  /* ---------- LineString ----------------------------------- */
   if (geometry.type === "LineString") {
     const drawnId = await insertUserDrawnRequest(
       userId,
@@ -95,7 +94,7 @@ export async function processRequestDrawnGeometry(
     const otpParams = {
       ...buildOtpParamsFromDrawnInput(params),
       drawnReqId: drawnId,
-      saveOnlyMerged: true, // ⬅️ sagt processPoints: nur Merge speichern
+      saveOnlyMerged: true,
     };
 
     return processPoints({

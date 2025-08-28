@@ -21,7 +21,6 @@ export async function matchJobsToPolygone(
     return;
   }
 
-  // ➜ Fügt nur Jobs für *dieses* Polygon ein (kein globales Delete nötig)
   await insertUserMatchedJobs(userId, polygonId);
 
   console.log(

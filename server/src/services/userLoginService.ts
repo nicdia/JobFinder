@@ -16,7 +16,6 @@ export async function handleLogin(
 
   const user = result.rows[0];
 
-  // ⚠️ Klartext-Vergleich, weil Passwort unverschlüsselt gespeichert wird
   if (user.password_hash !== password) {
     throw new Error("invalid_credentials");
   }

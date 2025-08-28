@@ -1,5 +1,5 @@
 // src/services/geomS_coordUtils.ts
-export type CoordArr = [number, number]; // irgendeine Reihenfolge
+export type CoordArr = [number, number];
 export type CoordObj = { lon: number; lat: number };
 
 export const toLatLon = (coord: CoordArr | CoordObj): [number, number] => {
