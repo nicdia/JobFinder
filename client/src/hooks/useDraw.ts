@@ -30,7 +30,6 @@ export const useDraw = ({
       type: drawType,
     });
 
-    // 🧯 1. DragPan deaktivieren beim Start
     draw.on("drawstart", () => {
       map.getInteractions().forEach((interaction) => {
         if (interaction instanceof DragPan) {
@@ -39,16 +38,12 @@ export const useDraw = ({
       });
     });
 
-    // ✅ 2. Feature speichern & Interaktion sauber entfernen
     draw.on("drawend", (event) => {
       const feature = event.feature;
       tempSource.current.clear();
       tempSource.current.addFeature(feature);
-
-      // remove interaction
       map.removeInteraction(draw);
 
-      // 👌 3. DragPan NACH drawend reaktivieren
       setTimeout(() => {
         map.getInteractions().forEach((interaction) => {
           if (interaction instanceof DragPan) {
@@ -62,7 +57,6 @@ export const useDraw = ({
 
     map.addInteraction(draw);
 
-    // 🧹 Cleanup
     return () => {
       map.removeInteraction(draw);
       map.getInteractions().forEach((interaction) => {

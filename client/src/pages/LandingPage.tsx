@@ -13,7 +13,6 @@ const LandingPage = () => {
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
 
-  // Nach erfolgreichem Login/Registrierung weiterleiten
   useEffect(() => {
     if (user?.id) {
       navigate("/dashboard");
@@ -24,7 +23,6 @@ const LandingPage = () => {
     <>
       <Box sx={{ minHeight: "100vh", backgroundColor: "#fff", py: 8 }}>
         <Stack alignItems="center" spacing={3}>
-          {/* Titel + Intro */}
           <Typography variant="h4" fontWeight={700} textAlign="center">
             JobFinder – die Jobsuche mit Karte
           </Typography>
@@ -37,7 +35,6 @@ const LandingPage = () => {
             entdecken – ganz flexibel und auf dich zugeschnitten.
           </Typography>
 
-          {/* Auth-Aktionen UNTER dem Intro, ÜBER dem Feature-Text */}
           <Stack
             spacing={2}
             direction="column"
@@ -109,7 +106,6 @@ const LandingPage = () => {
         </Stack>
       </Box>
 
-      {/* Auth-Dialoge */}
       <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} />
       <RegisterDialog
         open={registerOpen}

@@ -323,7 +323,6 @@ const AppHeader = () => {
     <>
       <AppBar position="fixed" color="primary">
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* 🏠 Home */}
           <IconButton
             color="inherit"
             onClick={() => navigate(user ? "/dashboard" : "/")}
@@ -332,7 +331,6 @@ const AppHeader = () => {
             <HomeIcon />
           </IconButton>
 
-          {/* 🔐 Auth */}
           {!user ? (
             <Stack direction="row" spacing={1}>
               <Button color="inherit" onClick={() => setLoginOpen(true)}>
@@ -358,7 +356,6 @@ const AppHeader = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Dialogs */}
       <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} />
       <RegisterDialog
         open={registerOpen}

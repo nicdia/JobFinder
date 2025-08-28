@@ -1,5 +1,5 @@
 // src/services/fetchDrawnRequests.ts
-import { api } from "../utils/api"; // Pfad anpassen
+import { api } from "../utils/api";
 
 type UserLite = { id?: number; token?: string };
 
@@ -12,13 +12,12 @@ export const fetchDrawnRequests = async (user?: UserLite) => {
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  // Falls Token übergeben wurde → in localStorage speichern, damit api es nutzt
   if (user?.token) localStorage.setItem("token", user.token);
 
   const path = `/drawRequest/${id}`;
   console.log("[fetchDrawnRequests] GET", path);
 
-  const data = await api.get<any>(path); // <any> durch FeatureCollection-Typ ersetzen falls vorhanden
+  const data = await api.get<any>(path);
   console.log("[fetchDrawnRequests] Loaded drawn requests:", data);
 
   return data;

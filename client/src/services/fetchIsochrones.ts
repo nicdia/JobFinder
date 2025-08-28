@@ -1,5 +1,5 @@
 // src/services/fetchUserIsochrones.ts
-import { api } from "../utils/api"; // Pfad ggf. anpassen
+import { api } from "../utils/api";
 
 type UserLite = { id?: number; token?: string };
 
@@ -12,13 +12,12 @@ export const fetchUserIsochrones = async (user?: UserLite) => {
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  // Token ggf. speichern, damit api ihn automatisch setzt
   if (user?.token) localStorage.setItem("token", user.token);
 
   const path = `/userIsochrones/${id}`;
   console.log("[fetchUserIsochrones] GET", path);
 
-  const data = await api.get<any>(path); // <any> bei Bedarf durch FeatureCollection-Typ ersetzen
+  const data = await api.get<any>(path);
   console.log("[fetchUserIsochrones] Loaded isochrones:", data);
 
   return data;

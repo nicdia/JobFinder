@@ -107,7 +107,7 @@ function isInHamburg(
       return true;
     }
   }
-  // Fallback: Text enthält „Hamburg“
+
   if (display && /hamburg/i.test(display)) return true;
   return false;
 }
@@ -187,7 +187,6 @@ const OnboardingPageEmployee = () => {
       });
     }
 
-    // cutoff: float/integer
     if (!isFloatOrInt(a.cutoff)) {
       errs.push({
         key: "cutoff",
@@ -196,7 +195,6 @@ const OnboardingPageEmployee = () => {
       });
     }
 
-    // houseNumber: integer
     if (!isInteger(a.houseNumber)) {
       errs.push({
         key: "houseNumber",
@@ -204,7 +202,6 @@ const OnboardingPageEmployee = () => {
       });
     }
 
-    // speed: float/integer
     if (!isFloatOrInt(a.speed)) {
       errs.push({
         key: "speed",
@@ -216,7 +213,6 @@ const OnboardingPageEmployee = () => {
     return errs;
   };
 
-  // Für den Submit: numerische Felder normalisieren
   const normalizedAnswers = useMemo(() => {
     const na: AnswerMap = { ...answers };
     if (answers.cutoff !== undefined) na.cutoff = toNumber(answers.cutoff);
@@ -254,7 +250,6 @@ const OnboardingPageEmployee = () => {
   };
 
   const handleSaveForGuestUser = () => {
-    // vor dem Umschwenken auf Login/Register validieren:
     const errs = validate(answers);
     if (errs.length) {
       setValidationErrors(errs);
@@ -286,7 +281,6 @@ const OnboardingPageEmployee = () => {
 
       <Box sx={{ minHeight: "100vh", backgroundColor: "#fff", py: 8 }}>
         <Stack alignItems="center" spacing={4}>
-          {/* Dynamische Validierungs-Meldungen */}
           {validationErrors.length > 0 && (
             <Paper
               elevation={0}

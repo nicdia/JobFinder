@@ -50,7 +50,7 @@ export const useMapSetup = (
       source: new TileWMS({
         url: wmsUrl,
         params: {
-          LAYERS: "landesgrenze", // ✅ aus Capabilities
+          LAYERS: "landesgrenze",
           STYLES: "default",
           FORMAT: "image/png",
           TRANSPARENT: true,
@@ -70,7 +70,7 @@ export const useMapSetup = (
       source: new TileWMS({
         url: wmsUrl,
         params: {
-          LAYERS: "bezirke", // ✅ aus Capabilities
+          LAYERS: "bezirke",
           STYLES: "default",
           FORMAT: "image/png",
           TRANSPARENT: true,
@@ -81,15 +81,13 @@ export const useMapSetup = (
       }),
       title: "Hamburg Bezirksgrenzen (WMS)",
       type: "overlay",
-      visible: true, // sichtbar ab Start
+      visible: true,
       opacity: 1,
     });
 
-    // In die Basemap-Gruppe aufnehmen (über OSM/Satellite, Reihenfolge = Zeichenreihenfolge)
     baseGroup.getLayers().push(landesgrenzeLayer);
     baseGroup.getLayers().push(bezirkeLayer);
 
-    // --- Map ---
     const map = new Map({
       target: mapElementRef.current!,
       layers: [baseGroup],
@@ -104,7 +102,6 @@ export const useMapSetup = (
 
     const target = controlBarRef?.current ?? undefined;
 
-    // --- Controls ---
     map.addControl(new Zoom({ target }));
     map.addControl(
       new ScaleLine({
@@ -116,7 +113,6 @@ export const useMapSetup = (
       })
     );
 
-    // "1 : N" Maßstabszahl
     const ratioEl = document.createElement("div");
     ratioEl.className = "ol-scale-ratio ol-unselectable ol-control";
     ratioEl.innerHTML = `<span class="ol-scale-ratio-label">1 :</span><span class="ol-scale-ratio-value">–</span>`;

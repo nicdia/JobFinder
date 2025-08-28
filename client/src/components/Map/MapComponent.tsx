@@ -124,17 +124,12 @@ const MapComponent = forwardRef<MapHandle, Props>((props, ref) => {
       />
 
       <style>{`
-        /* Container neutral – die Controls bringen ihre Elemente mit */
         .ol-custom-control-bar .ol-control { background: transparent; box-shadow: none; margin: 0; }
-
-        /* Zoom als kleine Pill-Gruppe */
         .ol-custom-control-bar .ol-zoom { display: inline-flex; gap: 6px; padding: 0 2px; }
         .ol-custom-control-bar .ol-zoom button {
           width: 40px; height: 40px; font-size: 20px; line-height: 40px;
           border-radius: 10px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.06);
         }
-
-        /* Maßstabsleiste als kompakter Chip (eine klare Länge) */
         .ol-custom-control-bar .ol-scale-line {
           padding: 6px 10px; border-radius: 10px;
           background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.06);
@@ -143,8 +138,6 @@ const MapComponent = forwardRef<MapHandle, Props>((props, ref) => {
           border-color: rgba(0,0,0,0.7);
           font-size: 14px; letter-spacing: 0.2px;
         }
-
-        /* "1 : N" als dezenter Chip */
         .ol-custom-control-bar .ol-scale-ratio {
           padding: 6px 10px; border-radius: 10px; margin-left: 2px;
           background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.06);

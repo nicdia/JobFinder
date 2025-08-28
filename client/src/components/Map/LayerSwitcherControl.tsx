@@ -11,10 +11,10 @@ interface LayerSwitcherControlProps {
 const LayerSwitcherControl: React.FC<LayerSwitcherControlProps> = ({ map }) => {
   useEffect(() => {
     const control = new LayerSwitcher({
-      activationMode: "click", // 👈 statt "hover"
+      activationMode: "click",
       tipLabel: "Layers",
       startActive: false,
-      groupSelectStyle: "none", // 👈 keine „Gruppe an/aus“-Checkbox (verhindert Massen-Toggle)
+      groupSelectStyle: "none",
     } as any);
     map.addControl(control);
     return () => {

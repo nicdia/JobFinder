@@ -11,13 +11,15 @@ import {
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface Props {
+  /** Wenn true, zeigt nur die Legende für gespeicherte Jobs */
   onlySavedJobs?: boolean;
-  onlyAllJobs?: boolean; // 👈 neu
+  /** Wenn true, zeigt nur die Legende für alle Jobs */
+  onlyAllJobs?: boolean;
 }
 
 /**
- * Kompakte Karten-Legende (nur Darstellung, keine Layer-Toggles).
- * Unten rechts "anklebend" (absolute innerhalb des Map-Containers).
+ * Kompakte Karten-Legende (nur visuelle Darstellung, keine Layer-Toggles).
+ * Platzierung: unten rechts im Map-Container.
  */
 const LegendWidget = memo(function LegendWidget({
   onlySavedJobs,
@@ -56,7 +58,7 @@ const LegendWidget = memo(function LegendWidget({
 
       <Stack spacing={1.25}>
         {onlySavedJobs ? (
-          // 📌 Saved Jobs (pink)
+          /** Darstellung: nur gespeicherte Jobs (rosa) */
           <Stack direction="row" alignItems="center" spacing={1.25}>
             <Box
               sx={{
@@ -70,7 +72,7 @@ const LegendWidget = memo(function LegendWidget({
             <Typography variant="body2">Gespeicherte Jobs</Typography>
           </Stack>
         ) : onlyAllJobs ? (
-          // 📌 All Jobs (dunkelgrau)
+          /** Darstellung: nur alle Jobs (dunkelgrau) */
           <Stack direction="row" alignItems="center" spacing={1.25}>
             <Box
               sx={{
@@ -84,7 +86,7 @@ const LegendWidget = memo(function LegendWidget({
             <Typography variant="body2">Alle Jobs</Typography>
           </Stack>
         ) : (
-          // 📌 Default: Isochrone, Startpunkt, Jobs
+          /** Standard-Darstellung: Isochrone, Startpunkt und Jobs */
           <>
             <Stack direction="row" alignItems="center" spacing={1.25}>
               <Box

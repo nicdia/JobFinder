@@ -28,7 +28,7 @@ interface Props {
   onSelect: (job: JobItem) => void;
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
-  initialSavedIds?: (string | number)[]; // 👈 neu
+  initialSavedIds?: (string | number)[];
 }
 
 function ensureSet<T>(val: unknown): Set<T> {
@@ -43,9 +43,8 @@ export default function JobsListWidget({
   initialSavedIds = [],
 }: Props) {
   const [open, setOpen] = useState(false);
-
   const [savedIds, setSavedIds] = useState<Set<string | number>>(
-    new Set(initialSavedIds) // 👈 direkt setzen
+    new Set(initialSavedIds)
   );
   const [loadingIds, setLoadingIds] = useState<Set<string | number>>(new Set());
 
@@ -56,12 +55,10 @@ export default function JobsListWidget({
   };
 
   const handleToggleSave = async (j: JobItem) => {
-    // schon in Arbeit? raus
     if (ensureSet(loadingIds).has(j.id)) return;
 
     const isSavedNow = ensureSet(savedIds).has(j.id);
 
-    // optimistic on
     setLoadingIds((prev) => {
       const p = ensureSet<string | number>(prev);
       const n = new Set(p);
@@ -85,7 +82,6 @@ export default function JobsListWidget({
       }
     } catch (err) {
       console.error("[JobsListWidget] toggle save error:", err);
-      // rollback
       setSavedIds((prev) => {
         const p = ensureSet<string | number>(prev);
         const n = new Set(p);
@@ -156,7 +152,7 @@ export default function JobsListWidget({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") handlePick(j);
                     }}
-                    sx={{ pr: 9 }} // Platz für secondaryAction
+                    sx={{ pr: 9 }}
                   >
                     <ListItemText primary={j.title} secondary={j.company} />
                   </ListItemButton>

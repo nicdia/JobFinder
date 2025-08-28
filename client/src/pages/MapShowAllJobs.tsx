@@ -40,8 +40,8 @@ export default function MapShowAllJobs() {
     (async () => {
       setLoading(true);
       try {
-        const allFC = await fetchAllJobs(); // -> FeatureCollection (Jobs)
-        // isJob-Flag für Dialog/Click
+        const allFC = await fetchAllJobs();
+
         const features = (allFC?.features ?? []).map((f: any) => ({
           ...f,
           properties: { ...(f.properties ?? {}), isJob: true },
@@ -51,9 +51,7 @@ export default function MapShowAllJobs() {
 
         setFeatureCollection({ type: "FeatureCollection", features });
 
-        // OL-Layer bauen (dunkelgrau wie in "Found Jobs")
         if (olMapRef.current) {
-          // evtl. alte Layer entfernen
           olMapRef.current
             .getLayers()
             .getArray()
@@ -83,14 +81,13 @@ export default function MapShowAllJobs() {
           olMapRef.current.addLayer(jobLayer);
         }
 
-        // Liste für das Widget
         const list: JobItem[] = features
           .filter((f: any) => f?.geometry?.type === "Point")
           .map((f: any) => ({
             id: f.id,
             title: f.properties?.title ?? "Job",
             company: f.properties?.company,
-            coord: f.geometry.coordinates, // [lon,lat]
+            coord: f.geometry.coordinates,
           }));
 
         setJobs(list);
@@ -141,15 +138,15 @@ export default function MapShowAllJobs() {
       />
 
       {featureCollection?.features?.length ? (
-        <LegendWidget onlyAllJobs /> // 👈 statt Standard
+        <LegendWidget onlyAllJobs />
       ) : null}
 
       <JobsListWidget
         jobs={jobs}
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
-        userId={user?.id} // damit Herz = speichern funktioniert
-        initialSavedIds={[]} // hier grundsätzlich leer
+        userId={user?.id}
+        initialSavedIds={[]}
       />
 
       <FeatureDialog

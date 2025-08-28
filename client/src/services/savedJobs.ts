@@ -1,4 +1,3 @@
-// nutzt denselben api-Helper wie deine anderen Services
 import { api } from "../utils/api";
 
 type UserLite = { id?: number; token?: string };
@@ -72,7 +71,6 @@ export const deleteUserSavedJob = async (jobId: number, user?: UserLite) => {
   const path = `/savedJobs/${id}/${jobId}`;
   console.log("[deleteUserSavedJob] DELETE", path);
 
-  // 👇 dein Helper nutzt `del`, nicht `delete`
   const data = await api.del<{ deleted: boolean }>(path);
   return data;
 };

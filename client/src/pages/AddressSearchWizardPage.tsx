@@ -248,13 +248,13 @@ const AddressSearchWizardPage = () => {
 
     try {
       setIsSaving(true);
-      setShowSavingInfo(true); // zeigt „Speichere…“ Snackbar
+      setShowSavingInfo(true);
       setSaveError(null);
 
       await submitSearchRequest(normalizedAnswers, user.token, user.id);
 
       setHasSubmitted(true);
-      // Schließt den Hinweis; Navigation erfolgt danach
+
       setShowSavingInfo(false);
       navigate("/found-jobs?mode=customVisible");
     } catch (err) {
@@ -273,7 +273,6 @@ const AddressSearchWizardPage = () => {
     }
     setValidationErrors([]);
 
-    // Kurzer visueller Hinweis, dass „etwas passiert“
     setShowSavingInfo(true);
     setTimeout(() => {
       setShowSavingInfo(false);
@@ -301,7 +300,6 @@ const AddressSearchWizardPage = () => {
       <AppHeader />
       <Box sx={{ minHeight: "100vh", backgroundColor: "#fff", py: 8 }}>
         <Stack alignItems="center" spacing={4}>
-          {/* Validierungs-Fehler */}
           {validationErrors.length > 0 && (
             <Paper
               elevation={0}
@@ -340,7 +338,6 @@ const AddressSearchWizardPage = () => {
 
           {step < questions.length ? (
             <>
-              {/* Kopfzeile mit Pfeilnavigation */}
               <Stack
                 direction="row"
                 alignItems="center"
@@ -541,7 +538,6 @@ const AddressSearchWizardPage = () => {
         </Stack>
       </Box>
 
-      {/* Backdrop beim Speichern (nur für asynchronen Save) */}
       <Backdrop
         open={isSaving}
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}
@@ -552,7 +548,6 @@ const AddressSearchWizardPage = () => {
         </Stack>
       </Backdrop>
 
-      {/* Info-Snackbar: „Speichere…“ (kurzzeitig auch für Gast) */}
       <Snackbar
         open={showSavingInfo}
         message="Speichervorgang gestartet…"
@@ -561,7 +556,6 @@ const AddressSearchWizardPage = () => {
         onClose={() => setShowSavingInfo(false)}
       />
 
-      {/* Fehler-Snackbar */}
       <Snackbar
         open={!!saveError}
         onClose={() => setSaveError(null)}

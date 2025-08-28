@@ -52,7 +52,7 @@ import {
   updateUserProfile,
   deleteUserAccount,
 } from "../services/userManagement";
-// -------- Hilfen zum Normalisieren ----------
+
 type AnyFeature = {
   id?: number | string;
   type: "Feature";
@@ -70,7 +70,7 @@ type UnifiedRequest = {
 };
 
 type SavedJob = {
-  id: number | string; // entspricht job_id
+  id: number | string;
   title: string;
   company?: string;
   createdAt?: string;
@@ -385,7 +385,6 @@ const DashboardPage = () => {
       setAccSaving(true);
       await updateUserProfile(user.id, payload);
       setAccPassword("");
-      // Optional: UI-Feedback
       alert("Deine Account-Daten wurden aktualisiert.");
     } catch (e: any) {
       setAccError(e?.message ?? "Aktualisierung fehlgeschlagen.");
@@ -408,8 +407,8 @@ const DashboardPage = () => {
       setAccError(null);
       setAccDeleting(true);
       await deleteUserAccount(user.id);
-      // Token/LocalStorage wird im Service bereits entfernt.
-      navigate("/"); // zurück zur Startseite
+
+      navigate("/");
     } catch (e: any) {
       setAccError(e?.message ?? "Löschen fehlgeschlagen.");
     } finally {

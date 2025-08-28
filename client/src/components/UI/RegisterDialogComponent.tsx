@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { registerUser } from "../../services/authApi"; // bleibt gleich
+import { registerUser } from "../../services/authApi";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -25,8 +25,6 @@ const RegisterDialog = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
-
-  // NEU: UI-States für Fehler & Laden
   const [submitting, setSubmitting] = useState(false);
   const [emailError, setEmailError] = useState<string>("");
   const [formError, setFormError] = useState<string>("");
@@ -67,7 +65,6 @@ const RegisterDialog = ({
         navigate("/dashboard");
       }
     } catch (err: any) {
-      // ⬇️ gezieltes Handling für bereits vergebene E-Mail
       if (
         err?.code === "EMAIL_TAKEN" ||
         err?.status === 409 ||

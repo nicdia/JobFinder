@@ -43,7 +43,6 @@ export default function MapPage() {
     if (p?.isJob === true) {
       setSelectedFeature(f);
     }
-    // sonst: ignorieren (Isochronen/Startpunkt/Linien etc.)
   }, []);
 
   /* Sichtbare Jobs anhand der sichtbaren Layer-Groups ermitteln */
@@ -140,7 +139,7 @@ export default function MapPage() {
         setFeatureCollection({
           type: "FeatureCollection",
           features: [
-            ...jobFeaturesWithFlag, // ⬅️ statt ...jobsFC.features
+            ...jobFeaturesWithFlag,
             ...isoFC.features,
             ...drawnReqFC.features,
             ...addressReqFC.features,
@@ -219,7 +218,7 @@ export default function MapPage() {
                 featureProjection: "EPSG:3857",
               }
             );
-            // ✨ Flag an jedes Feature hängen
+
             jobFeatures.forEach((feat) => feat.set("isJob", true));
 
             const jobLayer = new VectorLayer({
@@ -306,13 +305,10 @@ export default function MapPage() {
           if (!targetGroup) {
             const withDates = groupsMeta.filter((g) => g.createdAt !== null);
             if (withDates.length > 0) {
-              withDates.sort((a, b) => b.createdAt! - a.bcreatedAt!); // <-- typo fix below
+              withDates.sort((a, b) => b.createdAt! - a.bcreatedAt!);
             }
           }
-          // FIX for sort typo:
-          // withDates.sort((a, b) => b.createdAt! - a.createdAt!);
 
-          // Sichtbarkeiten anwenden
           const withDates = groupsMeta.filter((g) => g.createdAt !== null);
           if (!targetGroup) {
             if (withDates.length > 0) {
@@ -372,7 +368,6 @@ export default function MapPage() {
 
   const handleOpenPopup = useCallback(
     (j: JobItem) => {
-      // passende GeoJSON-Feature zum Job finden und an den Dialog geben
       const feat = featureCollection?.features?.find(
         (f: any) => String(f.id) === String(j.id)
       );
@@ -381,7 +376,6 @@ export default function MapPage() {
     [featureCollection]
   );
   return (
-    // ⬇️ nutzt den gesamten vom Router zugewiesenen Bereich und verhindert Scrollen
     <Box
       sx={{
         width: "100%",
@@ -390,8 +384,6 @@ export default function MapPage() {
         overflow: "hidden",
       }}
     >
-      {/* Kein AppHeader hier – Header kommt global aus App.tsx */}
-
       <MapComponent
         ref={mapHandleRef}
         mapRef={olMapRef}
@@ -401,14 +393,13 @@ export default function MapPage() {
         enableLayerSwitcher={true}
       />
 
-      {/* 📌 Legende unten rechts (anklebend) */}
       {featureCollection?.features?.length ? <LegendWidget /> : null}
 
       <JobsListWidget
         jobs={jobs}
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
-        userId={user?.id} // 👈 neu
+        userId={user?.id}
       />
       <FeatureDialog
         feature={selectedFeature}

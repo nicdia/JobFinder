@@ -7,7 +7,7 @@ type UserLite = { id?: number; token?: string };
 export async function updateDrawnRequest(
   user: UserLite | undefined,
   requestId: number | string,
-  featureGeoJSON: any // {type:'Feature', geometry:{...}, ...}
+  featureGeoJSON: any
 ) {
   const storedUser = JSON.parse(localStorage.getItem("user") || "null");
   const id = user?.id ?? storedUser?.id;
@@ -16,7 +16,7 @@ export async function updateDrawnRequest(
   if (user?.token) localStorage.setItem("token", user.token);
 
   const path = `/drawRequest/${id}/${requestId}`;
-  // akzeptieren sowohl Feature als auch bare geometry
+
   const body =
     featureGeoJSON?.type === "Feature"
       ? { geometry: featureGeoJSON.geometry }

@@ -211,17 +211,16 @@ export default function EditDrawnRequestPage() {
       }
       if (!source) return;
 
-      // Modify aktivieren
       const modify = new Modify({ source });
       map.addInteraction(modify);
       modifyInteractionRef.current = modify;
 
-      // DoubleClickZoom aus, damit wir Doppelklick zum Beenden nutzen können
+
       map.getInteractions().forEach((i) => {
         if (i instanceof DoubleClickZoom) i.setActive(false);
       });
 
-      // Rechtsklick => speichern
+
       const handleContextMenu = (evt: MouseEvent) => {
         evt.preventDefault();
         handleSave();
@@ -229,12 +228,12 @@ export default function EditDrawnRequestPage() {
       map.getViewport().addEventListener("contextmenu", handleContextMenu);
       contextMenuListenerRef.current = handleContextMenu;
 
-      // Doppelklick => speichern
+
       const handleDoubleClick = () => handleSave();
       map.on("dblclick", handleDoubleClick as any);
       doubleClickListenerRef.current = handleDoubleClick;
     } else {
-      // Modify & Listener entfernen, DoubleClickZoom wieder an
+an
       if (modifyInteractionRef.current) {
         map.removeInteraction(modifyInteractionRef.current);
         modifyInteractionRef.current = null;
@@ -314,7 +313,7 @@ export default function EditDrawnRequestPage() {
     }
   };
 
-  // Dummy fetch for MapComponent
+
   const fetchFunction = () =>
     Promise.resolve({ type: "FeatureCollection", features: [] });
 
@@ -322,7 +321,6 @@ export default function EditDrawnRequestPage() {
     <Box sx={{ width: "100vw", height: "100vh" }}>
       <AppHeader />
 
-      {/* Obere Bar: zentriert und fixiert */}
       <Box
         sx={{
           position: "fixed",
@@ -332,17 +330,17 @@ export default function EditDrawnRequestPage() {
           zIndex: 3000,
           display: "flex",
           justifyContent: "center",
-          pointerEvents: "none", // Wrapper nicht klickbar
+          pointerEvents: "none", 
         }}
       >
         <Paper
           elevation={1}
           sx={{
-            pointerEvents: "auto", // Panel selbst klickbar
+            pointerEvents: "auto", 
             borderRadius: 2,
             px: 2,
             py: 1,
-            width: "min(920px, calc(100% - 32px))", // max-breite + Seitenrand
+            width: "min(920px, calc(100% - 32px))", 
           }}
         >
           <Stack

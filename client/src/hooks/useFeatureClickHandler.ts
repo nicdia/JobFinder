@@ -7,7 +7,7 @@ export const useFeatureClickHandler = (
   mapRef: React.RefObject<Map | null>,
   layerFilter: any,
   onClick: (f: any) => void,
-  disabled = false // ⬅️ neu
+  disabled = false
 ) => {
   const selectRef = useRef<Select | null>(null);
 
@@ -15,7 +15,6 @@ export const useFeatureClickHandler = (
     const map = mapRef.current;
     if (!map) return;
 
-    // Interaktion einmalig anlegen
     if (!selectRef.current) {
       selectRef.current = new Select({ layers: layerFilter });
       selectRef.current.on("select", (evt) => {
@@ -24,11 +23,9 @@ export const useFeatureClickHandler = (
       map.addInteraction(selectRef.current);
     }
 
-    // 👉 je nach disabled ein‑/ausschalten
     selectRef.current.setActive(!disabled);
 
     return () => {
-      // Clean‑Up bei Unmount
       if (selectRef.current) {
         map.removeInteraction(selectRef.current);
         selectRef.current = null;

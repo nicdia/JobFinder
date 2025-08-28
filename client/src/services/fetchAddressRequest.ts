@@ -20,14 +20,12 @@ export const fetchUserSearchRequests = async (user?: UserLite) => {
 
   if (!id || !token) throw new Error("Benutzerdaten fehlen oder ungültig");
 
-  // Der api-Helper liest das Token aus localStorage.
-  // Wenn eins übergeben wurde, legen wir es sicherheitshalber dort ab.
   if (user?.token) localStorage.setItem("token", user.token);
 
   const path = `/userInputSearchRequest/${id}`;
   console.log("[fetchUserSearchRequests] GET", path);
 
-  const data = await api.get<any>(path); // <any> ggf. durch deinen Typ ersetzen
+  const data = await api.get<any>(path);
 
   console.log("[fetchUserSearchRequests] Loaded requests:", data);
   return data;

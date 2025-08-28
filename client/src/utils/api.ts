@@ -17,7 +17,6 @@ const API_BASE =
     (import.meta as any).env?.VITE_API_URL) ||
   "/api";
 
-// Token automatisch mitsenden, wenn vorhanden
 function withAuth(headers: HeadersInit = {}): HeadersInit {
   const token = localStorage.getItem("token");
   return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
@@ -42,14 +41,11 @@ export async function apiFetch<T>(
   try {
     res = await fetch(url, { ...init, headers, body });
   } catch (e: any) {
-    // Netzwerkfehler o.ä.
     throw new ApiError(e?.message || "Network error", -1);
   }
 
-  // 204 No Content etc.
   if (res.status === 204) return undefined as T;
 
-  // Fehler -> aussagekräftigen ApiError werfen
   if (!res.ok) {
     let payload: any = null;
     try {
@@ -69,11 +65,9 @@ export async function apiFetch<T>(
     throw new ApiError(String(msg), res.status, payload);
   }
 
-  // Erfolg -> JSON zurückgeben
   return (await res.json()) as T;
 }
 
-// Bequeme Helpers für gängige Methoden
 export const api = {
   get: <T>(path: string, init?: RequestInit) =>
     apiFetch<T>(path, { ...init, method: "GET" }),

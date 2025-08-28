@@ -11,21 +11,19 @@ import {
 } from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
 
-/* ---------- neue Prop --------------------------- */
 export interface FeatureCreateDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (data: Record<string, string>) => void;
-  geometryType: "Point" | "LineString" | "Polygon"; // 🔄
+  geometryType: "Point" | "LineString" | "Polygon";
 }
 
 export default function FeatureCreateDialog({
   open,
   onClose,
   onSave,
-  geometryType, // 🔄
+  geometryType,
 }: FeatureCreateDialogProps) {
-  /* ---------- komplette Fragenliste --------------- */
   const allQuestions = [
     {
       key: "reqName",
@@ -35,18 +33,20 @@ export default function FeatureCreateDialog({
     {
       key: "jobType",
       label: "In welchem Bereich möchtest du arbeiten?",
-      options: ["Software Engineering", "Data Engineering", "GIS"],
+      options: ["Software Engineering", "Data Engineering", "GIS"] as const,
     },
-    { key: "cutoff", label: "Max. Anreisezeit (Min.)", options: "text" },
+    {
+      key: "cutoff",
+      label: "Max. Anreisezeit (Min.)",
+      options: "text" as const,
+    },
     {
       key: "transport",
       label: "Transportmittel",
-      options: ["Zu Fuß", "Radverkehr", "ÖPNV"],
+      options: ["Zu Fuß", "Radverkehr", "ÖPNV"] as const,
     },
-    { key: "speed", label: "Geschwindigkeit (km/h)", options: "text" },
+    { key: "speed", label: "Geschwindigkeit (km/h)", options: "text" as const },
   ];
-
-  /* ---------- dynamisch filtern ------------------- */
 
   const questions = useMemo(
     () =>
@@ -58,16 +58,18 @@ export default function FeatureCreateDialog({
     [geometryType]
   );
 
-  /* ---------- State / Handler --------------------- */
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
-      const empty: Record<string, string> = {};
-      questions.forEach((q) => (empty[q.key] = ""));
+      const empty = questions.reduce<Record<string, string>>((acc, q) => {
+        acc[q.key] = "";
+        return acc;
+      }, {});
       setForm(empty);
     }
-  }, [open, questions]); // ✅ ESLint zufrieden, keine Schleife
+  }, [open, questions]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -76,13 +78,12 @@ export default function FeatureCreateDialog({
     onClose();
   };
 
-  /* ---------- Render ------------------------------ */
   return (
     <Dialog
       open={open}
       fullWidth
       maxWidth="sm"
-      onClose={(_, r) => r !== "backdropClick" && onClose()}
+      onClose={(_, reason) => reason !== "backdropClick" && onClose()}
     >
       <DialogTitle>Neues Feature eintragen</DialogTitle>
       <DialogContent dividers>

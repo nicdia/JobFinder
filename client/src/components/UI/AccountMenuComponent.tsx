@@ -24,7 +24,6 @@ const AccountMenu = () => {
   return (
     <>
       <IconButton onClick={handleClick} sx={{ ml: 2 }} color="inherit">
-        {/* 🧑 Profil-Icon statt Buchstabe */}
         <AccountCircleIcon fontSize="large" />
       </IconButton>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
