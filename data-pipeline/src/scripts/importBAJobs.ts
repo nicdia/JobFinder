@@ -20,7 +20,6 @@ async function main() {
       const jobs = await fetchJobsFromBA(keyword, city);
       console.log(`   → ${jobs.length} Treffer`);
 
-      // ➜ Metadaten anreichern
       for (const j of jobs) {
         j.search_category = keyword;
         j.search_address_location = city;
@@ -54,7 +53,7 @@ async function storeJobsToDatabase(jobs: any[]) {
   `;
 
   for (const job of jobs) {
-    const externalId = job.refnr ?? null; // BA-eindeutige Kennung
+    const externalId = job.refnr ?? null;
 
     try {
       await pool.query(text, [
@@ -72,7 +71,5 @@ async function storeJobsToDatabase(jobs: any[]) {
     }
   }
 }
-
-/* ------------------------------------------------------------------ */
 
 main();

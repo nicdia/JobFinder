@@ -20,7 +20,6 @@ async function main() {
       const jobs = await fetchAdzunaJobs(keyword, city);
       console.log(`   → ${jobs.length} Treffer`);
 
-      // ➜  Metadaten anhängen und sammeln
       for (const j of jobs) {
         j.search_category = keyword;
         j.search_address_location = city;
@@ -53,7 +52,6 @@ async function storeJobsToDatabase(jobs: any[]) {
   `;
 
   for (const job of jobs) {
-    // Adzuna liefert die ID unter "id"
     const externalId = job.id ?? null;
 
     try {

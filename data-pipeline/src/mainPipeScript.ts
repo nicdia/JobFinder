@@ -6,11 +6,10 @@ import pool from "./util/db";
 
 const execAsync = promisify(exec);
 
-// Hilfsfunktion: ts-node (Dev) vs. node dist (Prod)
 function resolveRunner(scriptTsPath: string) {
   const isProd = process.env.NODE_ENV === "production";
   if (!isProd) return { cmd: "ts-node", file: scriptTsPath };
-  // src/foo/bar.ts -> dist/foo/bar.js
+
   const jsPath = scriptTsPath
     .replace(/^src[\\/]/, "dist/")
     .replace(/\.ts$/, ".js");

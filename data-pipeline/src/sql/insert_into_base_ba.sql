@@ -47,6 +47,6 @@ SELECT
   fetched_at,
   search_category,
   search_address_location,
-  id  -- 🔁 das ist die stage.id → kommt in stage_id
+  id 
 FROM stage.raw_jobs_ba_api
 WHERE source = 'BA';

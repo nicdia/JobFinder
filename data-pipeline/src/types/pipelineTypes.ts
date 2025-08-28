@@ -9,6 +9,6 @@ export interface GeocodeTableOptions {
 }
 
 export interface PipelineConfig {
-  searchParamsInApis: [string, string][]; // z. B. [job, ort]
+  searchParamsInApis: [string, string][];
   tablesToBeGeocoded: GeocodeTableOptions[];
 }

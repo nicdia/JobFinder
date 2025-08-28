@@ -1,6 +1,4 @@
-/* ------------- Sicherung des aktuellen Datenbestands ---------------- */
 
--- Einheitlichen Snapshot-Zeitstempel für alle Zeilen dieses Laufs
 WITH snap AS (SELECT CURRENT_TIMESTAMP AS ts)
 INSERT INTO mart.jobs_archive (
   snapshot_at,
@@ -21,8 +19,8 @@ INSERT INTO mart.jobs_archive (
   search_address_location
 )
 SELECT
-  (SELECT ts FROM snap),        -- gleicher Zeitstempel für alle
-  id,                           -- ursprüngliche PK der Mart-Zeile
+  (SELECT ts FROM snap),        
+  id,                           
   source,
   external_id,
   title,

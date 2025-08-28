@@ -23,7 +23,7 @@ SELECT
   ad_title AS title,
   company,
   location,
-  NULL AS description,            -- BA hat kein description-Feld direkt
+  NULL AS description,          
   external_url,
   lat,
   lon,

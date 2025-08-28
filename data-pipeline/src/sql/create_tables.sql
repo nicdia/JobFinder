@@ -83,11 +83,11 @@ CREATE TABLE mart.jobs (
   starting_date TIMESTAMP
 );
 
--- Erstellt die Archivtabelle einmalig, falls noch nicht vorhanden
+
 CREATE TABLE IF NOT EXISTS mart.jobs_archive (
-  archive_id  SERIAL PRIMARY KEY,           -- eigenes PK für das Archiv
-  snapshot_at TIMESTAMP NOT NULL,           -- Zeitstempel der Übernahme
-  mart_id     INTEGER,                      -- ursprüngliche ID aus mart.jobs
+  archive_id  SERIAL PRIMARY KEY,           
+  snapshot_at TIMESTAMP NOT NULL,           
+  mart_id     INTEGER,                      
 
   source  TEXT,
   external_id TEXT,
