@@ -36,8 +36,6 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Startbildschirm anpassen - Tutorial was die App kann
-
 Responsive -- codex
 
 INIT SQL einrichten

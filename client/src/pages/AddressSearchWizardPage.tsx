@@ -10,8 +10,14 @@ import {
   List,
   ListItem,
   ListItemText,
+  IconButton,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -125,6 +131,11 @@ const AddressSearchWizardPage = () => {
   const [shouldSaveAfterLogin, setShouldSaveAfterLogin] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValError[]>([]);
 
+  // Lade-/Fehlerzustände fürs Speichern
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [showSavingInfo, setShowSavingInfo] = useState(false);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -164,6 +175,10 @@ const AddressSearchWizardPage = () => {
       setStep((prev) => prev + 1);
     }
   };
+
+  // Nur Navigation zwischen Fragen (ohne Speichern der aktuellen Eingabe)
+  const goPrev = () => setStep((s) => Math.max(0, s - 1));
+  const goNext = () => setStep((s) => Math.min(questions.length - 1, s + 1));
 
   const validate = (a: AnswerMap): ValError[] => {
     const errs: ValError[] = [];
@@ -232,11 +247,21 @@ const AddressSearchWizardPage = () => {
     setValidationErrors([]);
 
     try {
+      setIsSaving(true);
+      setShowSavingInfo(true); // zeigt „Speichere…“ Snackbar
+      setSaveError(null);
+
       await submitSearchRequest(normalizedAnswers, user.token, user.id);
+
       setHasSubmitted(true);
+      // Schließt den Hinweis; Navigation erfolgt danach
+      setShowSavingInfo(false);
       navigate("/found-jobs?mode=customVisible");
     } catch (err) {
       console.error("❌ Fehler beim Speichern des Suchauftrags", err);
+      setSaveError("Speichern fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -248,8 +273,13 @@ const AddressSearchWizardPage = () => {
     }
     setValidationErrors([]);
 
-    setSaved(true);
-    setShouldSaveAfterLogin(true);
+    // Kurzer visueller Hinweis, dass „etwas passiert“
+    setShowSavingInfo(true);
+    setTimeout(() => {
+      setShowSavingInfo(false);
+      setSaved(true);
+      setShouldSaveAfterLogin(true);
+    }, 600);
   };
 
   useEffect(() => {
@@ -310,9 +340,35 @@ const AddressSearchWizardPage = () => {
 
           {step < questions.length ? (
             <>
-              <Typography variant="body2" color="primary">
-                Schritt {step + 1} von {questions.length}
-              </Typography>
+              {/* Kopfzeile mit Pfeilnavigation */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1.5}
+                sx={{ width: "100%", maxWidth: 600, justifyContent: "center" }}
+              >
+                <IconButton
+                  aria-label="Zurück"
+                  onClick={goPrev}
+                  disabled={step === 0}
+                  size="small"
+                >
+                  <ArrowBackIosNewIcon fontSize="small" />
+                </IconButton>
+
+                <Typography variant="body2" color="primary">
+                  Schritt {step + 1} von {questions.length}
+                </Typography>
+
+                <IconButton
+                  aria-label="Weiter"
+                  onClick={goNext}
+                  disabled={step === questions.length - 1}
+                  size="small"
+                >
+                  <ArrowForwardIosIcon fontSize="small" />
+                </IconButton>
+              </Stack>
 
               <Typography variant="h5" fontWeight={600} textAlign="center">
                 {current.text}
@@ -419,9 +475,12 @@ const AddressSearchWizardPage = () => {
                     handleSaveForGuestUser();
                   }
                 }}
-                disabled={!allAnswered}
+                disabled={!allAnswered || isSaving}
+                startIcon={
+                  isSaving ? <CircularProgress size={18} /> : undefined
+                }
               >
-                Speichern
+                {isSaving ? "Speichern…" : "Speichern"}
               </Button>
             </>
           ) : (
@@ -481,6 +540,38 @@ const AddressSearchWizardPage = () => {
           )}
         </Stack>
       </Box>
+
+      {/* Backdrop beim Speichern (nur für asynchronen Save) */}
+      <Backdrop
+        open={isSaving}
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}
+      >
+        <Stack alignItems="center" spacing={2}>
+          <CircularProgress color="inherit" />
+          <Typography variant="body2">Speichere Suchauftrag…</Typography>
+        </Stack>
+      </Backdrop>
+
+      {/* Info-Snackbar: „Speichere…“ (kurzzeitig auch für Gast) */}
+      <Snackbar
+        open={showSavingInfo}
+        message="Speichervorgang gestartet…"
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        autoHideDuration={1500}
+        onClose={() => setShowSavingInfo(false)}
+      />
+
+      {/* Fehler-Snackbar */}
+      <Snackbar
+        open={!!saveError}
+        onClose={() => setSaveError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        autoHideDuration={4000}
+      >
+        <Alert severity="error" onClose={() => setSaveError(null)}>
+          {saveError}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
