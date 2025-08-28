@@ -36,8 +36,7 @@ docker compose run --rm pipeline -- pipeline starten einmalig
 
                     Funktionen die noch kommen müssen:
 
-Responsive -- codex
-
+Legende muss noch angepasst werden, bei gezeichnetem Polygon steht da trzd noch Isochron -- vllt allgemein alles ändern zu "Suchraum"?
 INIT SQL einrichten
 
                                     BUGLISTE

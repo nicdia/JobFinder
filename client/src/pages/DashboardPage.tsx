@@ -438,57 +438,6 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* --------- Gefundene Jobs (Accordion mit Count) --------- */}
-      <Accordion
-        expanded={expandedFound}
-        onChange={(_, v) => setExpandedFound(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <WorkOutlineIcon color="primary" />
-            <Typography fontWeight={600}>Gefundene Jobs</Typography>
-            <Chip
-              size="small"
-              label={
-                foundCountLoading
-                  ? "lädt…"
-                  : foundCountError
-                  ? "—"
-                  : `${foundCount ?? 0}`
-              }
-            />
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<MapOutlinedIcon />}
-              onClick={() => navigate("/found-jobs?mode=customVisible")}
-              disabled={foundCountLoading}
-            >
-              Auf Karte anzeigen
-            </Button>
-          </Stack>
-
-          {foundCountError ? (
-            <Typography color="error">{foundCountError}</Typography>
-          ) : (
-            <Typography color="text.secondary">
-              Anzahl der aktuell sichtbaren Jobs basierend auf deinen
-              Suchaufträgen: <strong>{foundCount ?? 0}</strong>
-            </Typography>
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      <Divider sx={{ my: 2 }} />
-
       {/* --------- Suchaufträge (Aktionen + Liste) --------- */}
       <Accordion
         expanded={expandedReq}
@@ -615,6 +564,57 @@ const DashboardPage = () => {
                 );
               })}
             </List>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* --------- Gefundene Jobs (Accordion mit Count) --------- */}
+      <Accordion
+        expanded={expandedFound}
+        onChange={(_, v) => setExpandedFound(v)}
+        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <WorkOutlineIcon color="primary" />
+            <Typography fontWeight={600}>Gefundene Jobs</Typography>
+            <Chip
+              size="small"
+              label={
+                foundCountLoading
+                  ? "lädt…"
+                  : foundCountError
+                  ? "—"
+                  : `${foundCount ?? 0}`
+              }
+            />
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<MapOutlinedIcon />}
+              onClick={() => navigate("/found-jobs?mode=customVisible")}
+              disabled={foundCountLoading}
+            >
+              Auf Karte anzeigen
+            </Button>
+          </Stack>
+
+          {foundCountError ? (
+            <Typography color="error">{foundCountError}</Typography>
+          ) : (
+            <Typography color="text.secondary">
+              Anzahl der aktuell sichtbaren Jobs basierend auf deinen
+              Suchaufträgen: <strong>{foundCount ?? 0}</strong>
+            </Typography>
           )}
         </AccordionDetails>
       </Accordion>
