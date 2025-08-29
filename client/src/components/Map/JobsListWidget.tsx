@@ -1,3 +1,4 @@
+// src/components/Map/JobsListWidget.tsx
 import {
   Fab,
   Drawer,
@@ -13,7 +14,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import CloseIcon from "@mui/icons-material/Close";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { saveUserJob, deleteUserSavedJob } from "../../services/savedJobs";
 
 export interface JobItem {
@@ -24,7 +25,7 @@ export interface JobItem {
 }
 
 interface Props {
-  jobs: JobItem[];
+  jobs?: JobItem[]; // optional → wir setzen Default []
   onSelect: (job: JobItem) => void;
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
@@ -36,16 +37,24 @@ function ensureSet<T>(val: unknown): Set<T> {
 }
 
 export default function JobsListWidget({
-  jobs,
+  jobs = [], // <-- defensiver Default
   onSelect,
   onOpenPopup,
   userId,
   initialSavedIds = [],
 }: Props) {
+  const safeJobs = Array.isArray(jobs) ? jobs : []; // doppelter Schutz
+
   const [open, setOpen] = useState(false);
+
+  // Herzen initial & bei Änderungen füllen/aktualisieren
   const [savedIds, setSavedIds] = useState<Set<string | number>>(
     new Set(initialSavedIds)
   );
+  useEffect(() => {
+    setSavedIds(new Set(initialSavedIds));
+  }, [initialSavedIds]);
+
   const [loadingIds, setLoadingIds] = useState<Set<string | number>>(new Set());
 
   const handlePick = (j: JobItem) => {
@@ -56,18 +65,16 @@ export default function JobsListWidget({
 
   const handleToggleSave = async (j: JobItem) => {
     if (ensureSet(loadingIds).has(j.id)) return;
-
     const isSavedNow = ensureSet(savedIds).has(j.id);
 
+    // Optimistic UI
     setLoadingIds((prev) => {
-      const p = ensureSet<string | number>(prev);
-      const n = new Set(p);
+      const n = new Set(ensureSet<string | number>(prev));
       n.add(j.id);
       return n;
     });
     setSavedIds((prev) => {
-      const p = ensureSet<string | number>(prev);
-      const n = new Set(p);
+      const n = new Set(ensureSet<string | number>(prev));
       isSavedNow ? n.delete(j.id) : n.add(j.id);
       return n;
     });
@@ -82,9 +89,9 @@ export default function JobsListWidget({
       }
     } catch (err) {
       console.error("[JobsListWidget] toggle save error:", err);
+      // Rollback
       setSavedIds((prev) => {
-        const p = ensureSet<string | number>(prev);
-        const n = new Set(p);
+        const n = new Set(ensureSet<string | number>(prev));
         isSavedNow ? n.add(j.id) : n.delete(j.id);
         return n;
       });
@@ -95,8 +102,7 @@ export default function JobsListWidget({
       );
     } finally {
       setLoadingIds((prev) => {
-        const p = ensureSet<string | number>(prev);
-        const n = new Set(p);
+        const n = new Set(ensureSet<string | number>(prev));
         n.delete(j.id);
         return n;
       });
@@ -119,7 +125,7 @@ export default function JobsListWidget({
       <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
         <Box sx={{ width: 360, p: 2 }}>
           <List dense>
-            {jobs.map((j) => {
+            {safeJobs.map((j) => {
               const isSaved = ensureSet(savedIds).has(j.id);
               const isLoading = ensureSet(loadingIds).has(j.id);
               return (
@@ -159,7 +165,7 @@ export default function JobsListWidget({
                 </ListItem>
               );
             })}
-            {jobs.length === 0 && (
+            {safeJobs.length === 0 && (
               <ListItemText primary="Keine Jobs gefunden" />
             )}
           </List>

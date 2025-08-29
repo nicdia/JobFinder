@@ -6,8 +6,8 @@ export function mapFrontendTransportToOtpMode(frontendValue: string): string {
     case "Radverkehr":
       return "BICYCLE";
     case "ÖPNV":
-      return "TRANSIT";
+      return "TRANSIT,WALK";
     default:
-      return "WALK"; // Fallback
+      return "WALK";
   }
 }

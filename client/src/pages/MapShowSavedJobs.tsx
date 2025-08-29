@@ -1,173 +1,196 @@
-import {
-  Fab,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Tooltip,
-  Box,
-  IconButton,
-} from "@mui/material";
-import WorkIcon from "@mui/icons-material/Work";
-import CloseIcon from "@mui/icons-material/Close";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useEffect, useState } from "react";
-import { saveUserJob, deleteUserSavedJob } from "../services/savedJobs";
+// src/pages/MapShowSavedJobs.tsx
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Box, CircularProgress } from "@mui/material";
 
-export interface JobItem {
-  id: string | number;
-  title: string;
-  company?: string;
-  coord: [number, number];
-}
+import MapComponent, { MapHandle } from "../components/Map/MapComponent";
+import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
+import JobsListWidget, { JobItem } from "../components/Map/JobsListWidget";
+import LegendWidget from "../components/Map/LegendWidget";
 
-interface Props {
-  jobs: JobItem[];
-  onSelect: (job: JobItem) => void;
-  onOpenPopup?: (job: JobItem) => void;
-  userId?: number;
-  initialSavedIds?: (string | number)[];
-}
+import { fetchUserSavedJobs } from "../services/savedJobs";
+import { useAuth } from "../context/AuthContext";
 
-function ensureSet<T>(val: unknown): Set<T> {
-  return val instanceof Set ? (val as Set<T>) : new Set<T>();
-}
+import { Map as OLMap } from "ol";
+import VectorSource from "ol/source/Vector";
+import VectorLayer from "ol/layer/Vector";
+import GeoJSON from "ol/format/GeoJSON";
+import { Style, Fill, Stroke, Circle as CircleStyle } from "ol/style";
 
-export default function JobsListWidget({
-  jobs,
-  onSelect,
-  onOpenPopup,
-  userId,
-  initialSavedIds = [],
-}: Props) {
-  const [open, setOpen] = useState(false);
+export default function MapShowSavedJobs() {
+  const { user } = useAuth();
 
-  // Wichtig: mit initialSavedIds synchron halten (Herzen direkt gefüllt)
-  const [savedIds, setSavedIds] = useState<Set<string | number>>(
-    new Set(initialSavedIds)
-  );
-  useEffect(() => {
-    setSavedIds(new Set(initialSavedIds));
-  }, [initialSavedIds]);
+  const mapHandleRef = useRef<MapHandle>(null);
+  const olMapRef = useRef<OLMap | null>(null);
 
-  const [loadingIds, setLoadingIds] = useState<Set<string | number>>(new Set());
+  const [jobs, setJobs] = useState<JobItem[]>([]);
+  const [featureCollection, setFeatureCollection] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedFeature, setSelectedFeature] = useState<any | null>(null);
 
-  const handlePick = (j: JobItem) => {
-    onSelect(j);
-    onOpenPopup?.(j);
-    setOpen(false);
-  };
-
-  const handleToggleSave = async (j: JobItem) => {
-    if (ensureSet(loadingIds).has(j.id)) return;
-    const isSavedNow = ensureSet(savedIds).has(j.id);
-
-    // optimistic
-    setLoadingIds((prev) => {
-      const n = new Set(ensureSet<string | number>(prev));
-      n.add(j.id);
-      return n;
-    });
-    setSavedIds((prev) => {
-      const n = new Set(ensureSet<string | number>(prev));
-      isSavedNow ? n.delete(j.id) : n.add(j.id);
-      return n;
-    });
-
-    try {
-      if (isSavedNow) {
-        const res = await deleteUserSavedJob(Number(j.id), { id: userId });
-        if (!res?.deleted) throw new Error("Delete failed");
-      } else {
-        const res = await saveUserJob(Number(j.id), { id: userId });
-        if (!res?.saved) throw new Error("Save failed");
-      }
-    } catch (err) {
-      console.error("[JobsListWidget] toggle save error:", err);
-      // rollback
-      setSavedIds((prev) => {
-        const n = new Set(ensureSet<string | number>(prev));
-        isSavedNow ? n.add(j.id) : n.delete(j.id);
-        return n;
-      });
-      alert(
-        isSavedNow
-          ? "Konnte Job nicht entfernen."
-          : "Konnte Job nicht speichern."
-      );
-    } finally {
-      setLoadingIds((prev) => {
-        const n = new Set(ensureSet<string | number>(prev));
-        n.delete(j.id);
-        return n;
-      });
+  const handleFeatureClick = useCallback((f: any) => {
+    const p = f?.properties ?? f;
+    if (p?.isJob === true) {
+      setSelectedFeature(f);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!user?.id) return; // wartet auf user
+      setLoading(true);
+      try {
+        const savedFC = await fetchUserSavedJobs(user);
+
+        const features = (savedFC?.features ?? []).map((f: any) => ({
+          ...f,
+          properties: { ...(f.properties ?? {}), isJob: true },
+        }));
+
+        if (!alive) return;
+
+        setFeatureCollection({
+          type: "FeatureCollection",
+          features,
+        });
+
+        if (olMapRef.current) {
+          // alte Layer entfernen
+          olMapRef.current
+            .getLayers()
+            .getArray()
+            .filter((l: any) => l.get("layerType") === "savedJobs")
+            .forEach((l) => olMapRef.current!.removeLayer(l));
+
+          // neue Features in OL-Layer
+          const olFeatures = new GeoJSON().readFeatures(
+            { type: "FeatureCollection", features },
+            {
+              dataProjection: "EPSG:4326",
+              featureProjection: "EPSG:3857",
+            }
+          );
+
+          const savedJobStyle = new Style({
+            image: new CircleStyle({
+              radius: 7,
+              fill: new Fill({ color: "#e91e63" }),
+              stroke: new Stroke({ color: "#c2185b", width: 2 }),
+            }),
+          });
+
+          const jobLayer = new VectorLayer({
+            source: new VectorSource({ features: olFeatures }),
+            style: savedJobStyle,
+          });
+          jobLayer.set("layerType", "savedJobs");
+          jobLayer.set("title", "Gespeicherte Jobs");
+
+          olMapRef.current.addLayer(jobLayer);
+        }
+
+        const list: JobItem[] = features
+          .filter((f: any) => f?.geometry?.type === "Point")
+          .map((f: any) => ({
+            id: f.id,
+            title: f.properties?.title ?? "Job",
+            company: f.properties?.company,
+            coord: f.geometry.coordinates, // [lon,lat]
+          }));
+
+        setJobs(list);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  const fetchFunction = () =>
+    Promise.resolve(
+      featureCollection ?? { type: "FeatureCollection", features: [] }
+    );
+
+  const handleJobSelect = useCallback((j: JobItem) => {
+    mapHandleRef.current?.zoomTo(j.coord, 17);
+  }, []);
+
+  const handleOpenPopup = useCallback(
+    (j: JobItem) => {
+      const feat = featureCollection?.features?.find(
+        (f: any) => String(f.id) === String(j.id)
+      );
+      if (feat) setSelectedFeature(feat);
+    },
+    [featureCollection]
+  );
+
+  if (!user?.id) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <>
-      <Tooltip title="Job-Liste">
-        <Fab
-          color="primary"
-          sx={{ position: "absolute", bottom: 24, left: 24, zIndex: 1100 }}
-          onClick={() => setOpen((p) => !p)}
-          aria-label={open ? "Job-Liste schließen" : "Job-Liste öffnen"}
-        >
-          {open ? <CloseIcon /> : <WorkIcon />}
-        </Fab>
-      </Tooltip>
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <MapComponent
+        ref={mapHandleRef}
+        mapRef={olMapRef}
+        key={"saved-" + user.id}
+        fetchFunction={fetchFunction}
+        onFeatureClick={handleFeatureClick}
+        enableLayerSwitcher={true}
+      />
 
-      <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
-        <Box sx={{ width: 360, p: 2 }}>
-          <List dense>
-            {jobs.map((j) => {
-              const isSaved = ensureSet(savedIds).has(j.id);
-              const isLoading = ensureSet(loadingIds).has(j.id);
-              return (
-                <ListItem
-                  key={j.id}
-                  disablePadding
-                  secondaryAction={
-                    <Tooltip
-                      title={isSaved ? "Gespeichert – entfernen" : "Merken"}
-                    >
-                      <span>
-                        <IconButton
-                          edge="end"
-                          size="small"
-                          aria-label={isSaved ? "Gespeichert" : "Merken"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleSave(j);
-                          }}
-                          disabled={isLoading}
-                        >
-                          {isSaved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  }
-                >
-                  <ListItemButton
-                    onClick={() => handlePick(j)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") handlePick(j);
-                    }}
-                    sx={{ pr: 9 }}
-                  >
-                    <ListItemText primary={j.title} secondary={j.company} />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-            {jobs.length === 0 && (
-              <ListItemText primary="Keine Jobs gefunden" />
-            )}
-          </List>
+      {featureCollection?.features?.length ? (
+        <LegendWidget onlySavedJobs />
+      ) : null}
+
+      <JobsListWidget
+        jobs={jobs}
+        onSelect={handleJobSelect}
+        onOpenPopup={handleOpenPopup}
+        userId={user.id}
+        initialSavedIds={jobs.map((j) => j.id)} // Herzen direkt gefüllt
+      />
+
+      <FeatureDialog
+        feature={selectedFeature}
+        onClose={() => setSelectedFeature(null)}
+      />
+
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            bgcolor: "rgba(255,255,255,0.55)",
+            display: "grid",
+            placeItems: "center",
+            zIndex: 1200,
+          }}
+        >
+          <CircularProgress />
         </Box>
-      </Drawer>
-    </>
+      )}
+    </Box>
   );
 }

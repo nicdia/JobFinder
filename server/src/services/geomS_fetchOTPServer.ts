@@ -28,12 +28,15 @@ export async function fetchOtpApi({
     errorResults[table] = [];
 
     const coords = corDict[table];
+    // src/services/fetchOtpService.ts
     let modeSpeed = "";
 
     if (mode.includes("WALK")) {
       modeSpeed = "walk";
-    } else if (mode === "BICYCLE") {
+    } else if (mode.includes("BICYCLE")) {
       modeSpeed = "bike";
+    } else if (mode.includes("TRANSIT")) {
+      modeSpeed = "walk";
     } else {
       console.warn("⚠️ Modus nicht erkannt. ModeSpeed wurde nicht gesetzt.");
       continue;
