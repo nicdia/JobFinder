@@ -40,3 +40,5 @@ Legende muss noch angepasst werden, bei gezeichnetem Polygon steht da trzd noch 
 INIT SQL einrichten
 
                                     BUGLISTE
+
+saved jobs page aufrufbar machen + in found jobs herzen geben können und in favorite jobs ein kreuz womit man den job entfernt aus der page und allg auch überall anders

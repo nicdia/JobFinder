@@ -25,11 +25,13 @@ export interface JobItem {
 }
 
 interface Props {
-  jobs?: JobItem[]; // optional → wir setzen Default []
+  jobs?: JobItem[];
   onSelect: (job: JobItem) => void;
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
   initialSavedIds?: (string | number)[];
+  /** Wird aufgerufen, wenn Speichern/Entfernen erfolgreich war */
+  onToggleSave?: (job: JobItem, nowSaved: boolean) => void;
 }
 
 function ensureSet<T>(val: unknown): Set<T> {
@@ -37,17 +39,16 @@ function ensureSet<T>(val: unknown): Set<T> {
 }
 
 export default function JobsListWidget({
-  jobs = [], // <-- defensiver Default
+  jobs = [],
   onSelect,
   onOpenPopup,
   userId,
   initialSavedIds = [],
+  onToggleSave,
 }: Props) {
-  const safeJobs = Array.isArray(jobs) ? jobs : []; // doppelter Schutz
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
 
   const [open, setOpen] = useState(false);
-
-  // Herzen initial & bei Änderungen füllen/aktualisieren
   const [savedIds, setSavedIds] = useState<Set<string | number>>(
     new Set(initialSavedIds)
   );
@@ -67,7 +68,7 @@ export default function JobsListWidget({
     if (ensureSet(loadingIds).has(j.id)) return;
     const isSavedNow = ensureSet(savedIds).has(j.id);
 
-    // Optimistic UI
+    // optimistic
     setLoadingIds((prev) => {
       const n = new Set(ensureSet<string | number>(prev));
       n.add(j.id);
@@ -83,13 +84,15 @@ export default function JobsListWidget({
       if (isSavedNow) {
         const res = await deleteUserSavedJob(Number(j.id), { id: userId });
         if (!res?.deleted) throw new Error("Delete failed");
+        onToggleSave?.(j, false); // ✅ erfolgreich entfernt
       } else {
         const res = await saveUserJob(Number(j.id), { id: userId });
         if (!res?.saved) throw new Error("Save failed");
+        onToggleSave?.(j, true); // ✅ erfolgreich gespeichert
       }
     } catch (err) {
       console.error("[JobsListWidget] toggle save error:", err);
-      // Rollback
+      // rollback
       setSavedIds((prev) => {
         const n = new Set(ensureSet<string | number>(prev));
         isSavedNow ? n.add(j.id) : n.delete(j.id);
