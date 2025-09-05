@@ -400,6 +400,7 @@ export default function MapPage() {
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
         userId={user?.id}
+        initialSavedIds={[]}
       />
       <FeatureDialog
         feature={selectedFeature}
