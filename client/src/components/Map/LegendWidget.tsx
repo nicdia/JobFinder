@@ -98,7 +98,7 @@ const LegendWidget = memo(function LegendWidget({
                   background: "rgba(255,23,68,0.15)",
                 }}
               />
-              <Typography variant="body2">Isochrone</Typography>
+              <Typography variant="body2">Suchraum</Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={1.25}>
               <Box

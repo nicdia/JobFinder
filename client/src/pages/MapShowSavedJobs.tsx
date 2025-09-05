@@ -71,6 +71,15 @@ export default function MapShowSavedJobs() {
             }
           );
 
+          // sicherstellen, dass die OL-Features eine ID tragen (für remove per getFeatureById)
+          olFeatures.forEach((of, i) => {
+            if (of.getId() == null) {
+              const srcFeat = features[i];
+              const id = srcFeat?.id ?? srcFeat?.properties?.id;
+              if (id != null) of.setId(id);
+            }
+          });
+
           const savedJobStyle = new Style({
             image: new CircleStyle({
               radius: 7,
@@ -127,6 +136,44 @@ export default function MapShowSavedJobs() {
     [featureCollection]
   );
 
+  // <- NEU: wird vom Widget aufgerufen, wenn Delete erfolgreich war
+  const handleUnsaveSuccess = useCallback((jobId: string | number) => {
+    // 1) UI-Liste updaten
+    setJobs((prev) => prev.filter((j) => String(j.id) !== String(jobId)));
+
+    // 2) FeatureCollection updaten (steuert LegendWidget & Popup)
+    setFeatureCollection((prev: any) => {
+      if (!prev) return prev;
+      const next = {
+        ...prev,
+        features: (prev.features ?? []).filter(
+          (f: any) => String(f.id) !== String(jobId)
+        ),
+      };
+      // aktives Popup schließen, falls betroffen
+      setSelectedFeature((curr) =>
+        curr && String(curr.id) === String(jobId) ? null : curr
+      );
+      return next;
+    });
+
+    // 3) OL-Layer direkt aktualisieren (ohne kompletten Reload)
+    if (olMapRef.current) {
+      const savedLayer = olMapRef.current
+        .getLayers()
+        .getArray()
+        .find((l: any) => l.get && l.get("layerType") === "savedJobs") as
+        | VectorLayer<VectorSource>
+        | undefined;
+
+      if (savedLayer) {
+        const src = savedLayer.getSource();
+        const feat = src?.getFeatureById?.(jobId as any);
+        if (feat) src!.removeFeature(feat);
+      }
+    }
+  }, []);
+
   if (!user?.id) {
     return (
       <Box
@@ -170,6 +217,7 @@ export default function MapShowSavedJobs() {
         onOpenPopup={handleOpenPopup}
         userId={user.id}
         initialSavedIds={jobs.map((j) => j.id)} // Herzen direkt gefüllt
+        onUnsaveSuccess={handleUnsaveSuccess} // 👈 wichtig für Saved-Jobs
       />
 
       <FeatureDialog

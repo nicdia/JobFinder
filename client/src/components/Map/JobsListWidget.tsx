@@ -30,6 +30,8 @@ interface Props {
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
   initialSavedIds?: (string | number)[];
+  /** Wird NUR in der Saved-Jobs-Ansicht gesetzt: nach erfolgreichem Unsave entfernen Seite/Liste/Karte den Job */
+  onUnsaveSuccess?: (jobId: string | number) => void;
 }
 
 function ensureSet<T>(val: unknown): Set<T> {
@@ -42,6 +44,7 @@ export default function JobsListWidget({
   onOpenPopup,
   userId,
   initialSavedIds = [],
+  onUnsaveSuccess, // <-- optional
 }: Props) {
   const safeJobs = Array.isArray(jobs) ? jobs : []; // doppelter Schutz
 
@@ -83,6 +86,9 @@ export default function JobsListWidget({
       if (isSavedNow) {
         const res = await deleteUserSavedJob(Number(j.id), { id: userId });
         if (!res?.deleted) throw new Error("Delete failed");
+
+        // Nur Saved-Jobs-Seite reagiert darauf
+        onUnsaveSuccess?.(j.id);
       } else {
         const res = await saveUserJob(Number(j.id), { id: userId });
         if (!res?.saved) throw new Error("Save failed");
