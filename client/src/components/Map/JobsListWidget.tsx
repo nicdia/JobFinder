@@ -30,23 +30,32 @@ interface Props {
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
   initialSavedIds?: (string | number)[];
-  /** Wird NUR in der Saved-Jobs-Ansicht gesetzt: nach erfolgreichem Unsave entfernen Seite/Liste/Karte den Job */
-  onUnsaveSuccess?: (jobId: string | number) => void;
+  onUnsaveSuccess?: (jobId: string | number) => void; // optional (Saved-Jobs-Seite)
+  /** Wenn true, werden Herz-/Speicher-Buttons komplett ausgeblendet (z.B. All Jobs Page) */
+  hideSaveActions?: boolean;
 }
 
 function ensureSet<T>(val: unknown): Set<T> {
   return val instanceof Set ? (val as Set<T>) : new Set<T>();
 }
 
+// Robust: Zahl bleiben Zahl, "123" → 123, andere Strings bleiben String
+function toBackendId(id: string | number): string | number {
+  if (typeof id === "number") return id;
+  const s = String(id);
+  return /^\d+$/.test(s) ? Number(s) : s;
+}
+
 export default function JobsListWidget({
-  jobs = [], // <-- defensiver Default
+  jobs = [],
   onSelect,
   onOpenPopup,
   userId,
   initialSavedIds = [],
-  onUnsaveSuccess, // <-- optional
+  onUnsaveSuccess,
+  hideSaveActions = false,
 }: Props) {
-  const safeJobs = Array.isArray(jobs) ? jobs : []; // doppelter Schutz
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
 
   const [open, setOpen] = useState(false);
 
@@ -68,6 +77,13 @@ export default function JobsListWidget({
 
   const handleToggleSave = async (j: JobItem) => {
     if (ensureSet(loadingIds).has(j.id)) return;
+
+    // Nicht eingeloggt → klare Meldung und Abbruch
+    if (!userId) {
+      alert("Bitte logge dich ein, um Jobs zu speichern.");
+      return;
+    }
+
     const isSavedNow = ensureSet(savedIds).has(j.id);
 
     // Optimistic UI
@@ -83,14 +99,14 @@ export default function JobsListWidget({
     });
 
     try {
-      if (isSavedNow) {
-        const res = await deleteUserSavedJob(Number(j.id), { id: userId });
-        if (!res?.deleted) throw new Error("Delete failed");
+      const backendId = toBackendId(j.id);
 
-        // Nur Saved-Jobs-Seite reagiert darauf
-        onUnsaveSuccess?.(j.id);
+      if (isSavedNow) {
+        const res = await deleteUserSavedJob(backendId as any, { id: userId });
+        if (!res?.deleted) throw new Error("Delete failed");
+        onUnsaveSuccess?.(j.id); // nur Saved-Jobs-Seite verwendet das
       } else {
-        const res = await saveUserJob(Number(j.id), { id: userId });
+        const res = await saveUserJob(backendId as any, { id: userId });
         if (!res?.saved) throw new Error("Save failed");
       }
     } catch (err) {
@@ -134,37 +150,43 @@ export default function JobsListWidget({
             {safeJobs.map((j) => {
               const isSaved = ensureSet(savedIds).has(j.id);
               const isLoading = ensureSet(loadingIds).has(j.id);
-              return (
-                <ListItem
-                  key={j.id}
-                  disablePadding
-                  secondaryAction={
-                    <Tooltip
-                      title={isSaved ? "Gespeichert – entfernen" : "Merken"}
-                    >
-                      <span>
-                        <IconButton
-                          edge="end"
-                          size="small"
-                          aria-label={isSaved ? "Gespeichert" : "Merken"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleSave(j);
-                          }}
-                          disabled={isLoading}
-                        >
-                          {isSaved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+
+              // Sekundäraktion (Herz) nur anzeigen, wenn NICHT versteckt
+              const secondary = hideSaveActions ? undefined : (
+                <Tooltip
+                  title={
+                    !userId
+                      ? "Zum Speichern einloggen"
+                      : isSaved
+                      ? "Gespeichert – entfernen"
+                      : "Merken"
                   }
                 >
+                  <span>
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      aria-label={isSaved ? "Gespeichert" : "Merken"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSave(j);
+                      }}
+                      disabled={isLoading}
+                    >
+                      {isSaved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              );
+
+              return (
+                <ListItem key={j.id} disablePadding secondaryAction={secondary}>
                   <ListItemButton
                     onClick={() => handlePick(j)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") handlePick(j);
                     }}
-                    sx={{ pr: 9 }}
+                    sx={{ pr: hideSaveActions ? 2 : 9 }} // mehr Platz, wenn kein Herz
                   >
                     <ListItemText primary={j.title} secondary={j.company} />
                   </ListItemButton>
