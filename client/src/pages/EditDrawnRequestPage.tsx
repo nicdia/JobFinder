@@ -215,11 +215,9 @@ export default function EditDrawnRequestPage() {
       map.addInteraction(modify);
       modifyInteractionRef.current = modify;
 
-
       map.getInteractions().forEach((i) => {
         if (i instanceof DoubleClickZoom) i.setActive(false);
       });
-
 
       const handleContextMenu = (evt: MouseEvent) => {
         evt.preventDefault();
@@ -228,12 +226,10 @@ export default function EditDrawnRequestPage() {
       map.getViewport().addEventListener("contextmenu", handleContextMenu);
       contextMenuListenerRef.current = handleContextMenu;
 
-
       const handleDoubleClick = () => handleSave();
       map.on("dblclick", handleDoubleClick as any);
       doubleClickListenerRef.current = handleDoubleClick;
     } else {
-an
       if (modifyInteractionRef.current) {
         map.removeInteraction(modifyInteractionRef.current);
         modifyInteractionRef.current = null;
@@ -313,7 +309,6 @@ an
     }
   };
 
-
   const fetchFunction = () =>
     Promise.resolve({ type: "FeatureCollection", features: [] });
 
@@ -330,17 +325,17 @@ an
           zIndex: 3000,
           display: "flex",
           justifyContent: "center",
-          pointerEvents: "none", 
+          pointerEvents: "none",
         }}
       >
         <Paper
           elevation={1}
           sx={{
-            pointerEvents: "auto", 
+            pointerEvents: "auto",
             borderRadius: 2,
             px: 2,
             py: 1,
-            width: "min(920px, calc(100% - 32px))", 
+            width: "min(920px, calc(100% - 32px))",
           }}
         >
           <Stack
