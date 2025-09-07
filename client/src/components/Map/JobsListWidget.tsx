@@ -30,8 +30,7 @@ interface Props {
   onOpenPopup?: (job: JobItem) => void;
   userId?: number;
   initialSavedIds?: (string | number)[];
-  onUnsaveSuccess?: (jobId: string | number) => void; // optional (Saved-Jobs-Seite)
-  /** Wenn true, werden Herz-/Speicher-Buttons komplett ausgeblendet (z.B. All Jobs Page) */
+  onUnsaveSuccess?: (jobId: string | number) => void;
   hideSaveActions?: boolean;
 }
 
@@ -59,7 +58,6 @@ export default function JobsListWidget({
 
   const [open, setOpen] = useState(false);
 
-  // Herzen initial & bei Änderungen füllen/aktualisieren
   const [savedIds, setSavedIds] = useState<Set<string | number>>(
     new Set(initialSavedIds)
   );
@@ -104,7 +102,7 @@ export default function JobsListWidget({
       if (isSavedNow) {
         const res = await deleteUserSavedJob(backendId as any, { id: userId });
         if (!res?.deleted) throw new Error("Delete failed");
-        onUnsaveSuccess?.(j.id); // nur Saved-Jobs-Seite verwendet das
+        onUnsaveSuccess?.(j.id);
       } else {
         const res = await saveUserJob(backendId as any, { id: userId });
         if (!res?.saved) throw new Error("Save failed");
@@ -186,7 +184,7 @@ export default function JobsListWidget({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") handlePick(j);
                     }}
-                    sx={{ pr: hideSaveActions ? 2 : 9 }} // mehr Platz, wenn kein Herz
+                    sx={{ pr: hideSaveActions ? 2 : 9 }}
                   >
                     <ListItemText primary={j.title} secondary={j.company} />
                   </ListItemButton>

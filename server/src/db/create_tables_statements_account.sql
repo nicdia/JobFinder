@@ -1,3 +1,6 @@
+CREATE SCHEMA account;
+CREATE SCHEMA 
+
 CREATE TABLE account.users (
   id SERIAL PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,

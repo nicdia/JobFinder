@@ -37,6 +37,9 @@ docker compose run --rm pipeline -- pipeline starten einmalig
                     Funktionen die noch kommen müssen:
 
 Legende muss noch angepasst werden, bei gezeichnetem Polygon steht da trzd noch Isochron -- vllt allgemein alles ändern zu "Suchraum"?
-INIT SQL einrichten
+INIT SQL einrichten --> SQL DUMP Ist besser denk ich ---> das als nächstes
 
                                     BUGLISTE
+
+Fullscreen soll mittig aufklappen derzeit nach links + Jobs details übershcneiet sich mit löscjhen
+leicht mittel schnell umbauen statt selbst kmh selbst angeben oder ein info ding was avg geschwi.

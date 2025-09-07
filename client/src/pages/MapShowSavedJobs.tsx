@@ -37,7 +37,7 @@ export default function MapShowSavedJobs() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!user?.id) return; // wartet auf user
+      if (!user?.id) return;
       setLoading(true);
       try {
         const savedFC = await fetchUserSavedJobs(user);
@@ -136,7 +136,6 @@ export default function MapShowSavedJobs() {
     [featureCollection]
   );
 
-  // <- NEU: wird vom Widget aufgerufen, wenn Delete erfolgreich war
   const handleUnsaveSuccess = useCallback((jobId: string | number) => {
     // 1) UI-Liste updaten
     setJobs((prev) => prev.filter((j) => String(j.id) !== String(jobId)));
@@ -216,8 +215,8 @@ export default function MapShowSavedJobs() {
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
         userId={user.id}
-        initialSavedIds={jobs.map((j) => j.id)} // Herzen direkt gefüllt
-        onUnsaveSuccess={handleUnsaveSuccess} // 👈 wichtig für Saved-Jobs
+        initialSavedIds={jobs.map((j) => j.id)}
+        onUnsaveSuccess={handleUnsaveSuccess}
       />
 
       <FeatureDialog

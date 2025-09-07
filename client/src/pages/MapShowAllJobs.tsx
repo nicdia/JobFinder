@@ -146,8 +146,8 @@ export default function MapShowAllJobs() {
         onSelect={handleJobSelect}
         onOpenPopup={handleOpenPopup}
         userId={user?.id}
-        initialSavedIds={[]} // irrelevant, weil Herzen ausgeblendet
-        hideSaveActions={true} // 👈 Herzen ausblenden NUR hier
+        initialSavedIds={[]}
+        hideSaveActions={true}
       />
 
       <FeatureDialog
