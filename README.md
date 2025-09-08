@@ -1,8 +1,3 @@
-                                    BUGLISTE
-
-Fullscreen soll mittig aufklappen derzeit nach links + Jobs details übershcneiet sich mit löscjhen
-leicht mittel schnell umbauen statt selbst kmh selbst angeben oder ein info ding was avg geschwi.
-
 # Jobfinder
 
 JobFinder is a map‑based job search platform. It combines a React front end, a Node.js/Express API and a PostGIS database. A separate data pipeline imports job postings from public APIs and geocodes them so that users can search for jobs within custom areas on a map.
