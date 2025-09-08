@@ -62,7 +62,7 @@ export const useMapSetup = (
       }),
       title: "Hamburg Landesgrenze (WMS)",
       type: "overlay",
-      visible: true,
+      visible: false,
       opacity: 1,
     });
 
@@ -81,7 +81,7 @@ export const useMapSetup = (
       }),
       title: "Hamburg Bezirksgrenzen (WMS)",
       type: "overlay",
-      visible: true,
+      visible: false,
       opacity: 1,
     });
 
