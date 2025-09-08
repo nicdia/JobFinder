@@ -15,6 +15,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  TextField,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -25,29 +26,21 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditLocationAltIcon from "@mui/icons-material/EditLocationAlt";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
-
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import DashboardSection from "../components/UI/DashboardSectionComponent";
-import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
-
-// Services – bestehend
-import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
-import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
-import { deleteAddressRequest } from "../services/deleteAdressRequest";
-import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
-
-// Services – Saved Jobs
-import { fetchUserSavedJobs, deleteUserSavedJob } from "../services/savedJobs";
-
-// Services – Counts für Found/All Jobs
-import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
-import { fetchAllJobs } from "../services/fetchAllJobsApi";
-import TextField from "@mui/material/TextField";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import FeatureDialog from "../components/Map/FeatureDetailsDialogComponent";
+
+import { fetchUserSearchRequests } from "../services/fetchAddressRequest";
+import { fetchDrawnRequests } from "../services/fetchDrawnRequest";
+import { deleteAddressRequest } from "../services/deleteAdressRequest";
+import { deleteDrawnRequest } from "../services/deleteDrawnRequest";
+import { fetchUserSavedJobs, deleteUserSavedJob } from "../services/savedJobs";
+import { fetchUserVisibleJobs } from "../services/fetchUserVisibleJobs";
+import { fetchAllJobs } from "../services/fetchAllJobsApi";
 import {
   updateUserProfile,
   deleteUserAccount,
@@ -97,27 +90,27 @@ function pickName(props: Record<string, any> = {}, id: number | string) {
     `Suchauftrag #${id}`
   );
 }
-// --------------------------------------------
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Accordions: States
-  const [expandedReq, setExpandedReq] = useState<boolean>(false);
-  const [expandedSaved, setExpandedSaved] = useState<boolean>(false);
-  const [expandedFound, setExpandedFound] = useState<boolean>(false);
-  const [expandedAll, setExpandedAll] = useState<boolean>(false);
+  // Accordion States
+  const [expandedReq, setExpandedReq] = useState(false);
+  const [expandedSaved, setExpandedSaved] = useState(false);
+  const [expandedFound, setExpandedFound] = useState(false);
+  const [expandedAll, setExpandedAll] = useState(false);
+  const [expandedAccount, setExpandedAccount] = useState(false);
 
-  // Requests laden
-  const [loading, setLoading] = useState<boolean>(false);
+  // Requests
+  const [loading, setLoading] = useState(false);
   const [addrData, setAddrData] = useState<AnyFeature[]>([]);
   const [drawnData, setDrawnData] = useState<AnyFeature[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
 
-  // Saved Jobs laden
-  const [savedLoading, setSavedLoading] = useState<boolean>(false);
+  // Saved Jobs
+  const [savedLoading, setSavedLoading] = useState(false);
   const [savedError, setSavedError] = useState<string | null>(null);
   const [savedFeatures, setSavedFeatures] = useState<AnyFeature[]>([]);
   const [savedSelected, setSavedSelected] = useState<any | null>(null);
@@ -125,19 +118,16 @@ const DashboardPage = () => {
     {}
   );
 
-  // Counts: Found / All
+  // Counts
   const [foundCount, setFoundCount] = useState<number | null>(null);
-  const [foundCountLoading, setFoundCountLoading] = useState<boolean>(false);
+  const [foundCountLoading, setFoundCountLoading] = useState(false);
   const [foundCountError, setFoundCountError] = useState<string | null>(null);
 
   const [allCount, setAllCount] = useState<number | null>(null);
-  const [allCountLoading, setAllCountLoading] = useState<boolean>(false);
+  const [allCountLoading, setAllCountLoading] = useState(false);
   const [allCountError, setAllCountError] = useState<string | null>(null);
 
-  // Accordion: Account verwalten
-  const [expandedAccount, setExpandedAccount] = useState<boolean>(false);
-
-  // Form-State
+  // Account form
   const initialEmail =
     (user as any)?.email ??
     (() => {
@@ -150,12 +140,11 @@ const DashboardPage = () => {
 
   const [accEmail, setAccEmail] = useState<string>(initialEmail);
   const [accPassword, setAccPassword] = useState<string>("");
-
-  const [accSaving, setAccSaving] = useState<boolean>(false);
-  const [accDeleting, setAccDeleting] = useState<boolean>(false);
+  const [accSaving, setAccSaving] = useState(false);
+  const [accDeleting, setAccDeleting] = useState(false);
   const [accError, setAccError] = useState<string | null>(null);
 
-  // Beim Mount laden (Requests)
+  // Load requests
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -181,7 +170,7 @@ const DashboardPage = () => {
     };
   }, [user]);
 
-  // Beim Mount laden (Saved Jobs)
+  // Load saved jobs
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -205,11 +194,9 @@ const DashboardPage = () => {
     };
   }, [user]);
 
-  // Counts laden (Found/All)
+  // Load counts
   useEffect(() => {
     let alive = true;
-
-    // Gefundene Jobs (nur sinnvoll, wenn eingeloggt)
     (async () => {
       if (!user?.id) {
         setFoundCount(null);
@@ -229,7 +216,6 @@ const DashboardPage = () => {
       }
     })();
 
-    // Alle Jobs
     (async () => {
       try {
         setAllCountLoading(true);
@@ -250,7 +236,7 @@ const DashboardPage = () => {
     };
   }, [user]);
 
-  // Vereinheitlichte Liste (Requests)
+  // Unified requests
   const requests: UnifiedRequest[] = useMemo(() => {
     const a = addrData.map((f) => {
       const id = (f.id ?? f.properties?.id) as number | string;
@@ -281,33 +267,35 @@ const DashboardPage = () => {
     return [...a, ...d];
   }, [addrData, drawnData]);
 
-  // Abgeleitete Liste (Saved Jobs)
-  const savedJobs: SavedJob[] = useMemo(() => {
-    return savedFeatures.map((f) => {
-      const id = (f.id ?? f.properties?.job_id) as number | string;
-      const p = f.properties ?? {};
-      return {
-        id,
-        title: p.title ?? `Job #${id}`,
-        company: p.company ?? undefined,
-        createdAt: p.created_at ?? p.saved_at ?? undefined,
-        externalUrl: p.external_url ?? undefined,
-        raw: f,
-      };
-    });
-  }, [savedFeatures]);
+  // Saved jobs derived
+  const savedJobs: SavedJob[] = useMemo(
+    () =>
+      savedFeatures.map((f) => {
+        const id = (f.id ?? f.properties?.job_id) as number | string;
+        const p = f.properties ?? {};
+        return {
+          id,
+          title: p.title ?? `Job #${id}`,
+          company: p.company ?? undefined,
+          createdAt: p.created_at ?? p.saved_at ?? undefined,
+          externalUrl: p.external_url ?? undefined,
+          raw: f,
+        };
+      }),
+    [savedFeatures]
+  );
 
-  // Delete-Handler (Requests)
+  // Delete handlers
   const handleDelete = async (r: UnifiedRequest) => {
     const key = `${r.type}-${r.id}`;
-    const ok = window.confirm(
-      `Möchtest du den Suchauftrag „${r.name}“ wirklich löschen?`
-    );
-    if (!ok) return;
-
+    if (
+      !window.confirm(
+        `Möchtest du den Suchauftrag „${r.name}“ wirklich löschen?`
+      )
+    )
+      return;
     try {
       setDeletingIds((s) => ({ ...s, [key]: true }));
-
       if (r.type === "address") {
         await deleteAddressRequest(Number(r.id), user || undefined);
         setAddrData((prev) =>
@@ -320,7 +308,6 @@ const DashboardPage = () => {
         );
       }
     } catch (e: any) {
-      console.error("Delete request failed:", e);
       alert(
         e?.message
           ? `Löschen fehlgeschlagen: ${e.message}`
@@ -334,14 +321,14 @@ const DashboardPage = () => {
     }
   };
 
-  // Delete-Handler (Saved Jobs)
   const handleDeleteSaved = async (j: SavedJob) => {
     const key = `saved-${j.id}`;
-    const ok = window.confirm(
-      `Möchtest du den gespeicherten Job „${j.title}“ wirklich entfernen?`
-    );
-    if (!ok) return;
-
+    if (
+      !window.confirm(
+        `Möchtest du den gespeicherten Job „${j.title}“ wirklich entfernen?`
+      )
+    )
+      return;
     try {
       setDeletingSaved((s) => ({ ...s, [key]: true }));
       await deleteUserSavedJob(Number(j.id), user || undefined);
@@ -351,7 +338,6 @@ const DashboardPage = () => {
         )
       );
     } catch (e: any) {
-      console.error("Delete saved job failed:", e);
       alert(
         e?.message
           ? `Löschen fehlgeschlagen: ${e.message}`
@@ -365,21 +351,19 @@ const DashboardPage = () => {
     }
   };
 
+  // Account actions
   const handleSaveAccount = async () => {
     if (!user?.id) {
       setAccError("Nicht eingeloggt.");
       return;
     }
-
     const payload: { email?: string; password?: string } = {};
     if (accEmail && accEmail !== initialEmail) payload.email = accEmail.trim();
     if (accPassword) payload.password = accPassword;
-
     if (!payload.email && !payload.password) {
       setAccError("Bitte neue E-Mail und/oder neues Passwort eingeben.");
       return;
     }
-
     try {
       setAccError(null);
       setAccSaving(true);
@@ -398,16 +382,16 @@ const DashboardPage = () => {
       setAccError("Nicht eingeloggt.");
       return;
     }
-    const ok = window.confirm(
-      "Willst du deinen Account wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
-    );
-    if (!ok) return;
-
+    if (
+      !window.confirm(
+        "Willst du deinen Account wirklich dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+      )
+    )
+      return;
     try {
       setAccError(null);
       setAccDeleting(true);
       await deleteUserAccount(user.id);
-
       navigate("/");
     } catch (e: any) {
       setAccError(e?.message ?? "Löschen fehlgeschlagen.");
@@ -427,7 +411,8 @@ const DashboardPage = () => {
         bgcolor: "#f5f5f5",
       }}
     >
-      <Container maxWidth="md">
+      {/* Oberer Headerbereich */}
+      <Container maxWidth="md" sx={{ mb: 2 }}>
         <Typography variant="h5" fontWeight={600}>
           Schön, dass du da bist!
         </Typography>
@@ -438,431 +423,423 @@ const DashboardPage = () => {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* --------- Suchaufträge (Aktionen + Liste) --------- */}
-      <Accordion
-        expanded={expandedReq}
-        onChange={(_, v) => setExpandedReq(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <EditLocationAltIcon color="primary" />
-            <Typography fontWeight={600}>Suchaufträge</Typography>
-            <Chip
-              size="small"
-              label={loading ? "lädt…" : `${requests.length}`}
-            />
-          </Stack>
-        </AccordionSummary>
-
-        <AccordionDetails>
-          {/* Aktionen */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<EditLocationAltIcon />}
-              onClick={() => navigate("/draw-search")}
+      {/* >>> FIX: Ab hier ALLES im gleichen Container – keine einzelnen maxWidth/mx:auto mehr */}
+      <Container maxWidth="md">
+        {/* Suchaufträge */}
+        <Accordion
+          expanded={expandedReq}
+          onChange={(_, v) => setExpandedReq(v)}
+          sx={{ bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <EditLocationAltIcon color="primary" />
+              <Typography fontWeight={600}>Suchaufträge</Typography>
+              <Chip
+                size="small"
+                label={loading ? "lädt…" : `${requests.length}`}
+              />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ mb: 2 }}
             >
-              Suchgebiet/Ort einzeichnen
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<SearchIcon />}
-              onClick={() => navigate("/address-search")}
-            >
-              Per Adresse suchen
-            </Button>
-          </Stack>
-
-          {/* Liste */}
-          {loading ? (
-            <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Typography color="error">{error}</Typography>
-          ) : requests.length === 0 ? (
-            <Typography color="text.secondary">
-              Du hast noch keine Suchaufträge erstellt.
-            </Typography>
-          ) : (
-            <List disablePadding>
-              {requests.map((r) => {
-                const key = `${r.type}-${r.id}`;
-                const isDeleting = !!deletingIds[key];
-
-                return (
-                  <ListItem
-                    key={key}
-                    divider
-                    secondaryAction={
-                      <Stack direction="row" spacing={1}>
-                        {r.type === "drawn" && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<EditLocationAltIcon />}
-                            onClick={() => navigate(`/edit-drawn/${r.id}`)}
-                          >
-                            Bearbeiten
-                          </Button>
-                        )}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteOutlineIcon />}
-                          onClick={() => handleDelete(r)}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? "Lösche…" : "Löschen"}
-                        </Button>
-                      </Stack>
-                    }
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          alignItems="center"
-                          flexWrap="wrap"
-                        >
-                          <Typography>{r.name}</Typography>
-                          <Chip
-                            size="small"
-                            label={
-                              r.type === "address" ? "Adresse" : "Geometrie"
-                            }
-                          />
-                          {r.jobType && (
-                            <Chip
-                              size="small"
-                              label={r.jobType}
-                              variant="outlined"
-                              sx={{
-                                ml: 0.5,
-                                color: "text.secondary",
-                                borderColor: "divider",
-                                bgcolor: "grey.100",
-                              }}
-                            />
-                          )}
-                        </Stack>
-                      }
-                      secondary={
-                        r.createdAt
-                          ? new Date(r.createdAt).toLocaleString("de-DE")
-                          : undefined
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* --------- Gefundene Jobs (Accordion mit Count) --------- */}
-      <Accordion
-        expanded={expandedFound}
-        onChange={(_, v) => setExpandedFound(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <WorkOutlineIcon color="primary" />
-            <Typography fontWeight={600}>Gefundene Jobs</Typography>
-            <Chip
-              size="small"
-              label={
-                foundCountLoading
-                  ? "lädt…"
-                  : foundCountError
-                  ? "—"
-                  : `${foundCount ?? 0}`
-              }
-            />
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<MapOutlinedIcon />}
-              onClick={() => navigate("/found-jobs?mode=customVisible")}
-              disabled={foundCountLoading}
-            >
-              Auf Karte anzeigen
-            </Button>
-          </Stack>
-
-          {foundCountError ? (
-            <Typography color="error">{foundCountError}</Typography>
-          ) : (
-            <Typography color="text.secondary">
-              Anzahl der aktuell sichtbaren Jobs basierend auf deinen
-              Suchaufträgen: <strong>{foundCount ?? 0}</strong>
-            </Typography>
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* --------- Gespeicherte Jobs (Aktion + Liste) --------- */}
-      <Accordion
-        expanded={expandedSaved}
-        onChange={(_, v) => setExpandedSaved(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <FavoriteBorderIcon color="primary" />
-            <Typography fontWeight={600}>Gespeicherte Jobs</Typography>
-            <Chip
-              size="small"
-              label={savedLoading ? "lädt…" : `${savedJobs.length}`}
-            />
-          </Stack>
-        </AccordionSummary>
-
-        <AccordionDetails>
-          {/* Aktion */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<MapOutlinedIcon />}
-              onClick={() => navigate("/saved-jobs")}
-            >
-              Auf Karte anzeigen
-            </Button>
-          </Stack>
-
-          {/* Liste */}
-          {savedLoading ? (
-            <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : savedError ? (
-            <Typography color="error">{savedError}</Typography>
-          ) : savedJobs.length === 0 ? (
-            <Typography color="text.secondary">
-              Du hast noch keine Jobs gespeichert.
-            </Typography>
-          ) : (
-            <List disablePadding>
-              {savedJobs.map((j) => {
-                const key = `saved-${j.id}`;
-                const isDeleting = !!deletingSaved[key];
-                return (
-                  <ListItem
-                    key={key}
-                    divider
-                    secondaryAction={
-                      <Stack direction="row" spacing={1}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<InfoOutlinedIcon />}
-                          onClick={() => setSavedSelected(j.raw)}
-                        >
-                          Details
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteOutlineIcon />}
-                          onClick={() => handleDeleteSaved(j)}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? "Lösche…" : "Löschen"}
-                        </Button>
-                      </Stack>
-                    }
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          alignItems="center"
-                          flexWrap="wrap"
-                        >
-                          <Typography>{j.title}</Typography>
-                          {j.company && (
-                            <Chip
-                              size="small"
-                              label={j.company}
-                              variant="outlined"
-                              sx={{ ml: 0.5 }}
-                            />
-                          )}
-                        </Stack>
-                      }
-                      secondary={
-                        j.createdAt
-                          ? new Date(j.createdAt).toLocaleString("de-DE")
-                          : undefined
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          )}
-        </AccordionDetails>
-      </Accordion>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* --------- Alle Jobs (Accordion mit Count) --------- */}
-      <Accordion
-        expanded={expandedAll}
-        onChange={(_, v) => setExpandedAll(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <AppsIcon color="primary" />
-            <Typography fontWeight={600}>Alle Jobs</Typography>
-            <Chip
-              size="small"
-              label={
-                allCountLoading
-                  ? "lädt…"
-                  : allCountError
-                  ? "—"
-                  : `${allCount ?? 0}`
-              }
-            />
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mb: 2 }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<MapOutlinedIcon />}
-              onClick={() => navigate("/all-jobs")}
-              disabled={allCountLoading}
-            >
-              Auf Karte anzeigen
-            </Button>
-          </Stack>
-
-          {allCountError ? (
-            <Typography color="error">{allCountError}</Typography>
-          ) : (
-            <Typography color="text.secondary">
-              Gesamtanzahl aller verfügbaren Jobs:{" "}
-              <strong>{allCount ?? 0}</strong>
-            </Typography>
-          )}
-        </AccordionDetails>
-      </Accordion>
-      <Divider sx={{ my: 2 }} />
-      {/* --------- Account verwalten --------- */}
-      <Accordion
-        expanded={expandedAccount}
-        onChange={(_, v) => setExpandedAccount(v)}
-        sx={{ maxWidth: 960, mx: "auto", bgcolor: "white" }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <ManageAccountsIcon color="primary" />
-            <Typography fontWeight={600}>Account verwalten</Typography>
-          </Stack>
-        </AccordionSummary>
-
-        <AccordionDetails>
-          <Stack spacing={2} sx={{ maxWidth: 520 }}>
-            {accError && (
-              <Typography variant="body2" color="error">
-                {accError}
-              </Typography>
-            )}
-
-            <TextField
-              label="E-Mail"
-              type="email"
-              value={accEmail}
-              onChange={(e) => setAccEmail(e.target.value)}
-              InputProps={{
-                startAdornment: <EmailIcon fontSize="small" sx={{ mr: 1 }} />,
-              }}
-              fullWidth
-            />
-
-            <TextField
-              label="Neues Passwort"
-              type="password"
-              value={accPassword}
-              onChange={(e) => setAccPassword(e.target.value)}
-              helperText="Leer lassen, wenn du das Passwort nicht ändern willst."
-              InputProps={{
-                startAdornment: <LockIcon fontSize="small" sx={{ mr: 1 }} />,
-              }}
-              fullWidth
-            />
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
               <Button
                 variant="contained"
-                onClick={handleSaveAccount}
-                disabled={accSaving}
+                startIcon={<EditLocationAltIcon />}
+                onClick={() => navigate("/draw-search")}
               >
-                {accSaving ? "Speichere…" : "Änderungen speichern"}
+                Suchgebiet/Ort einzeichnen
               </Button>
-
               <Button
                 variant="outlined"
-                color="error"
-                onClick={handleDeleteAccount}
-                disabled={accDeleting}
-                startIcon={<DeleteOutlineIcon />}
+                startIcon={<SearchIcon />}
+                onClick={() => navigate("/address-search")}
               >
-                {accDeleting ? "Lösche…" : "Account löschen"}
+                Per Adresse suchen
               </Button>
             </Stack>
 
-            <Typography variant="caption" color="text.secondary">
-              Hinweis: Das Löschen deines Accounts entfernt dauerhaft alle
-              zugehörigen Daten. Du wirst anschließend zur Startseite
-              weitergeleitet.
-            </Typography>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
+            {loading ? (
+              <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Typography color="error">{error}</Typography>
+            ) : requests.length === 0 ? (
+              <Typography color="text.secondary">
+                Du hast noch keine Suchaufträge erstellt.
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {requests.map((r) => {
+                  const key = `${r.type}-${r.id}`;
+                  const isDeleting = !!deletingIds[key];
+                  return (
+                    <ListItem
+                      key={key}
+                      divider
+                      secondaryAction={
+                        <Stack direction="row" spacing={1}>
+                          {r.type === "drawn" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditLocationAltIcon />}
+                              onClick={() => navigate(`/edit-drawn/${r.id}`)}
+                            >
+                              Bearbeiten
+                            </Button>
+                          )}
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteOutlineIcon />}
+                            onClick={() => handleDelete(r)}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? "Lösche…" : "Löschen"}
+                          </Button>
+                        </Stack>
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
+                          >
+                            <Typography>{r.name}</Typography>
+                            <Chip
+                              size="small"
+                              label={
+                                r.type === "address" ? "Adresse" : "Geometrie"
+                              }
+                            />
+                            {r.jobType && (
+                              <Chip
+                                size="small"
+                                label={r.jobType}
+                                variant="outlined"
+                                sx={{
+                                  ml: 0.5,
+                                  color: "text.secondary",
+                                  borderColor: "divider",
+                                  bgcolor: "grey.100",
+                                }}
+                              />
+                            )}
+                          </Stack>
+                        }
+                        secondary={
+                          r.createdAt
+                            ? new Date(r.createdAt).toLocaleString("de-DE")
+                            : undefined
+                        }
+                      />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
-      <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 2 }} />
 
-      {/* Dialog für gespeicherten Job */}
-      {savedSelected && (
-        <FeatureDialog
-          feature={savedSelected}
-          onClose={() => setSavedSelected(null)}
-        />
-      )}
+        {/* Gefundene Jobs */}
+        <Accordion
+          expanded={expandedFound}
+          onChange={(_, v) => setExpandedFound(v)}
+          sx={{ bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <WorkOutlineIcon color="primary" />
+              <Typography fontWeight={600}>Gefundene Jobs</Typography>
+              <Chip
+                size="small"
+                label={
+                  foundCountLoading
+                    ? "lädt…"
+                    : foundCountError
+                    ? "—"
+                    : `${foundCount ?? 0}`
+                }
+              />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
+              <Button
+                variant="contained"
+                startIcon={<MapOutlinedIcon />}
+                onClick={() => navigate("/found-jobs?mode=customVisible")}
+                disabled={foundCountLoading}
+              >
+                Auf Karte anzeigen
+              </Button>
+            </Stack>
+            {foundCountError ? (
+              <Typography color="error">{foundCountError}</Typography>
+            ) : (
+              <Typography color="text.secondary">
+                Anzahl der aktuell sichtbaren Jobs basierend auf deinen
+                Suchaufträgen: <strong>{foundCount ?? 0}</strong>
+              </Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Gespeicherte Jobs */}
+        <Accordion
+          expanded={expandedSaved}
+          onChange={(_, v) => setExpandedSaved(v)}
+          sx={{ bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <FavoriteBorderIcon color="primary" />
+              <Typography fontWeight={600}>Gespeicherte Jobs</Typography>
+              <Chip
+                size="small"
+                label={savedLoading ? "lädt…" : `${savedJobs.length}`}
+              />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
+              <Button
+                variant="contained"
+                startIcon={<MapOutlinedIcon />}
+                onClick={() => navigate("/saved-jobs")}
+              >
+                Auf Karte anzeigen
+              </Button>
+            </Stack>
+
+            {savedLoading ? (
+              <Box sx={{ display: "grid", placeItems: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : savedError ? (
+              <Typography color="error">{savedError}</Typography>
+            ) : savedJobs.length === 0 ? (
+              <Typography color="text.secondary">
+                Du hast noch keine Jobs gespeichert.
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {savedJobs.map((j) => {
+                  const key = `saved-${j.id}`;
+                  const isDeleting = !!deletingSaved[key];
+                  return (
+                    <ListItem
+                      key={key}
+                      divider
+                      secondaryAction={
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<InfoOutlinedIcon />}
+                            onClick={() => setSavedSelected(j.raw)}
+                          >
+                            Details
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteOutlineIcon />}
+                            onClick={() => handleDeleteSaved(j)}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? "Lösche…" : "Löschen"}
+                          </Button>
+                        </Stack>
+                      }
+                    >
+                      <ListItemText
+                        primary={
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
+                          >
+                            <Typography>{j.title}</Typography>
+                            {j.company && (
+                              <Chip
+                                size="small"
+                                label={j.company}
+                                variant="outlined"
+                                sx={{ ml: 0.5 }}
+                              />
+                            )}
+                          </Stack>
+                        }
+                        secondary={
+                          j.createdAt
+                            ? new Date(j.createdAt).toLocaleString("de-DE")
+                            : undefined
+                        }
+                      />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Alle Jobs */}
+        <Accordion
+          expanded={expandedAll}
+          onChange={(_, v) => setExpandedAll(v)}
+          sx={{ bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <AppsIcon color="primary" />
+              <Typography fontWeight={600}>Alle Jobs</Typography>
+              <Chip
+                size="small"
+                label={
+                  allCountLoading
+                    ? "lädt…"
+                    : allCountError
+                    ? "—"
+                    : `${allCount ?? 0}`
+                }
+              />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
+              <Button
+                variant="contained"
+                startIcon={<MapOutlinedIcon />}
+                onClick={() => navigate("/all-jobs")}
+                disabled={allCountLoading}
+              >
+                Auf Karte anzeigen
+              </Button>
+            </Stack>
+            {allCountError ? (
+              <Typography color="error">{allCountError}</Typography>
+            ) : (
+              <Typography color="text.secondary">
+                Gesamtanzahl aller verfügbaren Jobs:{" "}
+                <strong>{allCount ?? 0}</strong>
+              </Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Account verwalten */}
+        <Accordion
+          expanded={expandedAccount}
+          onChange={(_, v) => setExpandedAccount(v)}
+          sx={{ bgcolor: "white" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <ManageAccountsIcon color="primary" />
+              <Typography fontWeight={600}>Account verwalten</Typography>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2} sx={{ maxWidth: 520 }}>
+              {accError && (
+                <Typography variant="body2" color="error">
+                  {accError}
+                </Typography>
+              )}
+
+              <TextField
+                label="E-Mail"
+                type="email"
+                value={accEmail}
+                onChange={(e) => setAccEmail(e.target.value)}
+                InputProps={{
+                  startAdornment: <EmailIcon fontSize="small" sx={{ mr: 1 }} />,
+                }}
+                fullWidth
+              />
+
+              <TextField
+                label="Neues Passwort"
+                type="password"
+                value={accPassword}
+                onChange={(e) => setAccPassword(e.target.value)}
+                helperText="Leer lassen, wenn du das Passwort nicht ändern willst."
+                InputProps={{
+                  startAdornment: <LockIcon fontSize="small" sx={{ mr: 1 }} />,
+                }}
+                fullWidth
+              />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveAccount}
+                  disabled={accSaving}
+                >
+                  {accSaving ? "Speichere…" : "Änderungen speichern"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleDeleteAccount}
+                  disabled={accDeleting}
+                  startIcon={<DeleteOutlineIcon />}
+                >
+                  {accDeleting ? "Lösche…" : "Account löschen"}
+                </Button>
+              </Stack>
+
+              <Typography variant="caption" color="text.secondary">
+                Hinweis: Das Löschen deines Accounts entfernt dauerhaft alle
+                zugehörigen Daten. Du wirst anschließend zur Startseite
+                weitergeleitet.
+              </Typography>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Dialog */}
+        {savedSelected && (
+          <FeatureDialog
+            feature={savedSelected}
+            onClose={() => setSavedSelected(null)}
+          />
+        )}
+      </Container>
     </Box>
   );
 };
